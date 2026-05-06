@@ -1,0 +1,4033 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>CS 2050 Lecture 5 - 复习笔记</title>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    max-width: 980px;
+    margin: 40px auto;
+    padding: 0 24px;
+    line-height: 1.7;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 {
+    border-bottom: 3px solid #1f6feb;
+    padding-bottom: 10px;
+  }
+  h2.slide-title {
+    color: #1f6feb;
+    margin-top: 50px;
+    border-left: 5px solid #1f6feb;
+    padding-left: 12px;
+  }
+  h3 {
+    color: #333;
+    margin-top: 28px;
+  }
+  .slide-img {
+    display: block;
+    max-width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin: 16px 0 24px 0;
+  }
+  .explanation {
+    background: #fff;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
+  }
+  .qa {
+    background: #fff8e1;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border-left: 4px solid #f0a500;
+    margin-top: 20px;
+  }
+  .qa h3 { margin-top: 0; color: #b8730e; }
+  .qa ul li { margin-bottom: 8px; }
+  details.qa > summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #b8730e;
+    font-size: 1.08em;
+    padding: 6px 0;
+    user-select: none;
+    list-style: none;
+  }
+  details.qa > summary::before {
+    content: "▶ ";
+    display: inline-block;
+    transition: transform 0.15s;
+  }
+  details.qa[open] > summary::before {
+    content: "▼ ";
+  }
+  details.qa > summary:hover { color: #f0a500; }
+  details.qa[open] > summary { margin-bottom: 14px; }
+  code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.92em;
+  }
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th { background: #1f6feb; color: white; }
+  blockquote {
+    border-left: 4px solid #1f6feb;
+    margin: 16px 0;
+    padding: 4px 16px;
+    color: #555;
+    background: #eef4ff;
+  }
+  .takeaway {
+    background: #e8f5e9;
+    border-left: 4px solid #2e7d32;
+    padding: 14px 20px;
+    margin-top: 20px;
+    border-radius: 4px;
+  }
+
+  /* ============================================
+     Highlight feature (image + text)
+     ============================================ */
+  #hl-toolbar {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .hl-btn {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    user-select: none;
+  }
+  .hl-btn:hover { background: #e8e8e8; }
+  .hl-btn.active { background: #1f6feb; color: white; border-color: #1f6feb; }
+  .hl-color-picker {
+    display: inline-flex;
+    gap: 6px;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    padding: 0 10px;
+  }
+  .hl-color {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    display: inline-block;
+    box-sizing: border-box;
+  }
+  .hl-color.selected { border-color: #333; }
+  .hl-color[data-color="yellow"] { background: rgba(255, 235, 59, 0.85); }
+  .hl-color[data-color="green"]  { background: rgba(102, 187, 106, 0.85); }
+  .hl-color[data-color="pink"]   { background: rgba(236, 64, 122, 0.75); }
+  .hl-color[data-color="blue"]   { background: rgba(79, 195, 247, 0.85); }
+
+  body.hl-active { cursor: crosshair; }
+  body.hl-active .slide-img { cursor: crosshair; }
+  body.hl-eraser { cursor: not-allowed; }
+  body.hl-eraser .slide-img { cursor: not-allowed; }
+  body.hl-eraser .hl-img-mark,
+  body.hl-eraser mark.hl-text-mark {
+    outline: 2px dashed #d32f2f;
+    outline-offset: 1px;
+    cursor: pointer !important;
+  }
+
+  .hl-img-wrapper {
+    position: relative;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin: 16px 0 24px 0;
+  }
+  .hl-img-wrapper > .slide-img { margin: 0; }
+
+  .hl-img-mark {
+    position: absolute;
+    height: 14px;
+    transform: translateY(-50%);
+    border-radius: 2px;
+    mix-blend-mode: multiply;
+    pointer-events: auto;
+  }
+  .hl-img-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.65); }
+  .hl-img-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.55); }
+  .hl-img-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.50); }
+  .hl-img-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.55); }
+
+  mark.hl-text-mark {
+    padding: 1px 1px;
+    border-radius: 2px;
+    color: inherit;
+  }
+  mark.hl-text-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.55); }
+  mark.hl-text-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.40); }
+  mark.hl-text-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.30); }
+  mark.hl-text-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.40); }
+
+  body.hl-hidden .hl-img-mark { background: transparent !important; }
+  body.hl-hidden mark.hl-text-mark {
+    background: transparent !important;
+    padding: 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>CS 2050 Lecture 5 - 复习笔记</h1>
+<p><em>主题：Multicore Architecture &amp; Parallelism in Hardware</em></p>
+
+<!-- ==================== SLIDE 9 ==================== -->
+<h2 class="slide-title">Slide 9 — Multicore Architecture (示例)</h2>
+
+<img class="slide-img" src="images/slide-09.png" alt="Slide 9: Multicore Architecture examples">
+
+<div class="explanation">
+  <p>这一页给了两个真实机器的拓扑图（用 <code>lstopo</code> 这类工具生成），目的是让我们<strong>直观看到「现代 CPU 内部长什么样」</strong>。</p>
+
+  <h3>左图：CS 2050 集群节点（类似 Intel Xeon 服务器）</h3>
+  <p>从上往下是一个<strong>层级结构（hierarchy）</strong>：</p>
+<pre>Package（整颗 CPU 芯片）
+  └── NUMANode (69GB)         ← 这颗 CPU 直连的内存
+        └── L3 Cache (25MB)   ← 所有核心共享
+              └── L2 (1024KB) × 18   ← 每个核心独占
+                    └── L1d (32KB)   ← 每个核心独占
+                          └── Core L#0 ... L#17 （18 个物理核心）
+                                └── PU L#0, PU L#1 （每核 2 个超线程）</pre>
+
+  <p><strong>关键观察：</strong></p>
+  <ul>
+    <li><strong>L3 共享，L2/L1 私有</strong> → 这是后面 "cache coherence（缓存一致性）" 问题的根源</li>
+    <li><strong>18 个物理核 × 2 超线程 = 36 个逻辑 PU（Processing Unit）</strong></li>
+    <li><strong>PU = Processing Unit</strong>，操作系统看到的"逻辑 CPU"</li>
+  </ul>
+
+  <h3>右图：Apple Silicon（M 系列芯片）</h3>
+  <p>不一样的设计哲学 —— <strong>异构核心（heterogeneous cores）</strong>：</p>
+  <ul>
+    <li>上半部分：<strong>8 个高性能核（Performance cores）</strong>，配 192KB L1</li>
+    <li>下半部分：<strong>4 个能效核（Efficiency cores）</strong>，配较小缓存</li>
+    <li>两组核心共享不同的 L2</li>
+  </ul>
+
+  <div class="takeaway">
+    💡 <strong>Slide 想表达的点</strong>：不同厂商的多核架构差别很大，写并行程序时不能假设"所有核都一样"，也不能假设"内存访问代价都一样"。
+  </div>
+</div>
+
+<details class="qa">
+  <summary>📌 Q&amp;A 补充要点（点击展开）</summary>
+
+  <h4>Q1：粉色区域 NUMANode (69GB) 是不是这台机器的 RAM？</h4>
+  <p>是的，<strong>就是 RAM</strong>。但它的标签叫 NUMANode 是因为引入了 <strong>NUMA（Non-Uniform Memory Access，非统一内存访问）</strong>这个概念。</p>
+  <p><strong>NUMA 是什么</strong>：在多 socket 服务器上，每颗 CPU 都有自己直连的本地内存。访问本地内存快，访问"另一颗 CPU 那边"的内存要走 CPU 互联总线（Intel QPI/UPI），慢得多。</p>
+<pre>┌─────────────────┐         ┌─────────────────┐
+│   CPU 0         │ ←────→  │   CPU 1         │
+│  (Package L#0)  │ QPI/UPI │  (Package L#1)  │
+└────────┬────────┘  互联   └────────┬────────┘
+         │                            │
+   ┌─────▼─────┐                ┌────▼──────┐
+   │ NUMANode 0│                │ NUMANode 1│
+   │   64 GB   │                │   64 GB   │
+   └───────────┘                └───────────┘
+   (CPU 0 的本地内存)            (CPU 1 的本地内存)</pre>
+  <p>这台 CS 2050 节点只有一颗 CPU，所以只有一个 NUMANode = 全部 69GB RAM。</p>
+
+  <p><strong>容易混淆的名词</strong>：</p>
+  <ul>
+    <li><strong>Package</strong> — 一颗物理 CPU 芯片（最外层绿框）</li>
+    <li><strong>NUMANode</strong> — 一颗 CPU 直连的本地 RAM（粉色，69GB）</li>
+    <li><strong>L3 / L2 / L1</strong> — CPU 内部高速缓存（SRAM），中间几层</li>
+    <li><strong>Core</strong> — 真正干活的物理核心（灰色方块）</li>
+    <li><strong>PU</strong> — OS 看到的"逻辑 CPU"，含超线程，最内层</li>
+  </ul>
+
+  <p><strong>为什么 NUMA 对并行编程重要</strong>：如果线程跑在 CPU 0、但数据在 CPU 1 的 NUMANode，性能会显著下降。所以 OpenMP/MPI 都有 <em>thread affinity（线程亲和性）</em>和 <em>memory binding（内存绑定）</em>设置。</p>
+
+  <hr>
+
+  <h4>Q2：电脑上插拔的内存条是否包含在这张图里？</h4>
+  <p><strong>包含。</strong>粉色 NUMANode 就代表那些插在主板插槽里的内存条 (DIMM)。<code>lstopo</code> 不叫它 "DIMM" 而叫 "NUMANode"，是因为这张图是<strong>从 CPU 的视角</strong>画的：CPU 不关心你插了几条、什么型号，它只关心"这块内存离我多近"。</p>
+
+  <p><strong>物理硬件 → lstopo 标签的映射</strong>：</p>
+<pre>你看到的物理硬件                      lstopo 图里显示的
+─────────────────                    ──────────────────
+┌──────────────┐
+│  内存条 #1   │ ──┐
+│   (16GB)     │   │
+└──────────────┘   │
+┌──────────────┐   │
+│  内存条 #2   │   ├──→  NUMANode L#0 (69GB)
+│   (16GB)     │   │       (粉色那块)
+└──────────────┘   │
+┌──────────────┐   │
+│  内存条 #3   │   │
+│   (32GB)     │ ──┘
+└──────────────┘
+        ↑
+   插在主板上，连到 CPU 0 的内存控制器</pre>
+
+  <blockquote>💡 现代 CPU 内部集成了内存控制器，内存条直接连到 CPU（不再像旧架构那样走北桥）。所以"哪些内存条属于哪颗 CPU"是物理硬连线决定的。</blockquote>
+
+  <p><strong>这张图里包含的</strong>：CPU 核心、CPU 缓存 (L1/L2/L3)、内存条 (NUMANode)。</p>
+  <p><strong>不包含的</strong>：硬盘 / SSD（属于存储不是内存）、GPU、网卡（<code>lstopo</code> 默认不画外设）。</p>
+
+  <hr>
+
+  <h4>Q3：粉色 NUMANode 是否包含 L1/L2/L3？</h4>
+  <p><strong>不包含。它们是完全独立的两种硬件</strong>，只是都属于"内存系统"。图里画成嵌套是为了表达<strong>访问路径</strong>，不是物理包含。</p>
+
+  <p><strong>对比表</strong>：</p>
+  <table>
+    <tr><th></th><th>粉色 NUMANode (RAM)</th><th>L1 / L2 / L3 (Cache)</th></tr>
+    <tr><td>物理位置</td><td>主板上的内存条</td><td>CPU 芯片<strong>内部</strong></td></tr>
+    <tr><td>材料</td><td>DRAM</td><td>SRAM</td></tr>
+    <tr><td>容量</td><td>GB 级（69GB）</td><td>KB ~ MB 级</td></tr>
+    <tr><td>速度</td><td>慢（~100 ns）</td><td>快（~1~30 ns）</td></tr>
+    <tr><td>价格</td><td>便宜</td><td>极贵</td></tr>
+  </table>
+
+  <p><strong>为什么图里嵌套画</strong>：表达 CPU 找数据时的"<strong>逐级回退</strong>"顺序。当 Core 0 要读数据 X：</p>
+<pre>① 查 L1d (32KB)  ──→ 命中？✅ 直接拿走（最快）
+                  ↓ 没命中
+② 查 L2 (1024KB) ──→ 命中？✅ 拿走 + 复制到 L1
+                  ↓ 没命中
+③ 查 L3 (25MB)   ──→ 命中？✅ 拿走 + 复制到 L2 + L1
+                  ↓ 没命中（cache miss！）
+④ 去 NUMANode (69GB) 拿真正的内存
+   把数据搬回来，逐级填回 L3 → L2 → L1</pre>
+
+  <p><strong>物理上 vs lstopo 图上</strong>：</p>
+<pre>物理上（真实硬件）                 lstopo 图（逻辑层级）
+─────────────                     ─────────────────
+       主板                         ┌─ Package ─────────┐
+   ┌──────────┐                     │ ┌───────────────┐ │
+   │ 内存条 1 │ ←┐                  │ │ NUMANode 69GB │ │ ← 标注
+   └──────────┘  │                  │ └───────────────┘ │   不代表
+   ┌──────────┐  │  ┌──────────┐    │ ┌───────────────┐ │   RAM 在
+   │ 内存条 2 │ ←┼──┤ CPU 芯片 │    │ │ L3 25MB       │ │   CPU 里
+   └──────────┘  │  │ ┌──────┐ │    │ │ ┌─┐ ┌─┐ ...   │ │
+   ┌──────────┐  │  │ │L3/L2 │ │    │ │ │L2│ │L2│     │ │
+   │ 内存条 3 │ ←┘  │ │ /L1  │ │    │ │ │L1│ │L1│     │ │
+   └──────────┘     │ │Cores │ │    │ │ │Co│ │Co│     │ │
+                    │ └──────┘ │    │ │ └─┘ └─┘       │ │
+                    └──────────┘    │ └───────────────┘ │
+                                    └───────────────────┘
+   RAM 在 CPU 外                    嵌套 ≠ 物理包含
+   L1/L2/L3 在 CPU 内                只表示访问归属/顺序</pre>
+
+  <div class="takeaway">
+    🎯 <strong>一句话总结</strong>：粉色 = 主板上的内存条；L1/L2/L3 = CPU 芯片内的缓存；图里嵌套画法仅表示"从内到外的访问顺序"，不代表物理上谁包含谁。
+  </div>
+
+  <hr>
+
+  <h4>Q4：一个 Core 里有 2 个 PU 是什么意思？是不是同时只能处理两个 task？</h4>
+  <p>这就是 <strong>超线程（Intel Hyper-Threading）/ SMT（Simultaneous Multi-Threading）</strong>。一个核里有 2 个 PU 不等于核能"真正同时"干两件事 —— 底层只有一套执行单元（ALU、FPU），两个 PU 共享。它的本质是：操作系统看到这个核像"两个 CPU"，所以可以一次性把两个线程派给它，硬件在两个线程间快速切换、填补空档。</p>
+
+  <p><strong>为什么有用</strong>：单线程经常会卡住（比如等 cache miss 的数据从 RAM 加载回来，要几十 ns）。这段时间执行单元闲着没事，第二个 PU 上的线程就能立刻补上去，提高资源利用率。</p>
+
+  <p><strong>性能收益通常只有 15%~30%</strong>，远不是翻倍。两个 PU 共享缓存、执行单元、内存带宽，如果两个线程都是 CPU 密集型计算，互相抢资源甚至可能更慢（HPC 场景常主动关闭超线程）。</p>
+
+  <p><strong>和真的两个核的区别</strong>：两个物理核各有独立的 ALU 和 L1/L2，可以真正并行执行；一个核里的两个 PU 只是"轮流上场 + 填空隙"。所以 18 物理核 × 2 PU = 36 逻辑 CPU，OS 把它当 36 个 CPU 调度，但真实算力远小于"36 个核"。</p>
+</details>
+
+
+<!-- ==================== SLIDE 10 ==================== -->
+<h2 class="slide-title">Slide 10 — Parallelism in Hardware（硬件并行的三个来源）</h2>
+
+<img class="slide-img" src="images/slide-10.png" alt="Slide 10: Parallelism in Hardware">
+
+<div class="explanation">
+  <p>这页是对硬件并行性的正式归纳，用的还是 slide 9 左边那张拓扑图，把硬件提供并行能力的来源总结为三类：</p>
+  <p><strong>① 多个物理核心（multiple physical cores）</strong>—— 最直观的并行，不同核可以真正同时执行不同的指令流。</p>
+  <p><strong>② 多级物理内存层次（multiple memory levels）</strong>—— 缓存既可以在多个核之间共享（如 L3），也可以是核独占的（如 L1/L2）。共享缓存让核间数据传递便宜，独占缓存让单核访问极快，但也带来后续要讲的"缓存一致性"问题。</p>
+  <p><strong>③ 更底层的架构细节，比如 pipelining</strong>—— 流水线让一个核内部可以同时处理处于不同阶段（取指、解码、执行、访存、写回）的多条指令。这一类还包括超线程、SIMD、乱序执行等，对程序员通常透明，但会显著影响性能。</p>
+  <blockquote>💡 这页是在为下一页 <em>application-level parallelism</em> 做铺垫：先讲清楚硬件能提供什么，再讲软件怎么用上它。</blockquote>
+</div>
+
+
+<!-- ==================== SLIDE 11 ==================== -->
+<h2 class="slide-title">Slide 11 — Parallelism in Applications（应用层并行的两种形式）</h2>
+
+<img class="slide-img" src="images/slide-11.png" alt="Slide 11: Parallelism in Applications">
+
+<div class="explanation">
+  <p>应用层的并行可以分为两大类，slide 上特别强调要把它们区分开来。</p>
+
+  <p><strong>Data-level parallelism（数据并行）</strong>：当你有大量数据项要做"同一件事"时出现。代码例子就是典型 —— 把数组前 512 个元素全设为 1、后 512 个元素全设为 2，每个元素的操作完全独立。这种场景最适合用 <strong>向量化（SIMD 指令，比如 AVX）</strong>或 <strong>GPU</strong> 来加速：硬件一次性对一批数据做同样的操作。</p>
+
+  <p><strong>Task-level parallelism（任务并行）</strong>：当你有多个性质不同的任务可以同时执行时出现，每个任务做不同的事。这种场景下不同任务往往需要交换数据，所以 <strong>共享内存（shared memory）</strong> 是个优势 —— 多个线程在同一块内存里读写，比跨进程通信快得多。</p>
+
+  <p>代码例子里的两个 for 循环，既可以理解成"两个数据并行任务"（同样的赋值操作，只是数据范围不同），也可以理解成"两个独立任务"（两段独立代码并行执行）。这种二义性正好说明数据并行和任务并行的边界不是绝对的，是看你怎么组织。</p>
+</div>
+
+
+<!-- ==================== SLIDE 12 ==================== -->
+<h2 class="slide-title">Slide 12 — Processes and Threads（进程 vs 线程）</h2>
+
+<img class="slide-img" src="images/slide-12.png" alt="Slide 12: Processes and Threads">
+
+<div class="explanation">
+  <p>这页对比 <strong>进程（process）</strong> 和 <strong>线程（thread）</strong> 的核心区别。</p>
+
+  <p><strong>进程</strong>是操作系统调度的基本单位，是一个"正在运行的程序"。它有自己独立的进程 ID、独立的 <strong>虚拟地址空间（virtual address space）</strong>（slide 高亮 —— 这是进程间彼此隔离的根本原因）、独立的执行状态（程序计数器 PC、寄存器值），完全由 OS 管理。</p>
+
+  <p><strong>线程</strong>是进程内部的执行流。同一个进程里的所有线程<strong>共享应用的数据（都在主存里）</strong>，所以线程之间通信非常方便。最关键的一点（slide 紫框框出来）：<strong>线程比进程的创建代价小得多</strong> —— 因为不需要新建一整套地址空间，只要分配一个新的栈和寄存器状态就行。此外线程的创建/销毁通常由程序员代码控制（用 pthread、OpenMP 等 API），而不是像进程那样靠 OS 帮你管。</p>
+
+  <blockquote>💡 一句话记法：<strong>进程 = 隔离 + 安全 + 重；线程 = 共享 + 快 + 轻</strong>。</blockquote>
+</div>
+
+<details class="qa">
+  <summary>📌 Q&amp;A 补充要点（点击展开）</summary>
+
+  <h4>Q1：能不能给一个具体的例子展示进程和线程的关系？</h4>
+  <p>最直观的例子是 <strong>Chrome 浏览器</strong>。在 Chrome 里按 <code>Shift+Esc</code> 调出它自带的任务管理器，能直接看到清晰的进程/线程结构。</p>
+
+  <p><strong>每个标签页是一个独立的进程</strong>。这就是为什么某个网页崩溃时只有那一个 tab 显示 "Aw, snap!"，其他 tab 和浏览器本身完全不受影响 —— 进程 A 的内存崩溃影响不到进程 B，因为它们的虚拟地址空间根本不相通。如果所有 tab 共用一个进程，刷一个有 bug 的视频可能就会把正在写的 Gmail 草稿一起带走。同样，恶意网站也因此读不到你别的 tab 里的银行密码。这就是进程隔离的现实价值。</p>
+
+  <p><strong>每个 tab 进程内部又跑着很多线程</strong>，分工明确：渲染线程（HTML/CSS 排版）、JS 引擎线程（V8）、网络线程（下载资源）、输入处理线程（鼠标、滚动）、视频解码线程等等。它们为什么必须在同一个进程里？因为要共享同一个网页的 DOM 树和 JavaScript 堆 —— JS 改了一个节点，渲染线程立刻就要拿到改动重画。如果分成不同进程，每次都得走 IPC 序列化传数据，性能完全没法用。</p>
+
+  <p>所以整体层次是：<strong>Chrome 应用 → 多个进程（每个 tab 一个）→ 每个进程内多个线程</strong>。这背后正好对应 slide 12 的结论 —— <strong>用进程划安全/隔离边界，用线程提供性能/并发</strong>。</p>
+
+  <p>类似模式的软件还有：VS Code（主进程 + 扩展宿主进程 + 渲染进程，每个内部又有多个线程）、PostgreSQL（每个客户端连接一个进程）、Nginx（多 worker 进程，每个 worker 多线程）。</p>
+</details>
+
+
+<!-- ==================== SLIDE 13 ==================== -->
+<h2 class="slide-title">Slide 13 — Processes（进程的隔离与通信）</h2>
+
+<img class="slide-img" src="images/slide-13.png" alt="Slide 13: Processes">
+
+<div class="explanation">
+  <p>这页深入讲进程的两个性质：<strong>隔离</strong> 和 <strong>跨进程通信</strong>。</p>
+
+  <p><strong>进程之间是完全隔离的</strong>：一个进程访问不到另一个进程的虚拟内存（因此也访问不到对方的物理内存）。这是 Linux 这种多用户系统的基本安全要求 —— 不然你登录后跑的程序就能随便读其他用户的数据了。</p>
+
+  <p><strong>但隔离不等于不能合作</strong>：很多场景下不同进程需要协作完成任务，最典型的就是 <strong>MPI</strong>（Message Passing Interface）—— 在分布式并行计算里，每个计算节点跑一个进程，它们之间靠消息传递协作。</p>
+
+  <p>OS 提供了若干 <strong>IPC（inter-process communication，进程间通信）</strong> 机制：<strong>signals</strong>（信号，用于简单事件通知，比如 SIGTERM）、<strong>files</strong>（文件，最朴素但慢）、<strong>pipes</strong>（管道，shell 里 <code>|</code> 用的就是它）、<strong>sockets</strong>（套接字，本机或跨机器都能用）、<strong>shared memory</strong>（共享内存，效率最高，但需要自己处理同步）。</p>
+
+  <p>右边的紫色图是 Linux 进程虚拟地址空间的简化示意：<strong>Stack 从高地址往低地址增长</strong>（函数调用越深越往下），<strong>Heap 从低地址往高地址增长</strong>（malloc 越多越往上），中间留有大片空闲区域。这种"两端往中间挤"的布局是为了让两者动态扩展时不会很快撞到一起。</p>
+</div>
+
+<details class="qa">
+  <summary>📌 Q&amp;A 补充要点（点击展开）</summary>
+
+  <h4>Q1：IPC 和 MPI 是什么关系？MPI 到底是干嘛用的？这些 IPC 机制具体是什么？</h4>
+
+  <p><strong>IPC 和 MPI 处于不同抽象层次，不是一个东西。</strong>IPC（Inter-Process Communication）是一个概念性总称，泛指"进程之间通信"以及 OS 提供的一系列底层机制（signals、pipes、sockets、shared memory 等），都是 Linux 内核内置的最原始工具。MPI 则是一个具体的<strong>标准 API / 库</strong>（OpenMPI、MPICH 是它的实现），底层用的还是这些 IPC 机制，但在上面封装了一层"消息传递"的高级抽象。打比方就是：<strong>IPC 是字母表和单词，MPI 是用这些单词写出来的一本特定的书</strong>。HPC 程序员一般不直接用 IPC 原语写并行代码（太繁琐），而是用 MPI 提供的高层接口。</p>
+
+  <p><strong>MPI 是为"协作型并行计算"设计的，不是同机器上随便两个进程聊天。</strong>典型场景是 HPC：把一个超大计算任务切成 N 块扔到 N 台机器上同时算（气候模拟、AI 训练等），每台机器跑一个 MPI 进程，进程之间通过网络交换中间结果。这和 Chrome 多 tab "互不打扰"的多进程模式正好相反 —— Chrome tab 之间其实几乎不直接通信，要共享数据也通过浏览器主进程中转。MPI 更准确的比喻是：<strong>一群人在分工算一道巨大的数学题</strong>，每个人算一部分，算完后告诉相邻的人"我的结果是 X"，对方拿到才能算下一步。MPI 提供的就是这种 "send / receive / broadcast / reduce" 的标准化原语（<code>MPI_Send</code>、<code>MPI_Recv</code>、<code>MPI_Bcast</code>、<code>MPI_Reduce</code> 等）。</p>
+
+  <p><strong>MPI 自动选择 IPC 机制，依据的是"进程的物理位置"，不是"用户想完成什么"。</strong>用户写 MPI 代码时只描述逻辑通信意图（<code>MPI_Send(data, dest=5)</code>），不指定底层用什么。MPI 运行时会自动判断 rank 0 和 rank 5 的物理位置，再选传输方式：同机器 → 共享内存；不同机器只有以太网 → TCP socket；有 InfiniBand → RDMA（绕过内核拷贝，最快）；涉及 GPU 内存 → NVLink 或 GPUDirect RDMA。这种<strong>"逻辑通信和物理传输分离"</strong>的抽象（类似 SQL 的"声明式查询"）带来一个关键好处：<strong>同一份 MPI 程序可以不改代码地从笔记本（单机多进程，自动用共享内存）扩展到超算集群（上万核，自动用 InfiniBand）</strong>，这是 MPI 在 HPC 称霸 30 年的关键。</p>
+
+  <p><strong>5 种 IPC 机制各举一个具体例子：</strong></p>
+
+  <p><strong>Signals（信号）</strong>：进程间最轻量的通知机制，只传"事件发生了"这一个比特，不带数据。最常见的：你按 <code>Ctrl+C</code> 时终端向当前运行的程序发送 <code>SIGINT</code> 让它退出；用 <code>kill -9 &lt;pid&gt;</code> 命令本质是发 <code>SIGKILL</code> 强制终止某进程；子进程结束时 OS 会向父进程发 <code>SIGCHLD</code> 通知"你的孩子结束了"。</p>
+
+  <p><strong>Files（文件）</strong>：最朴素也最慢的通信方式 —— 一个进程写文件、另一个进程读。比如 nginx 把访问日志写到 <code>/var/log/nginx/access.log</code>，另一个监控进程定期读这个文件来统计流量。</p>
+
+  <p><strong>Pipes（管道）</strong>：建立一条单向字节流通道，常用于父子进程之间。最经典的例子就是 shell 里的 <code>ls | grep .txt</code> —— <code>ls</code> 进程的标准输出被"管道"接到 <code>grep</code> 进程的标准输入。同理 <code>cat file.txt | wc -l</code> 用来数行数。</p>
+
+  <p><strong>Sockets（套接字）</strong>：最灵活的机制，本机和跨机器都能用，是网络编程的基础。你浏览器（进程）通过 TCP socket 和远程网页服务器通信才看到这个网页；本地跑 <code>npm run dev</code> 时浏览器用 <code>localhost:3000</code> 这个 socket 连过去（同机器也是用 socket）；<code>psql</code> 客户端连 PostgreSQL 服务也是通过 socket。</p>
+
+  <p><strong>Shared Memory（共享内存）</strong>：性能最高的方式 —— 两个进程把同一块物理内存映射到各自的虚拟地址空间，一个写另一个立刻能读，不需要任何拷贝。比如 PostgreSQL 用共享内存在多个 worker 进程间共享缓存；高性能音视频软件用共享内存让采集进程和编码进程零拷贝传数据。代价是必须自己用锁或信号量做同步，不然两个进程同时写就乱套。</p>
+
+  <p>按速度大致排序：<strong>signals &lt; files &lt; pipes ≈ sockets &lt; shared memory</strong>（共享内存最快，完全不经过内核拷贝）。</p>
+
+  <hr>
+
+  <h4>Q2：Stack 和 Heap 有什么区别，为什么要分开？</h4>
+  <p><strong>Stack（栈）</strong>用于函数调用相关的临时数据：函数参数、局部变量、返回地址、保存的寄存器值。管理方式是 <strong>LIFO（后进先出）</strong>，由编译器自动生成代码维护 —— 每次调用函数就 push 一个 stack frame，函数返回就 pop 掉整个帧。"分配"内存只是把栈指针往下移几个字节，极快（一条 CPU 指令）。代价是：<strong>生命周期完全和函数作用域绑定</strong>，函数返回后里面的数据立刻失效；而且每线程栈大小有限（Linux 默认 8MB），递归太深或在栈上开大数组会 stack overflow。</p>
+
+  <p><strong>Heap（堆）</strong>用于程序员手动控制生命周期的动态数据。C 里用 <code>malloc</code> / <code>free</code>；C++ 用 <code>new</code> / <code>delete</code>；Java/Python 用 <code>new</code> 申请、由 GC 回收。Heap 上的数据<strong>生命周期任意</strong>，可以跨多个函数调用，只要不主动释放就一直在（忘释放就是内存泄漏）。代价是：分配慢（要在已用空间里找合适的空闲块，涉及空闲链表、碎片管理），释放也慢，必须显式管理。</p>
+
+  <p><strong>具体的 C 代码例子</strong>：</p>
+<pre>void foo() {
+    int x = 5;                       // x 在 Stack 上
+    int* p = malloc(sizeof(int));    // *p 在 Heap 上，但 p 指针本身在 Stack 上
+    *p = 10;
+
+    return;  // 函数返回的瞬间：
+             //   x 自动消失（Stack pop 掉整个帧）
+             //   p 指针变量也消失
+             //   但 *p 指向的那 4 字节还活着！没 free 就成了泄漏
+}</pre>
+
+  <p><strong>为什么要分开</strong>：两者解决根本不同的需求 —— 临时的、小的、短生命周期数据需要 Stack（速度优先、自动管理）；持久的、大的、长生命周期数据需要 Heap（灵活性优先、手动管理）。只用 Stack 的话函数返回就清空，没法长期保存数据；只用 Heap 的话每个临时变量都要 malloc/free，效率极低、代码繁琐。两者互补，缺一不可。</p>
+
+  <p><strong>为什么 Stack 向下、Heap 向上增长</strong>（slide 13 那张图的核心信息）：两边大小都是<strong>运行时动态变化</strong>的，编译期没法预知最终各占多少。让它们从虚拟地址空间两端向中间挤压是最经济的空间利用方式 —— 中间留大片未分配区域，谁需要谁涨。万一撞到一起就 stack overflow 或 out of memory，OS 会把进程干掉。</p>
+</details>
+
+
+<!-- ==================== SLIDE 14 ==================== -->
+<h2 class="slide-title">Slide 14 — Software Threads（软件线程的定义）</h2>
+
+<img class="slide-img" src="images/slide-14.png" alt="Slide 14: Software Threads">
+
+<div class="explanation">
+  <p>正式定义"软件线程"：它是一段 <strong>独立的指令流</strong>，由 OS 调度到某个 CPU 核（或者超线程的 PU）上去执行。</p>
+
+  <p><strong>一个进程可以创建很多线程</strong>，数量可以远超物理核数 —— 因为 OS 会用时间片轮转，让线程们排队上 CPU。但要注意：线程多了不等于真正能同时跑得多，真正同时执行的线程数仍然受物理核数（× 超线程数）的限制。</p>
+
+  <p>每个线程的特点是：</p>
+  <ul>
+    <li><strong>共享所属进程的内存</strong>（Heap、Data、Code 段）—— 这是线程间通信便宜的根源</li>
+    <li><strong>有自己独立的状态和一小块私有内存</strong>（主要是它自己的栈和寄存器）</li>
+    <li><strong>可以跑在任何可用的处理器上</strong>（哪个核空闲 OS 就调度过去），并且不一定一直在同一个核上</li>
+    <li><strong>创建代价小</strong>（比进程便宜几个数量级）</li>
+  </ul>
+
+  <p>右边的图是对比基准 —— 单线程进程（"sequential process"）：只有一个栈（标 t0）、一份寄存器，加上共享的 Heap/Data/Code。这是为下一页 slide 15 的多线程对比做铺垫。</p>
+</div>
+
+<details class="qa">
+  <summary>📌 Q&amp;A 补充要点（点击展开）</summary>
+
+  <h4>Q1：什么是 registers？顺带搞清楚汇编例子里的 System V、eax/edi/esi、add、ret 各是什么。</h4>
+
+  <p><strong>Registers 是 CPU 内部的超高速存储单元。</strong>几乎是 0 cycle 访问 —— 它们就在芯片里，紧贴执行单元。CPU 真正在算的所有数据，那一刻一定在某个 register 里。</p>
+
+  <p><strong>数量很少。</strong>x86-64 有 16 个通用寄存器（RAX、RBX、RCX、RDX、RSI、RDI、RBP、RSP、R8~R15，每个 64 位）。外加专用的 RIP（指令指针）和 RFLAGS（状态标志）。再加 SIMD 寄存器 XMM/YMM/ZMM 各 16~32 个。ARM64 有 31 个通用寄存器，RISC-V 有 32 个。整体"几十个"是合理估计。</p>
+
+  <p><strong>为什么这么少？</strong>它们是芯片硅片上的物理电路。每多一个就要加晶体管和走线。CPU 会变大、变慢、变热。少而快是 register 的本质。</p>
+
+  <p><strong>用来干什么：</strong>装当前指令的操作数；按调用约定传函数参数；装函数返回值；装栈指针 RSP、帧指针 RBP、指令指针 RIP；装编译器认为常用的局部变量。编译器优化时疯狂想"把热变量留在寄存器里"。</p>
+
+  <p><strong>具体的 C 例子：</strong></p>
+
+<pre>int add(int a, int b) {
+    int c = a + b;
+    return c;
+}</pre>
+
+  <p>编译成 x86-64 汇编（System V 约定）：</p>
+
+<pre>add:
+    mov  eax, edi    ; eax = a  (a 通过 edi 传进来)
+    add  eax, esi    ; eax = a + b  (b 通过 esi 传进来)
+    ret              ; 返回值已经在 eax 里</pre>
+
+  <p>整个过程<strong>没访问一次 RAM</strong>。参数从 register 拿，运算在 register 做，结果留在 register 返回。</p>
+
+  <hr>
+
+  <p><strong>System V 是什么？</strong>这里指 <strong>System V AMD64 ABI</strong>。<strong>ABI = Application Binary Interface</strong>，相当于"二进制层的合同"。规定函数参数放哪几个寄存器、返回值在哪、栈怎么对齐。</p>
+
+  <p><strong>Linux/macOS 上 x86-64 用的就是它</strong>：前 6 个整数参数依次放 RDI、RSI、RDX、RCX、R8、R9，返回值放 RAX。Windows 用的是另一套（前 4 个参数走 RCX、RDX、R8、R9）。所以 Linux 编译的二进制和 Windows 编译的不能互相调用 —— CPU 一样，ABI 不一样。没有 ABI 统一，gcc 和 clang 编译的代码也没法链接。</p>
+
+  <hr>
+
+  <p><strong>eax / edi / esi 是什么？</strong>都是 x86-64 通用寄存器。区别只是"位宽视图"。命名有历史包袱：</p>
+  <ul>
+    <li><code>AX</code> = 16 位（8086 时代）</li>
+    <li><code>EAX</code> = 32 位（<strong>E</strong>xtended AX，386 时代）</li>
+    <li><code>RAX</code> = 64 位（<strong>R</strong>egister AX，x86-64 时代）</li>
+  </ul>
+
+  <p><strong>这三个是同一个物理寄存器的不同视图。</strong>RAX 的低 32 位 = EAX，EAX 的低 16 位 = AX。同理还有 RSI/ESI/SI（<strong>S</strong>ource <strong>I</strong>ndex）和 RDI/EDI/DI（<strong>D</strong>estination <strong>I</strong>ndex）。</p>
+
+  <p>例子里为什么用 EAX/EDI/ESI？因为 C 的 <code>int</code> 在 x86-64 上是 32 位。所以编译器只用 32 位视图。如果是 <code>long</code>（64 位），就会用 RAX/RDI/RSI。</p>
+
+  <hr>
+
+  <p><strong>add 在哪里执行？就在 CPU 核心里。</strong>具体是核心内部的 <strong>ALU（算术逻辑单元）</strong>。每个核都有一个或多个 ALU，做整数加减、与或非、比较。浮点交给 FPU，向量交给 SIMD 单元。</p>
+
+  <p>一条 <code>add eax, esi</code> 的生命周期：<strong>fetch（从 L1 取指令）→ decode → execute（送进 ALU）→ writeback（结果写回 EAX）</strong>。1 个时钟周期完成（&lt; 1 ns），完全不访问 RAM。这就是"把数据保留在寄存器里"性能上诱人的根本原因。</p>
+
+  <hr>
+
+  <p><strong>ret 是什么？</strong>"return" 的缩写。从函数返回到调用它的地方。物理动作：<strong>从栈顶弹出一个地址，装进 RIP（指令指针），CPU 下一条就跳过去</strong>。</p>
+
+  <p>为什么栈顶有地址等着被弹？因为别的代码调用 add 时用的是 <code>call add</code>。<code>call</code> 干两件事：<strong>(1) 把"call 后面那条指令的地址"压栈</strong>（含义："add 干完后回到这里"）；<strong>(2) 跳转到 add 入口</strong>。</p>
+
+  <p>所以 <code>call</code> 和 <code>ret</code> 是配对的：<code>call</code> 推地址进栈，<code>ret</code> 弹地址出栈。这就是 C 函数"调用 → 返回"在 CPU 层面的真相。也是 stack overflow 能发生的原因 —— 每次嵌套调用都要在栈上压一份返回地址 + 栈帧，递归太深就撑爆。</p>
+
+  <hr>
+
+  <p><strong>回到 slide 14 的语境：</strong>图里每个线程有独立的 "Registers" 盒子。这不是说每个线程在 CPU 里有自己的物理寄存器（核里只有一组）。而是 OS 为每个线程保存的<strong>寄存器状态快照</strong>。线程切换时 OS 必须先把当前线程的寄存器值存进内存，再把下一个线程之前存的值加载回 CPU。这个过程叫 <strong>context switch</strong>。</p>
+</details>
+
+
+<!-- ==================== SLIDE 15 ==================== -->
+<h2 class="slide-title">Slide 15 — Software Threads（多线程进程的内存模型）</h2>
+
+<img class="slide-img" src="images/slide-15.png" alt="Slide 15: Multithreaded process">
+
+<div class="explanation">
+  <p>这页用并排对比直观展示<strong>多线程进程的内存模型</strong>，是理解后续并发问题的基础。</p>
+
+  <p><strong>左边（Sequential process）</strong>：单线程，一个 Stack + 一份 Registers + 共享的 Heap/Data/Code。</p>
+
+  <p><strong>右边（Multithreaded process）</strong>：4 个线程 t0~t3，<strong>每个线程有自己独立的 Stack 和 Registers</strong>（这就是 slide 14 说的"私有内存"的具体内容），但 <strong>Heap、Data、Code 段是所有线程共享的</strong>。也就是说：函数局部变量、调用栈、CPU 寄存器值是每线程一份；malloc 出来的对象、全局变量、代码段是大家共用一份。</p>
+
+  <p>最关键的结论（slide 高亮的橙字）：<strong>线程之间的通信通过共享主存（shared main memory）</strong>进行。一个线程往 Heap 里写一个值，另一个线程立刻就能读到 —— 不需要 IPC 调用、不需要拷贝数据，直接访问同一块内存地址即可。这就是"线程通信比进程通信便宜"的具体机制。</p>
+
+  <blockquote>⚠️ 但便宜也是双刃剑：多个线程同时读写同一块内存，会引出 <strong>race condition（竞态条件）</strong>、<strong>data race（数据竞争）</strong> 等并发问题，需要锁、原子操作等同步机制来处理。这是后续 slide 的核心主题。</blockquote>
+</div>
+
+<details class="qa">
+  <summary>📌 Q&amp;A 补充要点（点击展开）</summary>
+
+  <h4>Q1：紫色 box 是什么？线程跟 CPU、register、缓存、RAM 在内存层面怎么对应？</h4>
+
+  <p><strong>紫色 box = 进程的虚拟地址空间，不是 CPU。</strong>Slide 15 这张图根本没画 CPU。Stack₁~Stack₄、Registers₁~Registers₄、Heap、Data、Code 都是"内存里的东西"。Stack 们是各线程私有的栈（在同一虚拟地址空间，只是占不同地址段）。Registers 是 OS 给每个线程保存的寄存器快照。Heap/Data/Code 共享。</p>
+
+  <p><strong>线程跑在几个 CPU 上是另一个独立维度，由 OS 调度器决定。</strong>4 个线程可以跑在 4 个核上（真正并行），可以挤在 1 个核上轮转，可以跑在 2 个核上各轮转 2 个。同一线程也可能在不同时刻被迁移到不同的核。Slide 15 想表达的核心是<strong>内存布局</strong>（谁私有、谁共享），和 CPU 数量解耦。</p>
+
+  <hr>
+
+  <p><strong>每个线程的 register 数量是固定的，由 CPU 架构决定。</strong>x86-64 上每个线程都有同一套：16 个 64 位通用寄存器（RAX、RBX、... R15）+ RIP + RFLAGS + 16~32 个 SIMD 寄存器。ARM64 是 31 个，RISC-V 是 32 个。</p>
+
+  <p>但<strong>核里只有一份物理寄存器文件</strong>，任何瞬间只装一个线程的值。线程被挂起时，OS 把这套值保存到内存里。线程换上来时，再从内存把它的值加载回 CPU 寄存器。所以"每个线程有自己的 registers"指的是<strong>每个线程在内存里有一份独立的快照</strong>，不是物理上每个线程都拿到一组真寄存器。</p>
+
+  <hr>
+
+  <p><strong>虚拟地址 → 物理 RAM 地址 → 缓存层次。三步走。</strong></p>
+
+  <p>执行 <code>mov eax, [虚拟地址]</code> 的真实顺序：</p>
+  <ol>
+    <li>CPU 拿到虚拟地址（指令里带着）</li>
+    <li><strong>MMU 先查 TLB</strong>（一个记录最近翻译结果的小缓存）。命中直接拿到物理地址；未命中则 MMU 查页表（页表本身在 RAM 里），翻译完后存进 TLB</li>
+    <li><strong>拿到物理地址后，去缓存找数据</strong>：L1 → L2 → L3 → RAM 顺序查</li>
+    <li>找到的值送进寄存器</li>
+  </ol>
+
+  <p><strong>关键</strong>：缓存不是"按页表去找"。MMU 翻译完地址后，缓存系统拿物理地址当 key 去自己的 tag 表里查，和页表无关。<strong>翻译在前，缓存查找在后。</strong></p>
+
+  <hr>
+
+  <p><strong>3 个具体例子展示数据访问代价：</strong></p>
+
+  <p><strong>例子 1：热数据，L1 命中（最快）</strong></p>
+<pre>int x = 5;        // 写入 x
+int y = x + 1;    // 立刻又读 x</pre>
+  <p>读 x 时：TLB 命中 → L1 命中（5 刚被写进去）→ 送进 EAX 加 1。整个过程 ~1-2 ns。</p>
+
+  <p><strong>例子 2：冷数据，缓存全 miss，到 RAM</strong></p>
+<pre>int *arr = malloc(100 * 1024 * 1024);  // 100MB 大数组
+// ... 干别的事，缓存里都是别的内容 ...
+int v = arr[0];</pre>
+  <p>读 arr[0]：TLB miss → MMU 查页表 → L1 miss → L2 miss → L3 miss → 到 RAM 拿，~100 ns。同时把数据填回 L3/L2/L1，<strong>下次再读就快</strong>。这就是"第一次访问大数组很慢"的原因。</p>
+
+  <p><strong>例子 3：page fault（最慢）</strong></p>
+<pre>int *p = malloc(1000);
+int v = p[0];     // 立刻读，第一次访问</pre>
+  <p>读 p[0]：TLB miss → MMU 走页表 → <strong>发现这个虚拟地址还没映射到物理页</strong>（malloc 只登记地址范围，物理 RAM 还没分配）→ 触发 <strong>page fault</strong> → OS 接管：找空闲 RAM 页、更新页表、做映射 → 恢复进程重试 → 这次成功翻译，去缓存找都 miss，最终到 RAM 拿。整个过程可能 ~1000 ns。</p>
+
+  <p>这就是 <strong>lazy allocation</strong>：OS 不在 malloc 时就给你 RAM，等你真用了才分配，省内存。</p>
+
+  <hr>
+
+  <p><strong>"取一次数据"的完整代价排序：</strong></p>
+  <p>寄存器命中 (~0 ns) &lt; L1 (~1 ns) &lt; L2 (~3 ns) &lt; L3 (~10 ns) &lt; RAM (~100 ns) &lt;&lt; page fault (~1000 ns) &lt;&lt; 从 swap 磁盘调回 (~10 ms)</p>
+
+  <p>这就是为什么 <strong>cache locality（数据访问局部性）</strong> 对性能这么关键 —— 让数据尽量留在 L1/L2，避免到 RAM 甚至磁盘。</p>
+</details>
+
+
+<!-- ==================== SLIDE 16 ==================== -->
+<h2 class="slide-title">Slide 16 — A Simple Class for Counting（引入计数器例子）</h2>
+
+<img class="slide-img" src="images/slide-16.png" alt="Slide 16: Counter class introduction">
+
+<div class="explanation">
+  <p>这页开始用一个极简的 Counter 类作为贯穿后面好几页的例子。代码本身平淡无奇：一个 <code>count_</code> 私有成员、一个 <code>increment()</code> 把它加 1、一个 <code>get_count()</code> 返回当前值。<code>main()</code> 里建一个 Counter，循环 100 次调 <code>increment()</code>，最后打印结果。</p>
+
+  <p><strong>关键不在代码本身，而在它即将暴露的并发陷阱。</strong>这个看似无害的"读-改-写"操作（<code>++count_</code>）在单线程下永远输出 100。但一旦多线程跑，就会暴露出经典的 race condition。接下来 5 页都围绕这个例子层层展开。</p>
+</div>
+
+<details class="qa">
+  <summary>📌 Q&amp;A 补充要点（点击展开）</summary>
+
+  <h4>Q1：<code>Counter() : count_(0) {}</code> 这个语法是什么意思？为什么有时候只能用这种写法？</h4>
+
+  <p><strong><code>count_(0)</code> 既不是数组也不是 vector，是 C++ 的 *member initializer list*（成员初始化列表）。</strong></p>
+
+  <p>把 <code>Counter() : count_(0) {}</code> 拆开看：</p>
+  <ul>
+    <li><code>Counter()</code> —— 构造函数（无参）</li>
+    <li><code>: count_(0)</code> —— 成员初始化列表，把成员变量 <code>count_</code> 初始化成 <code>0</code></li>
+    <li><code>{}</code> —— 空的构造函数体</li>
+  </ul>
+
+  <p>这里的 <code>count_</code> 就是 slide 上 private 区里声明的那个 <code>unsigned int count_</code>。<strong>它是一个普通的私有整数成员变量。</strong><code>count_(0)</code> 的语法乍看像函数调用，其实是 C++ 的"用 0 这个值去初始化 count_"的写法。对 <code>int</code> 这种基本类型来说，等价于 <code>count_ = 0</code>。</p>
+
+  <hr>
+
+  <p><strong>为什么不直接写 <code>Counter() { count_ = 0; }</code>？</strong>对 <code>int</code> 效果完全一样。但 C++ 程序员习惯用 initializer list，因为某些情况下只有它能 work。</p>
+
+  <p><strong>核心原因</strong>：构造函数体（<code>{...}</code> 里的代码）执行的时候，所有成员已经被构造好了。Body 里的赋值是"修改一个已经存在的变量"。而 <code>const</code>、reference 这些类型恰恰不允许"创建后修改"。所以只能在"被创建的那一刻"设值 —— 那一刻就是 initializer list。</p>
+
+  <p>具体分 4 种情况：</p>
+
+  <p><strong>1. const 成员 —— 编译报错。</strong><code>const</code> 字面意思就是"创建后不能改"。Body 里赋值是非法操作。</p>
+<pre>class Bar {
+    Bar() { z_ = 5; }   // ❌ ERROR: assignment of read-only member
+    const int z_;
+};
+
+class Bar {
+    Bar() : z_(5) {}    // ✅ 在 const 被创建那一刻直接给 5
+    const int z_;
+};</pre>
+
+  <p><strong>2. Reference 成员 —— 编译报错。</strong>C++ 的 reference 必须在创建时绑定到某个对象，<strong>一旦绑定就不能改绑</strong>。Body 里的 <code>ref_ = x_</code> 不是"重新绑定"，而是"给 ref_ 指向的对象赋新值"。但 ref_ 这时还没绑定到任何东西，语义错乱。</p>
+<pre>class Bar {
+    Bar() { ref_ = x_; }    // ❌ ref_ 必须在初始化时就绑定
+    int x_ = 0;
+    int& ref_;
+};
+
+class Bar {
+    Bar() : ref_(x_) {}     // ✅ 在 ref_ 被创建那一刻绑到 x_
+    int x_ = 0;
+    int& ref_;
+};</pre>
+
+  <p><strong>3. 没有默认构造函数的类成员 —— 编译报错。</strong>如果某个成员是个类类型，而这个类没有默认构造函数（必须传参才能构造），body 写法也失败。原因：进入 body 之前，编译器要先把所有成员默认构造好，但有些类没法默认构造。</p>
+<pre>class Engine {
+    Engine(int hp) { ... }   // 只有这个，没默认构造函数
+};
+
+class Car {
+    Car() { engine_ = Engine(200); }   // ❌ 进入 body 前 engine_ 必须先默认构造，但 Engine 没有
+    Engine engine_;
+};
+
+class Car {
+    Car() : engine_(200) {}   // ✅ 直接用 200 构造 engine_，跳过默认构造
+    Engine engine_;
+};</pre>
+
+  <p><strong>4. 类类型成员 —— 编译能过，但性能浪费。</strong>即使一切能编译，body 写法对类类型效率更低。两步浪费：(1) 进入 body 前编译器先默认构造每个成员；(2) body 里的赋值再调用 <code>operator=</code>。重型对象被"构造一次 + 赋值一次"，做了双倍工作。Initializer list 只构造一次。</p>
+
+  <hr>
+
+  <p><strong>一句话总结</strong>：constructor body 是"成员都建好之后"才跑的代码。const、reference 这种"建好就不能动"的类型只能在 initializer list 里赋初值；没默认构造函数的类成员同理；即使能 work，body 写法对重型对象也有性能损失。所以 C++ 的惯例是<strong>能用 initializer list 就用</strong>。</p>
+</details>
+
+
+<!-- ==================== SLIDE 17 ==================== -->
+<h2 class="slide-title">Slide 17 — A Simple Class for Counting（顺序执行）</h2>
+
+<img class="slide-img" src="images/slide-17.png" alt="Slide 17: Sequential execution">
+
+<div class="explanation">
+  <p>单线程版本（叫 <strong>primary thread</strong>，主线程）按程序顺序一行行执行。Slide 上展示了连续 3 次运行，每次稳定输出 <code>100</code>。这就是顺序编程的核心保证：<strong>确定性（determinism）</strong> —— 同样的输入永远给同样的输出。</p>
+
+  <p>这种"每次都对"的舒适感来自两个隐含假设：(1) 指令严格按代码顺序执行；(2) 没有别人在改你的数据。这两个假设在多线程下都会被打破，所以 race condition 才会出现。</p>
+
+  <p><strong>顺带认识下编译命令</strong>：<code>g++ -o counter counter.cpp</code> 把源文件编译成可执行文件 <code>counter</code>。后面 slide 会加 <code>-fopenmp</code> 开启 OpenMP 支持。</p>
+</div>
+
+
+<!-- ==================== SLIDE 18 ==================== -->
+<h2 class="slide-title">Slide 18 — A Simple Class for Counting（用 OpenMP 并行化）</h2>
+
+<img class="slide-img" src="images/slide-18.png" alt="Slide 18: Parallelize with OpenMP pragma">
+
+<div class="explanation">
+  <p>只加一行 <code>#pragma omp parallel for</code>，编译器就会把 for 循环的 100 次迭代自动分配给多个线程并行执行。<strong>OpenMP</strong> 是 C/C++/Fortran 上最流行的并行化工具。它的设计哲学是"少改代码，加 pragma 就能并行" —— 不用程序员手动 spawn 线程、写同步逻辑。</p>
+
+  <p>但带来一个新问题：<strong>所有线程共享同一个 counter 实例</strong>。<code>counter</code> 是 main 函数栈上的局部变量，但 OpenMP 默认把 parallel 块外定义的变量当作 <strong>shared</strong>，所以多个线程拿到的是<strong>同一块内存</strong>的引用。</p>
+
+  <p>多个线程同时调 <code>counter.increment()</code> 修改同一个 <code>count_</code> 字段会发生什么？这就是 slide 紫框留的悬念："What memory operations can threads perform on the shared counter variable?"</p>
+
+  <p><strong>顺带解释 #pragma</strong>：<code>#pragma</code> 是 C/C++ 的"编译器指示符"，告诉编译器在这条语句上做点特殊的事。<code>#pragma omp parallel for</code> 就是告诉编译器："下面这个 for 循环用 OpenMP 并行化"。如果编译时没开 <code>-fopenmp</code>，pragma 会被忽略，程序回退成单线程。</p>
+</div>
+
+<details class="qa">
+  <summary>📌 Q&amp;A 补充要点（点击展开）</summary>
+
+  <h4>Q1：counter 这个对象住在哪里？多线程跑出来的结果到底长什么样？</h4>
+
+  <p><strong>counter 是 main() 的局部变量，住在主线程 t0 的栈上。</strong>整个 counter 对象只有一个成员 <code>count_</code>（unsigned int，4 字节），所以 counter 在 t0 栈上就是 4 字节。<code>count_</code> 作为 counter 的成员，自然就在那 4 字节里。</p>
+
+  <p><strong>注意：register 不是和"对象/实例"绑定，是和"线程"绑定的。</strong>同一时刻 CPU 核里那一份物理寄存器组装的是当前线程的状态，跟 counter 这个对象无关。只有 CPU 真在执行 <code>counter.increment()</code> 那一刻，count_ 的值才被<strong>临时</strong>载入某个寄存器（比如 edx）做加法，加完写回内存。<strong>register 是工作台，不是 count_ 的家</strong>。count_ 的家始终是内存（t0 栈上的那 4 字节）。</p>
+
+  <p><strong>OpenMP 的 shared 行为：</strong>counter 定义在 parallel 区之外，OpenMP 默认把这种变量当作 <strong>shared</strong>。所以 fork 出来的 worker 线程 t1/t2/t3/... 都拿着指向 t0 栈上同一个 counter 的引用。每个 worker 有<strong>自己的栈</strong>（用来跑 increment() 调用、存自己的循环变量 i），但它们都对<strong>同一块 4 字节内存</strong>做 ++。</p>
+
+  <p><strong>这就是 race 的物理基础：4 个不同线程同时把同一块内存加载进各自的 edx，加完又各自写回，覆盖彼此的结果。</strong></p>
+
+  <hr>
+
+  <p><strong>结果：一个不可预测的、≤ 100 的数。每次运行都不一样。</strong></p>
+  <ul>
+    <li><strong>永远 ≤ 100</strong>（最多 100 次自增）</li>
+    <li><strong>几乎从不正好 = 100</strong>（多线程基本会发生 race）</li>
+    <li><strong>典型范围 60~99</strong>（4 线程时）—— 正是 slide 19 看到的 87、65、94、88</li>
+    <li><strong>线程越多结果越乱</strong>：8 线程通常更低，单线程才会稳定 100</li>
+  </ul>
+
+  <p>每次发生一次"两个线程读到同一个值、再写回同一个值"的冲突，就丢失 1 次自增。冲突次数取决于 OS 调度、CPU 执行、缓存同步，全不可控。</p>
+
+  <p><strong>微观追踪</strong>（count_ 当前 = 49，线程 A 和 B 同时调 increment()）：</p>
+
+<pre>t1: A load   →  A.edx = 49      mem = 49
+t2: B load   →  B.edx = 49      mem = 49     ← 关键：B 读到了 A 还没写回的旧值
+t3: A add 1  →  A.edx = 50      mem = 49
+t4: A store  →                  mem = 50
+t5: B add 1  →  B.edx = 50      mem = 50
+t6: B store  →                  mem = 50     ← B 写回 50，覆盖了 A 刚写的 50</pre>
+
+  <p>两次 increment() 调用，count_ 只从 <strong>49 变到 50</strong>。应该 +2，实际只 +1。100 次循环里发生 13 次这样的冲突，结果就是 87。</p>
+
+  <p><strong>补充：counter 在 stack/heap/global 都一样。</strong>位置不重要，<strong>shared + 写</strong> 才是 race 的充要条件。</p>
+
+  <hr>
+
+  <h4>Q2：<code>#pragma omp parallel for</code> 这个语法什么意思？为什么是 4 个线程？</h4>
+
+  <p><strong>拆开看每个词：</strong></p>
+  <ul>
+    <li><code>#pragma</code> —— C/C++ 的预处理指示符，给编译器传递元信息，不属于标准 C++ 语法</li>
+    <li><code>omp</code> —— 告诉编译器"这条 pragma 是给 OpenMP 用的"</li>
+    <li><code>parallel</code> —— 创建 parallel region：fork 出一队线程并行执行接下来的代码块</li>
+    <li><code>for</code> —— 把紧接着的 for 循环的迭代分配给线程团队里的各个线程</li>
+  </ul>
+
+  <p>所以 <code>#pragma omp parallel for</code> 其实是两条指令的合写，等价于：</p>
+<pre>#pragma omp parallel
+{
+    #pragma omp for
+    for (int i = 0; i &lt; 100; ++i) { ... }
+}</pre>
+
+  <p>合写形式更常用，因为大部分时候 fork 出来就是为了跑 for 循环。</p>
+
+  <p><strong>编译时必须加 <code>-fopenmp</code>。</strong>没加的话编译器会忽略 pragma，程序回退成单线程。这是 OpenMP 的"零成本回退"特性 —— 同一份代码可以在支持 OpenMP 的环境下并行跑、在不支持的地方顺序跑，不用改代码。</p>
+
+  <hr>
+
+  <p><strong>为什么是 4 个线程？看 slide 19 的命令：</strong></p>
+
+<pre>$ OMP_NUM_THREADS=4 ./counter</pre>
+
+  <p><code>OMP_NUM_THREADS</code> 是 OpenMP 的环境变量，跑程序前指定线程数。这里设成 4，所以 fork 出 4 个线程。</p>
+
+  <p>OpenMP 决定线程数的优先级（从高到低）：</p>
+  <ol>
+    <li>代码里写 <code>num_threads(N)</code> 子句：<code>#pragma omp parallel for num_threads(8)</code></li>
+    <li>代码里调 <code>omp_set_num_threads(N)</code>（在 parallel 区之前）</li>
+    <li>环境变量 <code>OMP_NUM_THREADS</code> ← slide 19 用的就是这种</li>
+    <li>默认值：通常等于机器的逻辑 CPU 数（CS 2050 节点是 36）</li>
+  </ol>
+
+  <p>Slide 19 用 4 线程而不是默认值，应该是为了让 race 现象明显但又不至于乱到看不懂。</p>
+
+  <hr>
+
+  <p><strong>100 次迭代怎么分给 4 个线程？</strong>默认是平均分配（OpenMP 的 <code>schedule(static)</code>）：</p>
+  <ul>
+    <li>线程 0：迭代 0 ~ 24</li>
+    <li>线程 1：迭代 25 ~ 49</li>
+    <li>线程 2：迭代 50 ~ 74</li>
+    <li>线程 3：迭代 75 ~ 99</li>
+  </ul>
+
+  <p>每个线程独立跑自己那 25 次循环，调用 25 次 <code>counter.increment()</code>。如果不发生 race，4 个线程各贡献 25 次自增，总共应该正好 100。</p>
+
+  <p>OpenMP 还提供其他调度策略：<code>schedule(dynamic)</code> 让线程跑完一块再来抢下一块（适合每次迭代耗时不均的场景）；<code>schedule(guided)</code> 是动态分配的优化版。</p>
+</details>
+
+
+<!-- ==================== SLIDE 19 ==================== -->
+<h2 class="slide-title">Slide 19 — A Simple Class for Counting（多线程执行结果）</h2>
+
+<img class="slide-img" src="images/slide-19.png" alt="Slide 19: Inconsistent multithreaded results">
+
+<div class="explanation">
+  <p>编译时加 <code>-fopenmp</code> 开 OpenMP 支持，用环境变量 <code>OMP_NUM_THREADS=4</code> 指定 4 个线程跑。结果是 <strong>87、65、94、88</strong> —— <strong>每次都不一样，每次都不是 100</strong>。</p>
+
+  <p><strong>程序变成了非确定性（non-deterministic）。</strong>这是 race condition 的典型症状：<strong>结果取决于线程的执行时序，而时序由 OS 调度器决定，不可预测</strong>。100 次自增"看起来"应该得到 100，但实际上有些自增"丢失了"，count_ 没被加足够次。</p>
+
+  <p>下一页 slide 20 就开始解释 race condition 的概念。</p>
+</div>
+
+
+<!-- ==================== SLIDE 20 ==================== -->
+<h2 class="slide-title">Slide 20 — Race Conditions（竞态条件的定义）</h2>
+
+<img class="slide-img" src="images/slide-20.png" alt="Slide 20: Race condition definition">
+
+<div class="explanation">
+  <p>正式给出定义。<strong>顺序编程</strong>只有一条执行路径，结果只看程序逻辑对不对。<strong>共享内存的并行编程</strong>有许多可能的执行路径（线程的不同调度顺序就是不同的路径），<strong>所有可能的路径都必须给出正确结果</strong>，程序才算正确。</p>
+
+  <p>具体到 Counter 例子：多个线程同时<strong>读</strong> <code>count_</code> 是没问题的（<code>get_count()</code> 是 thread-safe）；但同时<strong>写</strong> <code>count_</code> 就会出问题。<code>increment()</code> 不是 thread-safe 的。</p>
+
+  <p><strong>关键概念 — thread-safe</strong>：一个函数被多线程并发调用时，无论调度顺序如何，结果都正确。判断标准是看它有没有"修改共享状态"。<code>get_count()</code> 只读，安全；<code>increment()</code> 要写，危险。</p>
+
+  <p><strong>简单记法</strong>：read-only 的代码天然 thread-safe；只要有写共享数据的操作，就必须考虑同步。</p>
+</div>
+
+
+<!-- ==================== SLIDE 21 ==================== -->
+<h2 class="slide-title">Slide 21 — Race Condition in Counter Class（race 在汇编层的真相）</h2>
+
+<img class="slide-img" src="images/slide-21.png" alt="Slide 21: Race condition at assembly level">
+
+<div class="explanation">
+  <p>这页揭示问题的根本原因。<code>++count_</code> 在 C++ 源码看起来是一行，但反汇编后实际是<strong>三条机器指令</strong>：</p>
+
+<pre>mov  edx, DWORD PTR [rax]   ; 1. 把 count_ 从内存读到寄存器 edx
+add  edx, 1                 ; 2. 在 edx 里加 1
+mov  DWORD PTR [rax], edx   ; 3. 把 edx 写回内存</pre>
+
+  <p><strong>关键事实</strong>：<code>rax</code> 和 <code>edx</code> 是<strong>线程私有</strong>的寄存器（slide 14/15 的概念）。每个线程读到自己的副本，加 1 后再写回。</p>
+
+  <p><strong>race 的具体场景</strong>。假设 count_ 当前是 5，线程 0 和线程 8 同时执行 increment()：</p>
+  <ol>
+    <li>时刻 1：线程 0 执行第 1 条，读到 <strong>5</strong> 进自己的 edx</li>
+    <li>时刻 2：线程 8 执行第 1 条，<strong>也读到 5</strong>（线程 0 还没写回）进自己的 edx</li>
+    <li>时刻 3：线程 0 执行第 2、3 条，把 <strong>6 写回</strong> count_</li>
+    <li>时刻 4：线程 8 执行第 2、3 条，<strong>也把 6 写回</strong>（覆盖掉线程 0 的结果）</li>
+  </ol>
+
+  <p><strong>两次自增只让 count_ 增加了 1，丢了一次</strong>。这就是为什么 100 次循环最后只得到 87 之类的值。"丢失"的次数就是发生这种交错的次数。</p>
+</div>
+
+<details class="qa">
+<summary>📌 Q&amp;A 补充要点（点击展开）</summary>
+
+<h4>Q1: 怎么解读 <code>mov edx, DWORD PTR [rax]</code>？每部分什么意思？</h4>
+
+<p>整条指令拆四部分理解。</p>
+
+<p><strong><code>mov</code></strong> = move。语义是<strong>复制</strong>（源不会被清空，所以叫 move 不太准）。x86 最常用指令。</p>
+
+<p><strong>操作数顺序：左 = 目的，右 = 源</strong>。这是 <strong>Intel 语法</strong>（slide 用的）。另一种 <strong>AT&amp;T 语法</strong>（GCC 默认输出）方向相反，寄存器名带 <code>%</code>，指令名带尺寸后缀（<code>movl</code>）。两者表达同一件事，只是约定。</p>
+
+<p><strong><code>DWORD PTR [rax]</code></strong> 三个部件分工不同：</p>
+<ul>
+  <li><strong><code>[rax]</code></strong> = "去 rax 这个地址处取内容"（解引用，类比 C++ 的 <code>*p</code>）</li>
+  <li><strong><code>DWORD</code></strong> = 一次取多少字节（4 字节 = 32 位）</li>
+  <li><strong><code>PTR</code></strong> = MASM/Intel 语法的胶水关键字，把"尺寸"和"内存方括号"粘起来，读作"DWORD 类型的指针"</li>
+</ul>
+
+<p>x86 内存尺寸术语：</p>
+<table>
+  <tr><th>术语</th><th>全名</th><th>大小</th></tr>
+  <tr><td>BYTE</td><td>Byte</td><td>8 位</td></tr>
+  <tr><td>WORD</td><td>Word</td><td>16 位</td></tr>
+  <tr><td>DWORD</td><td>Double Word</td><td>32 位</td></tr>
+  <tr><td>QWORD</td><td>Quad Word</td><td>64 位</td></tr>
+</table>
+<p>"WORD = 16 位"是 8086 时代的历史包袱：早期 CPU 字长就是 16 位。</p>
+
+<p><strong>既然 <code>[]</code> 已经解引用了，为什么还要 <code>PTR</code>？</strong>因为 <code>[]</code> 只说"去那里"，没说"读几字节"。同一个地址可以读 1/2/4/8 字节，CPU 不知道要哪个，必须显式标尺寸。比如 <code>mov DWORD PTR [rax], 1</code> 这种立即数场景，光看 <code>[rax]</code> 完全推不出尺寸。<code>PTR</code> 在 NASM 里被省了，AT&amp;T 干脆把尺寸塞进指令名（<code>movb/movw/movl/movq</code>）—— 所以 <code>PTR</code> 不是必要概念，是 MASM 流派的语法约定。</p>
+
+<p><strong><code>DWORD PTR [rax]</code> 最终代表的是 value，不是 address。</strong>三层要分清：</p>
+<ul>
+  <li><code>rax</code> = 64 位的数（这里恰好是地址）</li>
+  <li><code>[rax]</code> = 跑到那个地址读内容</li>
+  <li><code>DWORD PTR [rax]</code> = 跑过去<strong>按 4 字节读</strong></li>
+</ul>
+<p>执行后得到一个 32 位的值，落到 edx 里。如果想要"地址本身"而不是值，用 <code>lea rdx, [rax]</code>（Load Effective Address）或直接 <code>mov rdx, rax</code>。</p>
+
+
+<h4>Q2: <code>edx</code> 和 <code>rax</code> 是特定的寄存器吗？rax 是不是特指某个地址？</h4>
+
+<p><strong>edx 是一个特定物理寄存器的 32 位别名。</strong>x86-64 一共 16 个通用寄存器，每个有 4 个名字对应 4 种位宽：</p>
+
+<table>
+  <tr><th>位宽</th><th>"A 寄存器"</th><th>"D 寄存器"</th></tr>
+  <tr><td>64 位</td><td>RAX</td><td>RDX</td></tr>
+  <tr><td>低 32 位</td><td>EAX</td><td><strong>EDX</strong></td></tr>
+  <tr><td>低 16 位</td><td>AX</td><td>DX</td></tr>
+  <tr><td>低 8 位</td><td>AL / AH</td><td>DL / DH</td></tr>
+</table>
+
+<p>所以 <code>edx</code> 和 <code>rdx</code> 是<strong>同一个物理寄存器</strong>，只是用不同位宽访问。<code>edx</code> 和 <code>eax</code> 是<strong>不同的物理寄存器</strong>（D 和 A）。</p>
+
+<p><strong>rax 命名拆解</strong>：</p>
+<ul>
+  <li><code>R</code> = 64 位前缀（x86-64 时代加的）</li>
+  <li><code>E</code> = 32 位前缀（386 时代加的）</li>
+  <li><code>AX</code> = <strong>A</strong>ccumulator e<strong>X</strong>tension（8086 的累加器，最早 16 位）</li>
+</ul>
+<p>完整演化：8086 的 <code>AX</code>（16 位）→ 386 的 <code>EAX</code>（32 位）→ x86-64 的 <code>RAX</code>（64 位）。</p>
+
+<p><strong>rax 不特指任何地址。</strong>它是一个寄存器（64 位存储格子），里面可以放任意 64 位值 —— 整数、地址、字符都行。在 slide 21 的上下文里，编译器恰好把 <code>count_</code> 的地址放进 rax，但这是编译器的选择。</p>
+
+<p>rax 唯一"特殊"的地方是软件约定：System V AMD64 ABI 规定它存函数返回值。这只是调用约定，硬件层面跟其他通用寄存器没区别。</p>
+
+
+<h4>Q3: 编译器怎么知道 <code>count_</code> 的地址？数据怎么从内存搬到 edx？</h4>
+
+<p><strong>rax 自己什么都不"知道"</strong> —— 是更早的指令（通常是 <code>lea</code> 或 <code>mov</code>）把地址放进 rax 的。问题转化成：编译器是怎么算出地址的？</p>
+
+<p>变量的地址来源取决于它存在哪：</p>
+
+<table>
+  <tr><th>变量类型</th><th>地址哪来</th><th>编译时是否已知</th></tr>
+  <tr><td>局部变量（栈）</td><td><code>rbp</code> + 编译时已知偏移</td><td>偏移已知，绝对地址运行时才有</td></tr>
+  <tr><td>成员变量</td><td><code>this</code> + 类内偏移</td><td>偏移已知，<code>this</code> 调用时传入</td></tr>
+  <tr><td>全局 / static</td><td>链接器分配的固定地址</td><td>完全已知</td></tr>
+  <tr><td>堆</td><td><code>malloc</code> / <code>new</code> 返回值</td><td>完全运行时决定</td></tr>
+</table>
+
+<p><strong>Counter 例子的完整链路</strong>：</p>
+<ol>
+  <li>调用方算出 <code>&amp;counter</code>（栈上）放进 <code>rdi</code>：<code>lea rdi, [rbp - 16]</code></li>
+  <li><code>call Counter::increment</code> 跳进函数，rdi 仍 = <code>&amp;counter</code>（System V ABI 规定 <code>this</code> 走 rdi）</li>
+  <li>因为 <code>count_</code> 在 Counter 内偏移 0，所以 <code>&amp;count_ = rdi</code></li>
+  <li>编译器把它搬到 rax（或直接用 rdi）：<code>mov rax, rdi</code></li>
+  <li>现在才到 <code>mov edx, DWORD PTR [rax]</code></li>
+</ol>
+
+<p><strong><code>mov edx, DWORD PTR [rax]</code> 实际执行的微步骤</strong>：</p>
+<ol>
+  <li>CPU 解析操作数，知道要"去 rax 处读 4 字节"</li>
+  <li>算出有效地址 = rax 的内容（比如 0x7fff1234）</li>
+  <li>向内存子系统发读请求</li>
+  <li>内存返回 4 字节（路径走 L1 → L2 → L3 → RAM，期间 MMU/TLB 翻译虚→物地址）</li>
+  <li>把这 4 字节写进 edx</li>
+</ol>
+
+<p>关键观察：rax 全程没动（它只是"指路牌"），内存 <code>count_</code> 也没动（这是读操作）。变化的是 edx 和"穿越的数据"。C++ 类比：<code>uint32_t edx = *(uint32_t*)rax;</code> —— <code>*p</code> 一行代码背后就是这个硬件流程。</p>
+
+
+<h4>Q4: race 那段为什么两次 <code>add</code> 不是 +2？是值被错误地放进了寄存器吗？</h4>
+
+<p><strong>关键澄清：没有任何一次操作是"错"的。</strong>每个寄存器在每一刻都诚实地反映了当时读出的真实值。</p>
+
+<p><strong>为什么不是 +2</strong>：因为两次 <code>add</code> 加在<strong>不同线程的私有 edx 上</strong>，不是同一个 edx 连续累加两次。</p>
+
+<table>
+  <tr><th>时刻</th><th>谁在做</th><th>线程 0 的 edx</th><th>线程 8 的 edx</th><th>内存 count_</th></tr>
+  <tr><td>起始</td><td>—</td><td>—</td><td>—</td><td>5</td></tr>
+  <tr><td>T1</td><td>线程 0 读</td><td><strong>5</strong></td><td>—</td><td>5</td></tr>
+  <tr><td>T2</td><td>线程 8 读</td><td>5</td><td><strong>5</strong>（也读到 5）</td><td>5</td></tr>
+  <tr><td>T3</td><td>线程 0 加</td><td><strong>6</strong></td><td>5</td><td>5</td></tr>
+  <tr><td>T4</td><td>线程 0 写</td><td>6</td><td>5</td><td><strong>6</strong></td></tr>
+  <tr><td>T5</td><td>线程 8 加</td><td>6</td><td><strong>6</strong>（自己的 5+1）</td><td>6</td></tr>
+  <tr><td>T6</td><td>线程 8 写</td><td>6</td><td>6</td><td><strong>6</strong>（又写一次 6）</td></tr>
+</table>
+
+<p>两个 <code>add</code> 都在算 5+1=6，各自正确。但都基于<strong>同一个旧底数 5</strong>。第二个写出去的 6 跟第一个一样，等于覆盖掉了别人的更新。</p>
+
+<p><strong>最准确的描述</strong>：两个线程基于<strong>同一个 stale snapshot（过期快照）</strong>各自做了一次更新，第二个写入覆盖了第一个的有效结果。</p>
+
+<p>通俗说："+1" 做对了两次，但只<strong>生效</strong>了一次。</p>
+
+<p><strong>对比正确的执行（线程串行，没交错）</strong>：</p>
+<pre>T1-T3: 线程 0 完整跑完 → 内存 = 6
+T4-T6: 线程 8 才开始    → 读到的是 6 → 写回 7  ✓</pre>
+
+<p>代码完全一样，差别只在调度顺序。这就是 race 阴险之处：<strong>bug 不在某行代码里，而在多个正确操作的组合顺序里</strong>。<strong>寄存器是线程私有，内存是线程共享</strong> —— 加法在私有寄存器里发生绝不出错；问题出在写回共享内存这步可能撞车。</p>
+
+
+<h4>Q5: <code>count_</code> 的值具体存在哪？跟线程的栈是分开的吗？</h4>
+
+<p><strong>取决于 Counter 对象怎么声明</strong>：</p>
+
+<table>
+  <tr><th>写法</th><th>counter 在哪</th><th>count_ 也就在哪</th></tr>
+  <tr><td><code>Counter counter;</code>（main 里）</td><td>栈</td><td>栈</td></tr>
+  <tr><td><code>new Counter()</code></td><td>堆</td><td>堆</td></tr>
+  <tr><td>文件顶层 / <code>static</code></td><td>全局数据段</td><td>全局数据段</td></tr>
+</table>
+
+<p>典型 lecture 例子是第一种 → <strong>count_ 在主线程的栈上</strong>。</p>
+
+<p><strong>栈是物理分开的</strong>。每个线程有自己的栈区域，物理独立。但<strong>所有线程共享同一个虚拟地址空间</strong> —— 每个线程都能寻址到任何区域，包括别人的栈。</p>
+
+<pre>进程的虚拟地址空间（所有线程共享）：
+┌──────────────────────────┐
+│ 代码段                     │
+├──────────────────────────┤
+│ 数据段 / 堆                │
+├──────────────────────────┤
+│ 主线程栈                   │
+│   counter（count_=5）  📍 │  ← 共享访问的目标
+├──────────────────────────┤
+│ Worker 1 的栈              │
+├──────────────────────────┤
+│ Worker 2 的栈              │
+├──────────────────────────┤
+│ Worker 3 的栈              │
+└──────────────────────────┘</pre>
+
+<p>注：GCC/libgomp 的 <code>OMP_NUM_THREADS=4</code> 通常是主线程 + 3 worker = 4 线程。</p>
+
+<p><strong>worker 怎么访问 main 栈上的 count_</strong>：OpenMP 默认把 parallel region 之前声明的变量当 <code>shared</code>，把 <code>&amp;counter</code> 这个地址传给每个 worker。worker 拿到地址后，CPU 不在乎那个地址物理上属于哪个线程的栈 —— 给地址就能读写。</p>
+
+<p><strong>"栈是线程私有"的说法只半对</strong>：栈区域物理隔离 ✓，但虚拟地址空间共享 ✓。其他线程<strong>有地址就能访问任何栈，硬件不挡</strong>。日常感觉"私有"是因为别的线程<strong>通常拿不到地址</strong>，不是因为硬件隔离。</p>
+
+<p><strong>race 跟存储位置无关</strong>。栈、堆、全局段都能出 race。出 race 的根本条件是"多线程 + 共享数据 + 至少一个写"。</p>
+
+
+<h4>Q6: 怎么区分虚拟地址空间里哪些是 shared、哪些是线程 private？是 main 里的就自动去一个 shared 区域吗？</h4>
+
+<p><strong>没有"专门的 shared 区域"。</strong>整个虚拟地址空间本身就都是"可被共享的"。区分 shared / private 不靠物理区域，靠两件事：</p>
+<ol>
+  <li><strong>存在几份副本</strong>（一份 vs 每个线程一份）</li>
+  <li><strong>哪些线程拿到了地址</strong></li>
+</ol>
+
+<p><strong>看一段具体代码</strong>：</p>
+
+<pre>int main() {
+    int A = 0;          // ① 在 main 的栈上
+    Counter counter;    // ② 在 main 的栈上
+
+    #pragma omp parallel for num_threads(4)
+    for (int i = 0; i &lt; 100; i++) {
+        int B = i * 2;          // ③ 每次循环新建一个 B
+        counter.increment();    // 访问共享 counter
+        A += B;                  // 访问共享 A（race！）
+    }
+}</pre>
+
+<table>
+  <tr><th>变量</th><th>声明位置</th><th>实际怎么存</th><th>共享 / 私有</th></tr>
+  <tr><td><code>A</code>, <code>counter</code></td><td>parallel 区<strong>之前</strong></td><td>一份，在 main 栈上</td><td><strong>shared</strong>（OpenMP 把地址传给所有 worker）</td></tr>
+  <tr><td><code>B</code></td><td>parallel 区<strong>之内</strong></td><td>每个 worker 在自己栈上独立分配一份</td><td><strong>private</strong>（每线程一个 B）</td></tr>
+  <tr><td><code>i</code></td><td><code>parallel for</code> 的循环变量</td><td>每个 worker 自己一份</td><td><strong>private</strong>（强制）</td></tr>
+</table>
+
+<p><strong>关键观察</strong>：<code>A</code> 和 <code>B</code> 都是 <code>int</code>，都在某个线程的栈上，<strong>物理上没有区别</strong>。"shared" 不是某种特殊内存，<strong>是这个变量"只有一份" + "所有 worker 都拿到了它的地址"</strong>。</p>
+
+<p><strong>OpenMP 默认共享规则</strong>：</p>
+
+<table>
+  <tr><th>变量来源</th><th>默认行为</th></tr>
+  <tr><td>parallel 区<strong>之前</strong>声明的变量</td><td><code>shared</code></td></tr>
+  <tr><td>parallel 区<strong>之内</strong>声明的变量</td><td><code>private</code>（每线程一份）</td></tr>
+  <tr><td><code>parallel for</code> 的循环变量</td><td><code>private</code>（强制）</td></tr>
+  <tr><td>全局变量 / <code>static</code></td><td><code>shared</code></td></tr>
+  <tr><td>堆上 <code>new</code>/<code>malloc</code> 的对象</td><td>看指针是 shared 还是 private 决定</td></tr>
+</table>
+
+<p>也可以用子句显式指定：<code>#pragma omp parallel shared(A) private(B)</code>。</p>
+
+<p><strong>OpenMP 内部到底干了啥？</strong>看伪代码：</p>
+
+<pre>// 你写的：
+int A = 0;
+#pragma omp parallel for
+for (int i = 0; i &lt; 100; i++) {
+    int B = i * 2;
+    A += B;
+}
+
+// 编译器大致翻译成：
+int A = 0;
+auto worker_func = [&amp;A](int my_start, int my_end) {  // ← 注意捕获 &amp;A
+    for (int i = my_start; i &lt; my_end; i++) {
+        int B = i * 2;     // ← B 是局部变量，在 worker 自己栈上
+        A += B;            // ← 访问 main 栈上的 A（拿地址解引用）
+    }
+};
+spawn_threads(worker_func, ...);</pre>
+
+<p>OpenMP 通过<strong>捕获引用 / 传地址</strong>让 worker 能访问 main 栈上的变量。这就是 "shared" 的本质 —— 不是搬到某个特殊区域，是<strong>把地址传过去</strong>。</p>
+
+<p><strong>反向证明：手动泄露地址，private 也能变 shared</strong></p>
+
+<pre>#pragma omp parallel
+{
+    int B = 0;
+    if (omp_get_thread_num() == 0) {
+        global_ptr = &amp;B;          // worker 0 把自己栈上 B 的地址泄露
+    }
+    #pragma omp barrier
+    if (omp_get_thread_num() == 1) {
+        *global_ptr = 99;         // worker 1 写 worker 0 栈上的 B —— 完全合法
+    }
+}</pre>
+
+<p>这段代码硬件完全允许执行（地址有效就能访问）。这反过来证明：<strong>private 不是物理强制的，是"默认没人拿到地址"</strong>。一旦主动泄露地址，private 也变 shared。实际工程里这是 bug 温床（B 出 parallel 区就销毁，指针变野），所以约定俗成不这么干。</p>
+
+<p><strong>对比：process 之间才是真隔离</strong></p>
+
+<table>
+  <tr><th>边界</th><th>硬件强制隔离？</th><th>拿到地址能不能访问？</th></tr>
+  <tr><td>同 process 的多线程之间</td><td>❌ 不强制</td><td>✅ 能</td></tr>
+  <tr><td>不同 process 之间</td><td>✅ MMU 强制（虚拟地址映射不同）</td><td>❌ 不能（即使地址数字一样，物理上指向完全不同的 RAM）</td></tr>
+</table>
+
+<p>所以"地址空间隔离"准确说是<strong>进程级</strong>概念。slide 26 的紫色 box = 一个 process = 一个虚拟地址空间，里面所有线程<strong>共用同一份</strong>地址映射。</p>
+
+<p><strong>一句话总结</strong>：</p>
+<ul>
+  <li><strong>物理位置</strong>（在哪个栈/堆/段）≠ <strong>共享语义</strong>（谁能访问）</li>
+  <li>shared / private 不是"内存的属性"，是"哪些线程拥有这个地址"的属性</li>
+  <li>OpenMP 的 <code>shared</code> = 把地址广播；<code>private</code> = 每线程在自己栈上独立分配一份</li>
+</ul>
+
+</details>
+
+
+<!-- ==================== SLIDE 22 ==================== -->
+<h2 class="slide-title">Slide 22 — Atomic Operations（原子操作）</h2>
+
+<img class="slide-img" src="images/slide-22.png" alt="Slide 22: Atomic operations">
+
+<div class="explanation">
+  <p>这页总结上一页的核心洞察：<strong>一行 C++ 源码 ≠ 一条机器指令</strong>。看起来"一气呵成"的操作其实可能在中间被打断。这是 race condition 难以察觉、难以调试的根本 —— 你盯着 C++ 代码看不出问题，因为问题只在汇编层才显形。</p>
+
+  <p><strong>Atomic operation（原子操作）的定义</strong>：保证作为一个<strong>不可分割的整体</strong>执行，中途不会被其他线程打断、不会被打散成多步。是并发编程的最小积木。</p>
+
+  <p>OpenMP 提供了最简单的修复：<code>#pragma omp atomic</code> 加在自增前，编译器会用 CPU 的原子指令（比如 x86 的 <code>lock add</code> 或 <code>lock xadd</code>）实现，硬件保证整个"读-改-写"不被打断。</p>
+
+  <p><strong>例子 — x86 的 lock 前缀</strong>：</p>
+<pre>; 普通 add：会被中间打断
+add  DWORD PTR [rax], 1
+
+; lock 前缀：硬件保证整条指令原子完成，期间锁住对应缓存行
+lock add  DWORD PTR [rax], 1</pre>
+
+  <p><code>lock</code> 前缀让 CPU 在执行这条指令期间锁定 cache line，其他核心如果想访问同一行必须等。代价：比普通 add 慢 ~20-100 倍。所以原子操作虽然正确但不便宜。</p>
+
+  <p><strong>常见的硬件原子操作</strong>：原子加（atomic add）、原子比较交换 CAS（compare-and-swap）、原子交换（exchange）。CAS 是 lock-free 数据结构的基石。</p>
+</div>
+
+
+<!-- ==================== SLIDE 23 ==================== -->
+<h2 class="slide-title">Slide 23 — Critical Section（临界区）</h2>
+
+<img class="slide-img" src="images/slide-23.png" alt="Slide 23: Critical section">
+
+<div class="explanation">
+  <p>引入另一个并发编程的核心概念。<strong>Critical section（临界区）</strong>：一段代码，里面会访问共享资源，必须保证同一时刻只有一个线程在执行。</p>
+
+  <p>Slide 例子里 <code>counter.increment()</code> 这一行就是临界区。多个线程都想修改同一块内存（<code>count_</code>），必须想办法让它们排队，否则就 race condition。</p>
+
+  <p><strong>为什么 OS / 硬件不自动帮我们处理？</strong>因为 slide 提到的 <strong>relaxed memory consistency model（宽松内存一致性模型）</strong> —— 现代 CPU 为了性能，允许硬件层对内存操作做重排序、缓存延迟同步等优化。这些优化在单线程下完全透明，但在多线程下会让 race 更隐蔽。所以"安全"不是默认提供的，而是需要程序员主动声明。</p>
+
+  <p><strong>保护临界区的常见手段（从轻到重）</strong>：</p>
+  <ul>
+    <li><strong>原子操作</strong>（slide 22）：最轻量，但只能保护单个简单操作（加、比较交换等）</li>
+    <li><strong>Mutex / Lock（互斥锁）</strong>：最常用，可以保护任意代码段。代价：阻塞 + 上下文切换</li>
+    <li><strong>Read-write lock</strong>：允许多读单写，读多写少时性能更好</li>
+    <li><strong>Lock-free 数据结构</strong>：用原子操作组合实现复杂结构。性能高，极难写对</li>
+  </ul>
+
+  <p>Slide 紫框提示："对 Counter 这种简单情况原子操作就够用了；更复杂的场景（比如要修改多个相关字段、维持不变量）需要用锁或更高级的机制"。</p>
+</div>
+
+
+<!-- ==================== SLIDE 24 ==================== -->
+<h2 class="slide-title">Slide 24 — Creation of Threads — Fork/Join Model（线程的创建与汇合模型）</h2>
+
+<img class="slide-img" src="images/slide-24.png" alt="Slide 24: Fork/join model">
+
+<div class="explanation">
+  <p>这页介绍 <strong>fork/join 模型</strong> —— OpenMP 等并行框架背后最常见的执行模型。</p>
+
+  <p><strong>生命周期</strong>。程序开始时只有 <strong>primary thread</strong>（主线程，跑 main 函数）。遇到并行区域时，主线程"<strong>fork</strong>"出一队 <strong>child threads</strong>（也叫 worker threads）一起干活。这一段所有线程并行执行。并行区域结束时所有线程在 <strong>join</strong> 点汇合（每个线程都到达后才能继续），然后只剩主线程接着往下走。</p>
+
+  <p>图里横轴是时间。绿色那条贯穿始终的线就是主线程。中间紫色的"束"是某个 parallel region 里临时创建的线程团队，结束就 join 回去。</p>
+
+  <p><strong>几个细节</strong>：</p>
+  <ul>
+    <li><strong>嵌套并行（nested parallelism）</strong>：parallel region 里面还可以再开一个 parallel region，child threads 自己再 fork 出 sub-team</li>
+    <li><strong>Join 点 = synchronization point</strong>：通常是隐式的 <strong>barrier</strong>（所有线程都到才能继续）或 <strong>memory fence</strong>（强制把所有线程之前的写刷新到主存，保证一致性）</li>
+    <li><strong>并行段越长，并行收益越大</strong> —— 这暗示了 <strong>Amdahl's Law（阿姆达尔定律）</strong>：程序里串行部分的比例决定了加速上限，不管你有多少核</li>
+  </ul>
+
+  <p><strong>类比</strong>：项目经理（primary thread）在 main 阶段独自工作，需要并行处理时召集一队员工（fork），等所有人都汇报完成（join），项目经理才能进入下一阶段。员工只在并行任务期间存在，干完就解散。</p>
+</div>
+
+
+<!-- ==================== SLIDE 25 ==================== -->
+<h2 class="slide-title">Slide 25 — Fork/Join Applied to Counter Example</h2>
+
+<img class="slide-img" src="images/slide-25.png" alt="Slide 25: Fork/join applied to Counter">
+
+<div class="explanation">
+  <p>把 fork/join 模型套到之前的 Counter 例子上。完整流程：</p>
+
+  <ol>
+    <li>主线程跑 sequential 代码（变量声明、Counter 初始化）</li>
+    <li>遇到 <code>#pragma omp parallel for</code> → <strong>fork</strong>：开一队线程，把 100 次循环迭代分给它们（如果 4 个线程，每个大概干 25 次）</li>
+    <li>各线程并行调用 <code>counter.increment()</code>（这里仍然有 race，除非 increment 里加了 atomic）</li>
+    <li>循环结束 → <strong>implicit join</strong>（OpenMP 的 parallel region 结尾自带 barrier，不用程序员手写）</li>
+    <li>主线程继续执行 print 和 return</li>
+  </ol>
+
+  <p>右边图就是这个流程的可视化：竖轴是时间，从上往下走 Sequential → Parallel → Sequential。</p>
+
+  <p><strong>关键术语</strong>：</p>
+  <ul>
+    <li><strong>Implicit synchronization</strong>：不用程序员手动写 barrier，框架自动加</li>
+    <li><strong>Task-level parallelism</strong>：100 次迭代被当成 100 个独立任务，框架自动分配给线程（slide 11 提过的概念）</li>
+  </ul>
+
+  <p><strong>串起 Slides 16-25 的整条主线</strong>：从一个简单 Counter → 串行版本永远正确 → 加 OpenMP 并行后出现 race condition → 反汇编揭示根因（一行 C++ 是多条机器指令）→ 用 atomic 修复 → 引出临界区的概念 → 给出整体的 fork/join 执行模型作为框架。</p>
+</div>
+
+
+<!-- ==================== SLIDE 26 ==================== -->
+<h2 class="slide-title">Slide 26 — Where We Are Going（process 间通信，承上启下）</h2>
+
+<img class="slide-img" src="images/slide-26.png" alt="Slide 26: Big picture — multiple processes communicating via message passing across a cluster">
+
+<div class="explanation">
+  <p>这页是个<strong>承上启下的架构图</strong>，告诉你"现在站在哪、要去哪"。</p>
+
+  <p><strong>图的结构</strong>：</p>
+  <ul>
+    <li>外层大方框 = <strong>Cluster level（集群，分布式内存）</strong></li>
+    <li>里面三个独立方框 = <strong>Process 0 / 1 / 2</strong>，每个占一个 node（共享内存 + 异构 CPU/GPU）</li>
+    <li>三个 process <strong>之间</strong>用紫色 <strong>Message passing</strong> 箭头连起来</li>
+    <li>每个 process <strong>内部</strong>有一坨多线程结构（多个 multithreaded process / team of threads / 各自的 stack）</li>
+  </ul>
+
+  <p><strong>这页真正的重点：紫色箭头（process 间通信）</strong>。三个 process 是<strong>独立的</strong>，地址空间互不可见，只能靠 message passing 沟通。这正是 slide 13 讲的"process 间地址空间隔离 → 必须 IPC/MPI 通信"的图像化版本。</p>
+
+  <p><strong>承上 = 已学的部分</strong>。每个 process 内部那一坨蓝绿小块、parallel region、stack —— 就是本节课 slides 9-25 讲的全部 OpenMP 内容。一个 process 内的多线程，共享地址空间，靠 race / atomic / fork-join 等机制协调。<strong>整门课到这里只覆盖了"一个 process box 内部"</strong>。</p>
+
+  <p><strong>启下 = 接下来要学的部分</strong>。要把多个独立 process 用 <strong>message passing</strong> 连起来，scale 到整个 cluster。这就是 <strong>MPI</strong>（Message Passing Interface）—— 后续课程的主角。</p>
+
+  <p><strong>为什么是 message passing 而不是共享内存？</strong>因为 process 之间根本就没有共享内存可言（slide 13 说过）。即使两个 process 跑在同一台物理机器上，它们的虚拟地址空间也是独立的，MMU 把同一个虚拟地址映射到不同的物理 RAM。要交换数据只能"复制 + 传递" —— 这就是 message passing 的本质。跨节点更是如此：连物理 RAM 都不共享，必须走网络。</p>
+
+  <p><strong>process 间通信的代价</strong>：</p>
+  <ul>
+    <li>同节点 process 间（共享内存 IPC、Unix socket 等）：<strong>微秒级</strong></li>
+    <li>跨节点 process 间（网络 / InfiniBand）：<strong>几十微秒到毫秒级</strong></li>
+  </ul>
+  <p>对比 process <strong>内部</strong>线程间访问共享内存的<strong>纳秒级</strong>，可见跨 process 通信慢几个数量级。这也是为啥要"层内尽量共享内存，跨 process 才走 message passing"。</p>
+
+  <p><strong>一句话总结这页</strong>：你已经掌握了"一个 process 内部如何并行"（OpenMP）；接下来要学"多个 process 之间如何协作"（MPI）。这页画的就是终极目标 —— 一群独立的多线程 process 通过消息传递组成一个大型并行系统。</p>
+</div>
+
+<details class="qa">
+<summary>📌 Q&amp;A 补充要点（点击展开）</summary>
+
+<h4>Q1: Node / CPU / Core 是什么关系？某瞬间 core 上跑的是 process 还是 thread？</h4>
+
+<p><strong>层次结构</strong>（呼应 slide 9 的图）：</p>
+<pre>Node（一台物理机器）
+  └── Package（CPU 芯片 / socket，一个 node 可能有 1-4 个）
+       └── Core（核心，物理执行单元）
+            └── PU（Processing Unit，逻辑执行单元，hyperthreading 后每核 2 个）</pre>
+
+<p>"node = 一个 CPU" 的说法只是<strong>口语简化</strong>。准确说 node = 一台共享同一份 RAM 的物理机器，里面通常多 socket、多 core。</p>
+
+<p><strong>同一瞬间一个 core 能跑几条指令流</strong>：</p>
+<table>
+  <tr><th>单位</th><th>能并行执行几个指令流</th></tr>
+  <tr><td>1 个 core（不开 HT）</td><td>1</td></tr>
+  <tr><td>1 个 core + hyperthreading</td><td>2（SMT）</td></tr>
+  <tr><td>1 颗 CPU 芯片</td><td>核心数 × HT 系数</td></tr>
+  <tr><td>1 个 node（多 socket）</td><td>sockets × 核心数 × HT 系数</td></tr>
+</table>
+
+<p><strong>OS 调度的最小单位是 thread，不是 process</strong>。Process 只是个容器（地址空间 + 资源 + 文件描述符等），它本身不"跑"。CPU 上跑的永远是某个 thread。"运行一个 process" 这种说法实际意思是"运行这个 process 里的某个 thread"。Linux 内核更彻底，统一叫 task，不区分 process/thread。</p>
+
+<p><strong>具体例子</strong>。一个 8 核 node 上有 process A（1 线程）、process B（4 线程）、process C（2 线程）+ 一堆系统进程，总共可能有几十上百个 thread。OS 调度器把它们映射到 8 个 core 上：</p>
+<ul>
+  <li>同一瞬间 8 个 core 各跑 1 个 thread → 最多 8 个 thread 在物理执行</li>
+  <li>这 8 个 thread 可能来自不同 process</li>
+  <li>下一时间片 OS 切换，换上另外 8 个</li>
+</ul>
+
+<p><strong>关键事实</strong>：同一 process 的多个 thread 可以同时跑在不同 core 上 —— 这就是 OpenMP 加速的物理基础。</p>
+
+
+<h4>Q2: 一个 node 上能跑多少个 process？三种典型模式（Pure MPI / Pure OpenMP / Hybrid）有啥区别？</h4>
+
+<p><strong>OS 层面没有限制</strong>。任何 node 任何时刻都至少跑几十上百个 process（系统服务、shell、用户程序…）。slide 26 画"每 node 一个 process" 指的是<strong>用户的 MPI workload 视角</strong>，不是 OS 层面。</p>
+
+<p>用户工作负载的三种典型分配模式（以 32 core × 4 node 集群为例）：</p>
+
+<table>
+  <tr><th>模式</th><th>每 node MPI process 数</th><th>每 process 线程数</th><th>总线程数</th><th>能用几个 node</th></tr>
+  <tr><td>Pure MPI</td><td>32（每核一个 rank）</td><td>1</td><td>128</td><td>4</td></tr>
+  <tr><td>Pure OpenMP</td><td>1</td><td>32</td><td>32</td><td><strong>1</strong>（跨不了 node）</td></tr>
+  <tr><td>Hybrid</td><td>1</td><td>32</td><td>128</td><td>4</td></tr>
+  <tr><td>Hybrid（每 NUMA 一 rank）</td><td>2-4</td><td>8-16</td><td>128</td><td>4</td></tr>
+</table>
+
+<p><strong>Pure OpenMP vs Hybrid 的关键区别</strong>：单 node 时两者完全一样；多 node 时<strong>只有 Hybrid 能用上多 node 资源</strong>。OpenMP 假设所有线程共享同一份内存，跨 node 没共享内存，所以 OpenMP 程序物理上跨不了节点。</p>
+
+<pre>Pure OpenMP（1 节点）：               Hybrid（4 节点协作）：
+┌─── Node 0 ──────┐                  ┌Node0┐ ┌Node1┐ ┌Node2┐ ┌Node3┐
+│ 1 process       │                  │ P0  │←│ P1  │←│ P2  │←│ P3  │
+│ 32 thread       │                  │32th │ │32th │ │32th │ │32th │
+└─────────────────┘                  └─────┘ └─────┘ └─────┘ └─────┘
+其他 3 节点闲置 ❌                       ↑─── MPI message passing ───↑</pre>
+
+<p><strong>怎么控制每 node 跑几个 process</strong>。MPI 启动器的 <code>--map-by</code> 参数：</p>
+
+<pre># 4 节点 × 1 rank/节点（hybrid 模式）
+mpirun -np 4 --map-by ppr:1:node ./prog
+
+# 4 节点 × 2 NUMA = 8 rank
+mpirun -np 8 --map-by ppr:1:numa ./prog
+
+# 4 节点 × 32 core = 128 rank（pure MPI）
+mpirun -np 128 --map-by core ./prog</pre>
+
+<p>配合 <code>OMP_NUM_THREADS</code> 决定每 process 开几线程。典型 hybrid 写法：</p>
+<pre>OMP_NUM_THREADS=32 mpirun -np 4 --map-by ppr:1:node ./hybrid_prog</pre>
+
+<p><strong>为啥 hybrid 通常最优</strong>：节点内线程共享内存（纳秒级通信），节点间靠 MPI（微秒级）。process 越少 → 昂贵的 MPI 通信越少 → 整体越快。</p>
+
+<p><strong>什么时候用 pure MPI</strong>：程序天然没共享数据（embarrassingly parallel）；想要 process 级隔离（一个 rank 崩不影响别的）；不想写 OpenMP 省事。</p>
+
+
+<h4>Q3: 32 核 node 能不能开 64 个 thread / process？</h4>
+
+<p><strong>能。</strong>叫 <strong>oversubscription（超额订阅）</strong>。但计算密集场景下性能通常更差。</p>
+
+<p><strong>原理：OS 时间片轮转（time slicing）</strong>。OS 调度器在多个 thread 之间快速轮换，每个跑几毫秒就被换下来。从用户视角看像是 64 个 thread "同时"在跑，实际每瞬间只有 32 个真正在 core 上执行。</p>
+
+<pre>时间 →
+Core 0:  [T1][T33][T1][T33]...   ← T1 和 T33 轮换
+Core 1:  [T2][T34][T2][T34]...
+...
+Core 31: [T32][T64][T32][T64]...</pre>
+
+<p><strong>为啥性能通常变差</strong>：</p>
+<ul>
+  <li><strong>Context switch 开销</strong>：每次切换要保存当前线程的寄存器、PC、栈指针等，恢复另一个线程的状态。约 1-10 微秒一次，纯开销不干活。</li>
+  <li><strong>Cache 抖动</strong>：T1 刚把数据加载到 L1/L2，T33 上来把 cache 挤掉。等 T1 回来又得重新加载。</li>
+  <li><strong>TLB miss 增多</strong>：进程切换时甚至要刷 TLB。</li>
+  <li><strong>同步原语恶化</strong>：64 个线程争用同一把锁，比 32 个慢得多。</li>
+</ul>
+
+<p><strong>HPC 黄金规则</strong>：</p>
+<ul>
+  <li>计算密集（CPU-bound）：thread 数 = core 数（最优）；core 数 × 2 开 HT（可能稍快）；超过这个基本只会变慢</li>
+  <li>I/O 密集（线程经常 block 等 I/O）：thread 数 可以远 &gt; core 数（web server 几千线程 vs 几十核很常见）</li>
+</ul>
+
+<p><strong>什么时候 oversubscription 反而合理</strong>：</p>
+<ul>
+  <li><strong>I/O 密集</strong>：线程大量等 I/O，core 闲着没事干，多开线程让 core 有活干是赚的</li>
+  <li><strong>任务粒度差异大</strong>：快任务做完空出位置给慢的填，避免负载不均</li>
+  <li><strong>开发 / 测试</strong>：本地 4 核测 100 并发场景，不得不超额</li>
+</ul>
+
+<p><strong>实际限制</strong>：Linux 默认每进程线程上限几万（<code>/proc/sys/kernel/threads-max</code>）；每线程默认占 8MB 栈，1000 线程 = 8GB 栈空间。实际工程很少超几百线程。</p>
+
+</details>
+
+
+<!-- ==================== SLIDE 27 ==================== -->
+<h2 class="slide-title">Slide 27 — Recap So Far（本节课总结）</h2>
+
+<img class="slide-img" src="images/slide-27.png" alt="Slide 27: Recap of shared-memory programming concepts">
+
+<div class="explanation">
+  <p>这是 Lecture 5 的总结页，把前面 25 张 slide 的核心点压成 7 条。每条都对应之前的某个 slide，可以当复习题来用。</p>
+
+  <p><strong>1. 共享内存属于 MIMD 范畴。</strong>MIMD（Multiple Instruction, Multiple Data）= 多个指令流操作各自的数据，是 Flynn 分类里最一般的形式。共享内存可以同时利用 data-level（多线程处理不同数据）和 task-level（多线程做不同任务）两种并行。</p>
+
+  <p><strong>2. 软件线程是"轻量级逻辑实体"。</strong>每个线程有自己的私有状态（寄存器值、program counter），但跟同进程的兄弟线程共享代码和堆。OS 调度器决定线程在哪个核上跑，可以被随时挪到别的核（slide 14/15 讲过）。</p>
+
+  <p><strong>3. Race condition：两个或更多线程同时写同一块内存。</strong>注意定义重点是"写"。同时读没事；只有"同时存在写"才有 race。<strong>有 race 的程序是非确定性的（non-deterministic）</strong>—— 同样输入、同样代码，每次运行结果可能不同，因为线程调度顺序每次都不一样。这是并行 bug 最难调的根本原因。</p>
+
+  <p><strong>4. 线程在 parallel region 里被 fork，joined 在 synchronization point。</strong>Parallel region 越长，能并行的工作越多 —— 但要小心串行段成为瓶颈（这是 Amdahl 定律的核心）。</p>
+
+  <p><strong>5. 共享内存只能在节点内用</strong>（单台物理机），跨节点必须靠消息传递（呼应 slide 26 的大图）。</p>
+
+  <p><strong>6 + 7. 程序员必须主动施加 read/write 顺序约束，否则程序不正确。</strong>这是因为现代 CPU 和编译器为了性能允许重排序内存操作。在单线程下完全透明，但在多线程下会让 race 更隐蔽。所以 atomic、mutex、memory fence 这些机制不是"可选优化"，是"正确性必需"。</p>
+</div>
+
+
+<!-- ==================== SLIDE 28 ==================== -->
+<h2 class="slide-title">Slide 28 — OpenMP: Open Multi-Processing（OpenMP 是什么、不是什么）</h2>
+
+<img class="slide-img" src="images/slide-28.png" alt="Slide 28: OpenMP — what it is and isn't">
+
+<div class="explanation">
+  <p>正式介绍 <strong>OpenMP</strong>。一句话定义：<strong>共享内存架构上做显式多线程并行的 API 标准</strong>。重点在"显式"：你告诉编译器哪里要并行（不像自动并行化那样靠编译器猜）。</p>
+
+  <p><strong>OpenMP 由三部分组成</strong>。理解这个分工很关键，因为日常用 OpenMP 时三种东西都会碰到：</p>
+  <ul>
+    <li><strong>Compiler directives（编译器指令）</strong>：写在源码里的 <code>#pragma omp ...</code>。比如 <code>#pragma omp parallel for</code>。这是 OpenMP 最有特色的部分 —— 不需要改代码结构，只在循环前加一行 pragma 就能并行化。</li>
+    <li><strong>Runtime library calls（运行时库函数）</strong>：在程序里调用的函数，比如 <code>omp_get_thread_num()</code>（查当前线程编号）、<code>omp_set_num_threads(8)</code>（设置线程数）。需要 <code>#include &lt;omp.h&gt;</code>。</li>
+    <li><strong>Environment variables（环境变量）</strong>：在 shell 里设置，最常见的是 <code>OMP_NUM_THREADS=8 ./a.out</code>。好处是不用重新编译就能改线程数。</li>
+  </ul>
+
+  <p><strong>三者优先级（从低到高）</strong>：环境变量 &lt; 运行时库调用 &lt; 编译器指令里的子句。也就是说，代码里 <code>num_threads(4)</code> 子句会盖过 <code>OMP_NUM_THREADS=8</code>。</p>
+
+  <p><strong>OpenMP 不做的事（很重要）</strong>。这部分是经常踩坑的地方：</p>
+  <ul>
+    <li><strong>不检查 race condition、deadlock、代码是否符合标准</strong>。你写错了，编译器和运行时不会报错，程序就静悄悄地给出错误结果。要查这种 bug 得用专门工具（比如 <strong>ThreadSanitizer</strong>、<strong>Intel Inspector</strong>、<strong>Helgrind</strong>）。</li>
+    <li><strong>不为分布式内存设计</strong>。OpenMP 假定所有线程共享地址空间，跨节点没法用，跨节点必须用 MPI。</li>
+    <li><strong>不为 parallel I/O 设计</strong>。多线程同时读写同一个文件不在 OpenMP 范畴，要用 MPI-IO 或 HDF5 之类专门的并行 I/O 库。</li>
+  </ul>
+
+  <p><strong>记忆口诀</strong>：OpenMP 给你"在节点内开线程"的能力，<strong>正确性靠你自己</strong>。任何"我以为框架会帮我处理"的想法都是 bug 的温床。</p>
+</div>
+
+
+<!-- ==================== SLIDE 29 ==================== -->
+<h2 class="slide-title">Slide 29 — OpenMP 的开发成本和性能权衡</h2>
+
+<img class="slide-img" src="images/slide-29.png" alt="Slide 29: Performance vs time/effort for OpenMP, MPI, hybrid">
+
+<div class="explanation">
+  <p>这页用一张曲线图回答"为什么很多人选 OpenMP"。横轴是<strong>开发时间和精力</strong>，纵轴是<strong>性能</strong>。三条曲线走势完全不同。</p>
+
+  <p><strong>OpenMP（绿色）</strong>：起步快，加几个 <code>#pragma</code> 就能拿到不错的加速。但很快进入平台期 —— 因为 OpenMP 的天花板就是单节点的核数和内存上限。</p>
+
+  <p><strong>MPI（红色）</strong>：起步慢，前期有一段虚线"<strong>Code does not work</strong>"（图中标注）—— 这是因为用 MPI 必须重新设计程序：把数据切分到不同进程、显式写 <code>MPI_Send</code> / <code>MPI_Recv</code>、处理同步。这个改造期间程序是不能跑的。但一旦改造完成，性能可以远超 OpenMP，因为它能跨节点扩展。</p>
+
+  <p><strong>MPI + OpenMP 混合（蓝色）</strong>：天花板最高，但开发成本也最大。</p>
+
+  <p><strong>OpenMP 最关键的工程优势：渐进式改造（incremental parallelism）。</strong>三条曲线对比就能看出：OpenMP 可以在<strong>不破坏现有串行代码</strong>的前提下，一段段加 <code>#pragma</code> 慢慢并行化。MPI 则必须从头重新设计架构。</p>
+
+  <p><strong>另一个 OpenMP 的隐藏优势：graceful degradation（优雅降级）。</strong>编译时不加 <code>-fopenmp</code>，编译器会<strong>直接忽略所有 <code>#pragma omp</code></strong>，把代码当作普通串行程序编译。同一份源代码在支持/不支持 OpenMP 的环境都能跑（只是少了并行加速），代码的可移植性、可调试性都很好。</p>
+
+  <p><strong>怎么编译</strong>。GCC 用户必须加 <code>-fopenmp</code>：</p>
+<pre>g++ -fopenmp -O2 my_program.cpp -o my_program
+./my_program          # 默认线程数 = 核心数
+OMP_NUM_THREADS=4 ./my_program   # 显式指定 4 线程</pre>
+
+  <p><strong>OpenACC 是亲戚</strong>。slide 提到 OpenACC 用同样的"指令式"哲学，但目标是 GPU 等异构加速器。语法长这样：<code>#pragma acc parallel loop</code>。理念一样：原代码不动，靠 pragma 标记并行区域。</p>
+</div>
+
+
+<!-- ==================== SLIDE 30 ==================== -->
+<h2 class="slide-title">Slide 30 — OpenMP 的适用范围（什么时候该换工具）</h2>
+
+<img class="slide-img" src="images/slide-30.png" alt="Slide 30: OpenMP vs MPI scope chart">
+
+<div class="explanation">
+  <p>承接上一页继续讲选型。这页的主问题是：<strong>OpenMP 能撑到多大规模？什么时候必须换 MPI？</strong></p>
+
+  <p><strong>看图</strong>。横轴是问题规模，纵轴是 CPU 数量（对数）。三段：</p>
+  <ul>
+    <li><strong>1 CPU = sequential</strong>，小问题</li>
+    <li><strong>O(10¹) CPUs = OpenMP</strong>，中等问题（一般 16~128 核）</li>
+    <li><strong>O(10³) CPUs = MPI</strong>，大问题</li>
+    <li>更高规模 → "<strong>Dominated by overhead</strong>"，曲线开始平甚至下降，因为通信代价超过了并行收益</li>
+  </ul>
+
+  <p><strong>OpenMP 的硬上限：单节点</strong>。原因是 OpenMP 依赖共享内存，所有线程必须能访问同一份 RAM。这就把 OpenMP 锁死在<strong>单台物理机器</strong>里。典型节点 16-128 核，超大节点（特殊机器）能到 ~1000 核，但市面上不常见。</p>
+
+  <p><strong>核数限制 ⇒ 内存限制 ⇒ 问题规模限制。</strong>单节点的 RAM 通常几百 GB（顶配能到 TB 级），这就是 OpenMP-only 程序能处理的最大问题尺寸。要做模拟整个银河系或全国天气这种事，单节点内存根本装不下，必须 MPI 把数据切到多节点。</p>
+
+  <p><strong>大规模时通信会变瓶颈。</strong>规模到几千节点时，节点之间网络通信延迟和带宽就成了主要开销。这时候纯 MPI（每个核一个 process）会产生海量小消息，性能反而下降。</p>
+
+  <p><strong>解药：MPI + OpenMP 混合（hybrid）。</strong>每个节点跑 1 个 MPI process，process 内部用 OpenMP 开多个线程。这样：</p>
+  <ul>
+    <li>节点内：线程之间用共享内存（纳秒级），完全没网络开销</li>
+    <li>节点间：MPI process 之间发消息，但消息总数大幅减少（因为节点内已经先聚合了）</li>
+  </ul>
+
+  <p><strong>具体感受一下规模差。</strong>假设要在 32 节点 × 32 核的集群上跑：</p>
+  <ul>
+    <li><strong>纯 MPI</strong>：1024 个 process，all-to-all 通信要发 ~10⁶ 条消息</li>
+    <li><strong>Hybrid</strong>：32 个 MPI process，all-to-all 只要 ~10³ 条消息（节点内的 32 个线程先在共享内存里聚合）</li>
+  </ul>
+  <p>消息数差 1000 倍 —— 这就是 hybrid 在超大规模下的性能优势来源。</p>
+
+  <p><strong>选型小结</strong>：</p>
+  <ul>
+    <li>问题能塞进单节点 RAM、核数 ≤ 128 → 纯 OpenMP，开发最快</li>
+    <li>问题需要多节点 → 加 MPI</li>
+    <li>规模到几千节点 → MPI + OpenMP hybrid，减少消息数</li>
+  </ul>
+</div>
+
+
+<!-- ==================== SLIDE 31 ==================== -->
+<h2 class="slide-title">Slide 31 — Why OpenMP？（OpenMP 的卖点总结）</h2>
+
+<img class="slide-img" src="images/slide-31.png" alt="Slide 31: Why OpenMP — selling points">
+
+<div class="explanation">
+  <p>这页把 OpenMP 的核心卖点压成一张 slide。紫框主旨：<strong>用简单的 compiler directive，最小工作量并行化已有串行代码</strong>。</p>
+
+  <p><strong>1. Incremental parallelization（渐进式并行化）</strong>。可以一次只并行化一个 compute kernel，benchmark 后再做下一个。"compute kernel" 指程序里最耗时的几个函数 / 循环（hot spot）—— 通常用 profiling 工具（gprof / perf）找出来。这点对比 MPI 优势巨大：MPI 必须先重新设计整个数据布局，全或全无；OpenMP 可以一段段慢慢上，每改一段都还能跑。</p>
+
+  <p><strong>2. 支持 coarse-grained 和 fine-grained 两种粒度</strong>。</p>
+  <ul>
+    <li><strong>Coarse-grained（粗粒度）</strong>：大块工作分给线程，比如 <code>#pragma omp task</code>。每个 task 是一个较大的独立单位，做完就走，少同步。</li>
+    <li><strong>Fine-grained（细粒度）</strong>：频繁同步的小操作，比如 atomic、lock。每次操作都可能和别的线程交互。</li>
+  </ul>
+  <p>两种粒度对应不同场景：粗粒度适合天然可分的工作（如批处理 100 张图，每张独立）；细粒度适合需要频繁协作的（如多线程更新同一个共享数据结构）。</p>
+
+  <p><strong>3. 工业界和学术界广泛使用</strong>。这意味着文档、教程、Stack Overflow 答案丰富，主流编译器都成熟支持，遇到 bug 容易找到解决方案。</p>
+
+  <p><strong>4. Portability（可移植性）</strong>。</p>
+  <ul>
+    <li>语言：C / C++ / Fortran（HPC 三大语言全覆盖）</li>
+    <li>平台：Linux / Unix / Windows</li>
+    <li>编译器：GCC / Clang / Intel ICC / MSVC 都支持</li>
+  </ul>
+
+  <p><strong>串起来一句话</strong>：OpenMP 是低成本入门、增量改造、有粒度选择、跨平台跨语言的并行编程标准。这就是 HPC 课从它入手的原因 —— 学完能马上用，不用大改架构。</p>
+</div>
+
+
+<!-- ==================== SLIDE 32 ==================== -->
+<h2 class="slide-title">Slide 32 — Alternatives We Will Not Consider（C++11 threads 和 pthreads 对比）</h2>
+
+<img class="slide-img" src="images/slide-32.png" alt="Slide 32: C++11 threads and pthreads alternatives">
+
+<div class="explanation">
+  <p>这页摆出两种"不用 OpenMP 时的替代方案"，目的是<strong>对比凸显 OpenMP 的简洁</strong>。课上不会深入讲这两种。</p>
+
+  <p><strong>左边：C++11 <code>std::thread</code></strong>。C++ 标准库自带的线程类，需要 <code>#include &lt;thread&gt;</code>。</p>
+<pre>std::thread threads[NTHREADS];
+for (size_t t = 0; t &lt; NTHREADS; ++t)
+    threads[t] = std::thread(do_work, t);   // 显式 spawn
+for (size_t t = 0; t &lt; NTHREADS; ++t)
+    threads[t].join();                       // 显式 join</pre>
+
+  <p><strong>右边：pthreads</strong>（POSIX Threads）。C 语言的线程库，Linux / macOS 通用，是 std::thread 底层的实现基础。</p>
+<pre>pthread_t threads[NTHREADS];
+for (long t = 0; t &lt; NTHREADS; ++t)
+    pthread_create(&amp;threads[t], NULL, do_work, (void*)t);
+for (int t = 0; t &lt; NTHREADS; ++t)
+    pthread_join(threads[t], &amp;status);</pre>
+  <p>注意 do_work 的签名必须是 <code>void* (*)(void*)</code>，因为 pthread 是 C 库，没模板，传参靠 <strong>void* 类型擦除</strong>。要传整数得强转 <code>(void*)t</code>，函数里再 <code>(long)t</code> 转回来。</p>
+
+  <p><strong>对比 OpenMP 的等价写法</strong>：</p>
+<pre>#pragma omp parallel num_threads(8)
+do_work(omp_get_thread_num());</pre>
+  <p><strong>两行</strong>搞定上面 20+ 行的事。OpenMP 把 spawn / join / 线程数管理 / 数据划分等 boilerplate 全藏起来。</p>
+
+  <p><strong>为啥课上不讲 pthreads / std::thread</strong>：</p>
+  <ul>
+    <li>太底层，boilerplate 多</li>
+    <li>没有高层构造（parallel for、reduction、task scheduling 都要手写）</li>
+    <li>数据切分手动算（每个线程负责哪几个迭代）</li>
+    <li>同步原语要手动 init / destroy</li>
+  </ul>
+
+  <p><strong>但什么时候反而该用它们？</strong></p>
+  <ul>
+    <li><strong>pthreads</strong>：写底层系统软件（OS 内核、网络服务、数据库引擎）；需要细粒度控制（CPU 亲和性、优先级、信号处理）；不想引入 OpenMP 运行时依赖</li>
+    <li><strong>std::thread</strong>：通用 C++ 应用程序，不专门为 HPC；需要现代 C++ 风格（lambda、move semantics、<code>std::future</code>、<code>std::async</code>）</li>
+  </ul>
+
+  <p><strong>定位</strong>：OpenMP 是 HPC / 科学计算场景的事实标准；std::thread 是通用 C++ 多线程标准；pthreads 是底层 / 系统编程标准。三者目标人群不同。</p>
+</div>
+
+
+<!-- ==================== SLIDE 33 ==================== -->
+<h2 class="slide-title">Slide 33 — History（OpenMP 版本时间线）</h2>
+
+<img class="slide-img" src="images/slide-33.png" alt="Slide 33: OpenMP version history">
+
+<div class="explanation">
+  <p>OpenMP 的版本时间线。重点<strong>不是背日期</strong>，是知道哪个版本引入了哪些能力，便于查文档和判断编译器支持。</p>
+
+  <table>
+    <tr><th>年份</th><th>版本</th><th>主要新能力</th></tr>
+    <tr><td>1997</td><td>Fortran 1.0</td><td>OpenMP 诞生，最早只支持 Fortran（HPC 老派语言）</td></tr>
+    <tr><td>1998</td><td>C/C++ 1.0</td><td>加入 C/C++ 支持</td></tr>
+    <tr><td>2005</td><td>OpenMP 2.5</td><td>第一个统一 Fortran 和 C/C++ 规范的版本</td></tr>
+    <tr><td>2008</td><td><strong>OpenMP 3.0</strong></td><td><strong>加入 tasking</strong>（重大里程碑）</td></tr>
+    <tr><td>2013</td><td><strong>OpenMP 4.0</strong></td><td><strong>加入 SIMD 和 GPU/加速器支持</strong></td></tr>
+    <tr><td>2015</td><td>OpenMP 4.5</td><td>更多任务依赖控制</td></tr>
+    <tr><td>2018</td><td>OpenMP 5.0</td><td>memory model 扩展、对现代 C++ 标准支持</td></tr>
+    <tr><td>2020-21</td><td>OpenMP 5.1 / 5.2</td><td>规范重组、对 C++20 / Fortran 2018 完整支持</td></tr>
+  </table>
+
+  <p><strong>三个里程碑要记住</strong>：</p>
+
+  <p><strong>OpenMP 3.0（2008）的 tasking</strong>。3.0 之前 OpenMP 只能并行 for 循环（数据并行），适合"100 个独立迭代"这种规整场景。3.0 引入 <code>#pragma omp task</code>，让你可以表达<strong>任意任务图</strong> —— 一个任务可以创建子任务，子任务可以再创建。这就支持了递归并行（quicksort、tree traversal、图遍历）等以前 OpenMP 做不到的场景。</p>
+
+  <p><strong>OpenMP 4.0（2013）的 GPU 支持</strong>。<code>#pragma omp target</code> 把代码段卸载到 GPU 执行。让 OpenMP 从纯 CPU 工具变成异构（CPU+GPU）工具。但实际工程里 <strong>CUDA / HIP 仍然是主流</strong>，OpenMP target 是"想跨厂商不绑定 NVIDIA"时的选择。</p>
+
+  <p><strong>OpenMP 4.0 的 SIMD</strong>。<code>#pragma omp simd</code> 提示编译器把循环向量化（生成 SSE / AVX 指令），跟多线程并行正交但能叠加。</p>
+
+  <p><strong>实战 tip：编译时检查版本</strong>。OpenMP 定义了 <code>_OPENMP</code> 宏，值是 <code>yyyymm</code> 格式：</p>
+<pre>#ifdef _OPENMP
+  #if _OPENMP &gt;= 201511    // OpenMP 4.5+
+    // 用 4.5 才有的特性
+  #endif
+#endif</pre>
+
+  <p>查 GCC 支持的版本：<code>g++ --version</code> + 看 GCC release notes。GCC 12+ 大致到 OpenMP 5.0；ICC 一向走在最前。</p>
+
+  <p><strong>slide 上那个弹窗</strong>是 OpenMP 6.0 examples 文档的广告，不是版本表的一部分，可以忽略。</p>
+</div>
+
+
+<!-- ==================== SLIDE 34 ==================== -->
+<h2 class="slide-title">Slide 34 — Directives Basics（pragma 语法）</h2>
+
+<img class="slide-img" src="images/slide-34.png" alt="Slide 34: OpenMP directive syntax">
+
+<div class="explanation">
+  <p>正式介绍 OpenMP 的 pragma 语法。前面 slide 28 简单提过，这页给出精确语法。</p>
+
+  <p><strong>C/C++ 语法</strong>：</p>
+<pre>#pragma omp construct [clause [clause]...]            // 通用形式
+__pragma("omp construct [clause [clause]...]")        // MSVC 在宏里用</pre>
+
+  <p><strong>Fortran 语法</strong>（注意 <code>!</code> 是 Fortran 的注释起始符）：</p>
+<pre>!$omp construct [clause [clause]...]
+c$omp construct [clause [clause]...]
+*$omp construct [clause [clause]...]</pre>
+
+  <p><strong>为什么用 pragma / 注释这种形式？</strong>保证 <strong>graceful degradation</strong>：不开 OpenMP 编译时（比如忘加 <code>-fopenmp</code>），这些行被当成"未知 pragma" 或"普通注释"直接忽略，代码照样能编译运行（只是没并行加速）。一份源代码两套用法。</p>
+
+  <p><strong>三个核心术语必须分清</strong>（考点）：</p>
+
+  <table>
+    <tr><th>术语</th><th>含义</th><th>例子</th></tr>
+    <tr><td><strong>Directive（指令）</strong></td><td>整行 <code>#pragma omp ...</code></td><td><code>#pragma omp parallel num_threads(2)</code></td></tr>
+    <tr><td><strong>Construct（构造）</strong></td><td>会执行代码的 directive（不是所有 directive 都执行）</td><td><code>parallel</code>（执行并行区域）；<code>for</code>、<code>task</code>、<code>critical</code> 等</td></tr>
+    <tr><td><strong>Clause（子句）</strong></td><td>跟在 construct 后面的可选修饰</td><td><code>num_threads(4)</code>、<code>shared(x)</code>、<code>private(y)</code>、<code>reduction(+:sum)</code></td></tr>
+  </table>
+
+  <p>举例分解 <code>#pragma omp parallel for num_threads(4) reduction(+:sum)</code>：</p>
+  <ul>
+    <li>Directive = 整行</li>
+    <li>Construct = <code>parallel for</code></li>
+    <li>Clauses = <code>num_threads(4)</code> 和 <code>reduction(+:sum)</code></li>
+  </ul>
+
+  <p><strong>Clause 都是可选的</strong>。最简洁就 <code>#pragma omp parallel</code>，所有参数走默认值（线程数 = 核数、变量按"区外 shared / 区内 private"默认规则）。</p>
+</div>
+
+<details class="qa"><summary><strong>Q&A 1: <code>#pragma</code>、<code>_Pragma</code>、<code>#omp</code> 的关系（语法层面彻底搞清）</strong></summary>
+
+<p><strong>1. 没有 <code>#omp</code> 这种独立写法</strong>。<code>#pragma omp parallel</code> 是<strong>一条指令的两部分</strong>，不是 <code>#pragma</code> 和 <code>#omp</code> 二选一：</p>
+<ul>
+  <li><code>#pragma</code> 是 C/C++ 的<strong>预处理器指令</strong>（preprocessor directive），用来给编译器发"特定提示"。其他 pragma 还有 <code>#pragma once</code>、<code>#pragma pack(1)</code> 等。编译器不认识时<strong>静默忽略</strong>（标准要求）。</li>
+  <li><code>omp</code> 是<strong>命名空间标识符</strong>，告诉编译器"这条 pragma 属于 OpenMP"。</li>
+</ul>
+
+<p>开 <code>-fopenmp</code> 时编译器把 <code>#pragma omp ...</code> 当 OpenMP 处理；不开时整段被忽略，代码退化成顺序版本 —— 这就是 OpenMP <strong>渐进式并行（incremental parallelism）</strong>哲学的语法基础。</p>
+
+<p><strong>2. <code>#pragma omp ...</code> 和 <code>_Pragma("omp ...")</code> 作用完全相同</strong>，编译出的二进制一样：</p>
+<pre>#pragma omp parallel for      ⇔      _Pragma("omp parallel for")</pre>
+
+<p>区别只在<strong>能不能从宏展开</strong>：</p>
+<ul>
+  <li><code>#pragma</code> 是预处理指令（以 <code>#</code> 起头），<strong>宏展开结果不能包含 <code>#</code> 开头的预处理指令</strong>，所以宏体内不能用。</li>
+  <li><code>_Pragma</code> 是 C99/C++11 标准引入的<strong>语言内置 operator</strong>，跟 <code>sizeof</code>、<code>if</code> 一样。<strong>不需要任何 <code>#include</code> 或定义</strong>，直接就能用。<strong>能在宏里出现</strong>。</li>
+</ul>
+
+<p>注：<code>__pragma(...)</code>（双下划线、无引号）是<strong>微软扩展</strong>，跟 <code>_Pragma</code>（单下划线、需引号）作用一样但只在 MSVC 上有。跨平台代码用标准的 <code>_Pragma</code>。</p>
+
+<p><strong>3. <code>_Pragma</code> 的实战价值在写宏</strong>。直接用 <code>_Pragma</code> 合法但没意义（<code>#pragma</code> 更短）。它的存在感只在<strong>需要宏生成 pragma</strong> 时体现：</p>
+
+<pre>// 不合法 —— 宏体不能含 #
+#define PARALLEL_FOR  #pragma omp parallel for
+
+// 合法
+#define PARALLEL_FOR  _Pragma("omp parallel for")
+
+PARALLEL_FOR
+for (int i = 0; i &lt; N; ++i) ...</pre>
+
+<p>典型场景：写跨编译器抽象（OpenMP 不可用时让宏消失）、写库的并行模板。</p>
+
+<p><strong>4. <code>_Pragma("...")</code> 引号里的内容必须是合法 pragma</strong>。规则就是 <code>_Pragma("X") ⇔ #pragma X</code>，<strong>不能瞎写</strong>：</p>
+<ul>
+  <li>合法：<code>_Pragma("omp parallel for")</code>、<code>_Pragma("once")</code>、<code>_Pragma("pack(1)")</code></li>
+  <li>不合法：<code>_Pragma("hello world")</code>（不是 pragma，被忽略）、<code>_Pragma("#pragma omp ...")</code>（多了 <code>#pragma</code> 前缀，错的）</li>
+</ul>
+
+<p><strong>引号里的字符串<strong>不会被打印</strong></strong>。它是<strong>编译期</strong>给编译器看的指令，不是 <code>printf</code>。运行时根本不存在这串文本。对比看清：</p>
+<pre>printf("omp parallel for");    // 运行时：屏幕真的打印
+_Pragma("omp parallel for");   // 编译时：当 pragma 解析，运行时啥都没</pre>
+
+<p><strong>速记</strong>：直接写源码 → <code>#pragma omp ...</code>；写在宏里 → <code>_Pragma("omp ...")</code>。99% 的 OpenMP 代码用前者就够了，看到 <code>_Pragma</code> 通常是某个宏的内部实现。</p>
+
+</details>
+
+<details class="qa"><summary><strong>Q&A 2: 什么是宏（macro）</strong></summary>
+
+<p><strong>宏 = 预处理器在编译开始前做的"文本替换"</strong>。<code>#define</code> 定义的名字，会在<strong>正式编译前</strong>被原样替换成对应内容。</p>
+
+<p><strong>三种主要用途</strong>：</p>
+
+<p><strong>(1) 命名常量</strong>：</p>
+<pre>#define PI 3.14159
+double area = PI * r * r;     // 编译前被替换成 3.14159 * r * r</pre>
+
+<p><strong>(2) 简单内联代码</strong>（function-like macro）：</p>
+<pre>#define SQUARE(x) ((x) * (x))
+int y = SQUARE(a + 1);        // 替换成 ((a + 1) * (a + 1))</pre>
+
+<p>每个参数都包括号是因为是<strong>纯文本替换</strong>，不包括号会撞运算符优先级（<code>SQUARE(a+1)</code> 不加括号会变成 <code>a + 1 * a + 1</code>）。</p>
+
+<p><strong>(3) 条件编译</strong>：</p>
+<pre>#ifdef _OPENMP
+    printf("OpenMP enabled\n");
+#else
+    printf("No OpenMP\n");
+#endif</pre>
+
+<p><code>_OPENMP</code> 是<strong>编译器在开 <code>-fopenmp</code> 时自动定义的宏</strong>。<code>#ifdef</code> 是<strong>编译时</strong>判断，false 那段<strong>直接从源码消失</strong>，跟运行时 <code>if</code> 完全两回事。</p>
+
+<p><strong>宏 vs 函数 vs 常量的本质区别</strong>：宏在<strong>编译前</strong>做文本替换，没有类型检查、没有调用开销；函数在<strong>运行时</strong>调用、有类型检查；<code>const</code> 是<strong>编译期变量</strong>、有类型。现代 C++ 推荐能用 <code>const</code>/<code>constexpr</code>/<code>inline</code> 函数就别用宏。</p>
+
+<p><strong>跟 <code>_Pragma</code> 的关系</strong>：<code>_Pragma</code> 之所以存在，就是为了<strong>能放在宏体里发 pragma 指令</strong>（<code>#pragma</code> 因为以 <code>#</code> 开头，宏展开时非法）。这就是它的全部价值。</p>
+
+</details>
+
+<details class="qa"><summary><strong>Q&A 3: directive、construct、clause 三个术语的层次关系</strong></summary>
+
+<p>三个词在 OpenMP 规范里是<strong>不同层次</strong>的概念，但教材里经常混着用，要分清。</p>
+
+<p><strong>严格 OpenMP 规范定义</strong>：</p>
+
+<table>
+  <tr><th>术语</th><th>含义</th><th>例子</th></tr>
+  <tr><td><strong>Directive</strong></td><td>整行 <code>#pragma omp ...</code>（包含 clauses）</td><td><code>#pragma omp parallel num_threads(8) shared(A)</code> 这一<strong>整行</strong></td></tr>
+  <tr><td><strong>Construct / directive-name</strong></td><td>directive 里那个<strong>关键字</strong>，决定"做什么"</td><td><code>parallel</code>、<code>for</code>、<code>barrier</code>、<code>single</code></td></tr>
+  <tr><td><strong>Clause</strong></td><td>挂在 construct 后面的<strong>修饰参数</strong>，微调行为</td><td><code>num_threads(8)</code>、<code>shared(A)</code>、<code>private(i)</code></td></tr>
+</table>
+
+<p><strong>类比</strong>。directive = 整个完整句子；construct = 句子里的动词；clause = 修饰动词的状语：</p>
+
+<pre>#pragma omp  parallel  num_threads(8) shared(A) private(i)
+└────┘  └────┘ └──────┘ └────────────────────────────────┘
+ 前缀     ns    construct           clause 列表
+└──────────────────────────────────────────────────────────┘
+                        整行 = directive</pre>
+
+<p><strong>口语化用法（教学/博客常见）</strong>：经常把 <code>parallel</code>、<code>for</code> 这种关键字直接叫 "directive"。这是<strong>松散说法</strong>，但很普遍。看到时根据上下文判断。</p>
+
+<p><strong>Clause 的关键性质</strong>：</p>
+<ul>
+  <li>每个 directive 可以挂 <strong>0 个或多个</strong> clause（中括号 <code>[]</code> 表示可选）。</li>
+  <li>顺序无关 —— <code>num_threads(8) shared(A)</code> 等同 <code>shared(A) num_threads(8)</code>。</li>
+  <li>每个 directive 有自己<strong>合法的 clause 列表</strong>。乱挂会报错（如 <code>schedule</code> 只能挂在 <code>for</code> 上，不能挂 <code>parallel</code>）。</li>
+</ul>
+
+<p><strong>常见 clause 速查</strong>：<code>num_threads(N)</code> 开几个线程；<code>shared(x)</code>/<code>private(x)</code>/<code>firstprivate(x)</code> 数据作用域；<code>reduction(op:list)</code> 规约合并；<code>schedule(kind, chunk)</code> 循环调度策略；<code>nowait</code> 去掉 implicit barrier；<code>collapse(n)</code> 展平嵌套循环；<code>if(cond)</code> 条件并行。</p>
+
+<p><strong>速记</strong>：学 OpenMP 的全部内容 = "<em>有哪些 directive，每个 directive 能挂哪些 clause，每个 clause 怎么用</em>"。</p>
+
+</details>
+
+<details class="qa"><summary><strong>Q&A 4: Fortran 是什么，为什么 OpenMP 课件会出现</strong></summary>
+
+<p><strong>Fortran</strong>（<strong>For</strong>mula <strong>Tran</strong>slation，1957 年诞生）是一门<strong>非常老</strong>的编程语言，比 C 还早 15 年。主流软件开发圈几乎绝迹，但在 <strong>HPC / 科学计算圈</strong>仍然广泛使用。</p>
+
+<p><strong>OpenMP 是同时支持 C/C++ 和 Fortran 的标准</strong>。规范里每条 directive 都给两套语法。HPC 的老牌代码（气候模拟、流体力学、量子化学）大量是 Fortran，OpenMP 必须照顾它们。</p>
+
+<p><strong>两套语法对比</strong>：</p>
+<pre>C/C++:    #pragma omp parallel
+Fortran:  !$omp parallel
+            ...
+          !$omp end parallel</pre>
+
+<p>差别要点：</p>
+<ul>
+  <li>C/C++ 用 <code>#pragma</code>（预处理器）；Fortran 没有预处理器，用<strong>注释前缀 <code>!$omp</code></strong>。</li>
+  <li>Fortran 的 <code>!</code> 本来就是注释符，不开 OpenMP 编译时整行被当注释忽略 —— 同样实现"渐进式并行"。</li>
+  <li>C/C++ 用 <code>{}</code> 划定 structured block；Fortran 用显式 <code>!$omp end parallel</code> 标记结束。</li>
+</ul>
+
+<p><strong>Fortran 在 HPC 不死的原因</strong>：多维数组语法天生友好（<code>A(i,j,k)</code> 直接是真多维数组）；默认假设数组无别名（编译器能放心向量化）；LAPACK/BLAS 等核心数值库的几十万行代码资产；几十年优化积累的浮点性能。</p>
+
+<p><strong>对 CS 2050 的实际意义</strong>：作业不会要求写 Fortran，<strong>认识 <code>!$omp</code> 就行</strong>，知道它是 Fortran 版的 <code>#pragma omp</code>。真到 HPC 行业碰到老代码再学也不迟。</p>
+
+</details>
+
+
+<!-- ==================== SLIDE 35 ==================== -->
+<h2 class="slide-title">Slide 35 — Directives Basics: Structured Block（结构化块的强约束）</h2>
+
+<img class="slide-img" src="images/slide-35.png" alt="Slide 35: Structured blocks — single entry, single exit">
+
+<div class="explanation">
+  <p>OpenMP 的一个核心约束：directive 后面跟的代码必须是 <strong>structured block（结构化块）</strong> —— <strong>单一入口、单一出口</strong>。要么是 <code>{}</code> 包起来的复合语句，要么是一条单语句。</p>
+
+  <p><strong>能做（结构化块，左侧紫框）</strong>：</p>
+<pre>#pragma omp parallel
+{                       // ← 唯一入口
+    int a = 0;
+    do_work(a);
+    do_work_out();
+}                       // ← 唯一出口</pre>
+
+  <p><strong>不能做（破坏结构，右侧）</strong>：</p>
+<pre>#pragma omp parallel
+{
+    int a = 0;
+    do_work(a);
+    if (a) goto out;    // ← 跳出结构化块！违反规则
+    do_work_out();
+}
+out: cout &lt;&lt; "Skipped point of exit!\n";</pre>
+
+  <p><strong>为什么有这个限制？</strong>OpenMP 需要在块结束处自动加 join / barrier 等同步机制。如果允许跳出，OpenMP 就不知道在哪里结束 parallel region，同步逻辑全乱、子线程可能被孤立 / 内存状态不一致。</p>
+
+  <p><strong>禁止的跳出方式（全部）</strong>：</p>
+  <ul>
+    <li><code>goto</code> 跳出块</li>
+    <li><code>return</code> 跳出函数（在大多数 construct 里禁止）</li>
+    <li><code>break</code> 跳出 <code>parallel for</code> 的循环</li>
+    <li><code>throw</code> 跨过块边界（异常必须在同一结构化块内 catch）</li>
+  </ul>
+
+  <p><strong>怎么实现"提前退出"逻辑？</strong>用 flag 让块自然走完：</p>
+<pre>bool done = false;
+#pragma omp parallel
+{
+    if (!done) {
+        do_work();
+        if (some_condition) done = true;
+    }
+    // 块自然结束，无 goto
+}</pre>
+
+  <p>或者用 <code>#pragma omp cancel</code>（OpenMP 4.0+），但用得少 —— 性能开销大，且需要配合 <code>#pragma omp parallel</code> 的 <code>cancellation</code> 子句。</p>
+
+  <p><strong>"automatic variable" 是什么？</strong>就是栈上的局部变量。"Automatic" 来自 C 的存储类关键字 <code>auto</code>（默认就是 auto），意思是"进入作用域自动分配，离开自动回收"。在 parallel block 里 <code>int a = 0</code> 这种变量默认是 <strong>private</strong>（每个线程一份），跟 slide 26 Q6 讲的"区内声明 = private"规则一致。</p>
+</div>
+
+<details class="qa"><summary><strong>Q&A: <code>goto</code> 是什么语言的命令</strong></summary>
+
+<p><strong><code>goto</code> 是无条件跳转语句</strong>，在很多语言里都存在。</p>
+
+<p><strong>有 <code>goto</code> 的语言</strong>：C、C++、Fortran、Pascal、Go、PHP、汇编（对应 <code>jmp</code>）。</p>
+
+<p><strong>没有 <code>goto</code> 的语言</strong>：Java、Python、JavaScript、Rust、Swift。现代语言<strong>故意不要它</strong>，强制用结构化控制流（<code>break</code>/<code>continue</code>/异常）替代。</p>
+
+<p><strong>C 里的语法</strong>：</p>
+<pre>for (int i = 0; i &lt; N; ++i) {
+    for (int j = 0; j &lt; M; ++j) {
+        if (A[i][j] == target) goto found;
+    }
+}
+return 0;
+found:
+    return 1;</pre>
+
+<p><code>goto label</code> 让控制流<strong>无条件跳到 <code>label:</code> 那一行</strong>，跨过中间所有代码。典型用途：从深层嵌套循环一次性跳出、错误处理跳到统一清理代码。</p>
+
+<p><strong>为什么 slide 35 提它</strong>。<code>goto</code> 是<strong>破坏 single-exit 的最经典工具</strong>。从 structured block 中间跳到外部标签，整个块的控制流就乱了。所以 OpenMP 明文禁止 structured block 里出现 <code>goto</code> 跳出（<code>break</code>/<code>return</code>/异常同理）。</p>
+
+<p><strong>整体评价</strong>。<code>goto</code> 滥用会产生<strong>无法理解的控制流</strong>（俗称 spaghetti code）。社区<strong>强烈不推荐</strong>用，只在罕见场景才合理。新语言直接砍掉，老语言保留但很少用。考试只需<strong>认得这个关键字</strong>即可。</p>
+
+</details>
+
+
+<!-- ==================== SLIDE 36 ==================== -->
+<h2 class="slide-title">Slide 36 — Example（一行 pragma 并行化的体验）</h2>
+
+<img class="slide-img" src="images/slide-36.png" alt="Slide 36: Sequential vs parallel side-by-side example">
+
+<div class="explanation">
+  <p>实例展示"加一行 pragma 就并行化"的体验，对应 slide 29 那条"OpenMP 起步快"的曲线。</p>
+
+  <p><strong>串行版（左）</strong>：</p>
+<pre>int main(void) {
+    int results[100];
+    for (int i = 0; i &lt; 100; ++i) {
+        do_work(results[i]);
+    }
+    return 0;
+}</pre>
+  <p>编译：<code>g++ -o main main.cpp</code></p>
+
+  <p><strong>并行版（右）</strong>：</p>
+<pre>int main(void) {
+    int results[100];
+    #pragma omp parallel for         // ← 唯一改动
+    for (int i = 0; i &lt; 100; ++i) {
+        do_work(results[i]);
+    }
+    return 0;
+}</pre>
+  <p>编译：<code>g++ -fopenmp -o main main.cpp</code></p>
+
+  <p>差别就两处：<strong>一行 pragma + 一个编译选项</strong>。do_work() 函数体本身不用动。</p>
+
+  <p><strong>底部紫框警告（关键）</strong>："As soon as you add the <code>#pragma omp parallel</code> line, you have signed the contract for <strong>relaxed memory consistency</strong> and responsibility for correct parallel code is now yours."</p>
+
+  <p>翻译人话：</p>
+  <ul>
+    <li>加了 <code>#pragma omp parallel</code>，就是<strong>告诉编译器</strong>"这些迭代之间彼此独立，可以乱序 / 并行执行"</li>
+    <li>编译器 + CPU 因此放弃严格的内存顺序保证（即 <strong>relaxed memory model</strong>），换性能 —— 但这意味着写后读可能跨线程乱序</li>
+    <li>如果迭代之间其实<strong>有依赖</strong>（比如 <code>arr[i] = arr[i-1] + 1</code>），程序会算错，且 <strong>OpenMP 不会报错</strong></li>
+    <li>正确性靠你保证，不是 OpenMP 帮你检查（呼应 slide 28 "OpenMP is not required to check for races"）</li>
+  </ul>
+
+  <p><strong>什么场景能直接套这个 pragma？</strong></p>
+  <ul>
+    <li>每次迭代只读自己的索引、写自己的索引（这个例子就是 —— 第 i 次只碰 <code>results[i]</code>）</li>
+    <li>迭代之间没有数据依赖</li>
+    <li><code>do_work</code> 没访问共享可变状态</li>
+  </ul>
+
+  <p><strong>什么场景不能直接套？（常见反例）</strong></p>
+<pre>// ❌ 数据依赖（results[i] 依赖 results[i-1]）
+for (int i = 1; i &lt; 100; ++i) results[i] = results[i-1] + 1;
+
+// ❌ sum 是共享变量，需要 reduction 子句
+for (int i = 0; i &lt; 100; ++i) sum += a[i];
+
+// ❌ 修改共享容器
+for (int i = 0; i &lt; 100; ++i) global_vec.push_back(i);</pre>
+
+  <p>修复办法：<code>reduction(+:sum)</code> 子句（专门处理累加）；<code>private</code> / <code>firstprivate</code> 子句（变量私有化）；<code>critical</code> 块或 <code>atomic</code>（slide 22-23 讲的）；或者重新组织算法消除依赖。</p>
+
+  <p><strong>回到本节课主线</strong>：加 pragma 容易，<strong>保证正确性是你的事</strong>。这就是为什么前面花那么多 slide 讲 race / atomic / critical section —— 不学这些就敢加 pragma，等于签了个不知道在签什么的合同。</p>
+</div>
+
+<details class="qa"><summary><strong>Q&A 1: 什么是 <code>reduction</code> 子句</strong></summary>
+
+<p><strong>Reduction = "把 N 个值用某个二元运算符合并成 1 个值"的并行模式</strong>。典型如求和、求积、找最大/最小值。</p>
+
+<p><strong>写法</strong>：</p>
+<pre>#pragma omp parallel for reduction(+: sum)
+for (int i = 0; i &lt; N; ++i)
+    sum += a[i];</pre>
+
+<p><strong>OpenMP 实际做的事</strong>（3 步）：</p>
+<ol>
+  <li>每个线程<strong>新建一份私有 sum 副本</strong>，按运算符的幺元初始化（<code>+</code> 初值是 0）。</li>
+  <li>每个线程在自己的私有副本上累加自己分到的迭代 —— <strong>无锁、无 race</strong>。</li>
+  <li>循环结束时所有私有副本被<strong>合并到外部那个共享 sum</strong>。</li>
+</ol>
+
+<p><strong>为什么需要它</strong>。多线程同时写同一个 sum 必然 race。用 <code>critical</code> 包累加正确但慢（每次累加都要拿锁）。reduction 是规范优化 —— 各干各的，最后合并一次，开销 O(nthreads) 而不是 O(N)。</p>
+
+<p><strong>支持的运算符</strong>：<code>+ - * &amp; | ^ &amp;&amp; ||</code>、<code>min</code>、<code>max</code>。也支持自定义。</p>
+
+<p>详细机制（幺元表、合并实现、浮点结合性问题）见 <strong>slide 59-60</strong>。</p>
+
+</details>
+
+<details class="qa"><summary><strong>Q&A 2: <code>parallel</code> 和 <code>for</code> 都是 construct，不是 "construct + clause"</strong></summary>
+
+<p><strong>错误理解</strong>："<code>parallel</code> 是 construct，<code>for</code> 是 clause"。</p>
+
+<p><strong>正确理解</strong>：<code>for</code> 也是 construct（worksharing 三件套之一），不是 clause。</p>
+
+<p><code>#pragma omp parallel for</code> 是 <strong>combined construct（组合构造）</strong>—— 把两个独立 construct 合写成一行的简写。等价于：</p>
+<pre>// 合写形式
+#pragma omp parallel for
+for (int i = 0; i &lt; N; ++i) ...
+
+// 等价分写
+#pragma omp parallel
+{
+    #pragma omp for
+    for (int i = 0; i &lt; N; ++i) ...
+}</pre>
+
+<p>外层 <code>parallel</code> 开线程队，内层 <code>for</code> 分循环迭代给线程。两者各管一摊，合写只是少打字。</p>
+
+<p><strong>判断窍门：能不能独立成一行 pragma？</strong></p>
+<ul>
+  <li>能独立 → <strong>construct</strong>。如 <code>#pragma omp parallel</code>、<code>#pragma omp for</code>、<code>#pragma omp barrier</code>、<code>#pragma omp critical</code>。</li>
+  <li>不能独立 → <strong>clause</strong>。如 <code>num_threads(8)</code>、<code>shared(A)</code>、<code>private(i)</code>、<code>reduction(+:sum)</code>、<code>schedule(...)</code>、<code>nowait</code>、<code>collapse(n)</code>。</li>
+</ul>
+
+<p>clause 必须挂在某个 construct 后面才有意义，单独写不合法。construct 自己就能"做事"。</p>
+
+<p><strong>完整指令拆解</strong>：</p>
+<pre>#pragma omp  parallel for  num_threads(8) shared(A) reduction(+:sum)
+└────────┘  └───────────┘ └───────────────────────────────────────┘
+  前缀       combined construct              clause 列表
+└──────────────────────────────────────────────────────────────────┘
+                          整行 = directive</pre>
+
+</details>
+
+
+<!-- ==================== SLIDE 37 ==================== -->
+<h2 class="slide-title">Slide 37 — Compiling OpenMP Code（编译 + 条件编译）</h2>
+
+<img class="slide-img" src="images/slide-37.png" alt="Slide 37: Compiling OpenMP code with -fopenmp and _OPENMP macro">
+
+<div class="explanation">
+  <p>这页讲两件事：怎么编译，以及怎么写"<strong>同时支持有 / 无 OpenMP 的代码</strong>"。</p>
+
+  <p><strong>编译命令</strong>。GCC / Clang 都用 <code>-fopenmp</code>：</p>
+<pre>g++ -fopenmp -o main main.cpp     # C++
+gcc -fopenmp -o main main.c       # C</pre>
+  <p><code>-o main</code> 指定输出文件名为 <code>main</code>，不写就默认 <code>a.out</code>。</p>
+
+  <p><strong>其他编译器对应的 flag</strong>：</p>
+  <table>
+    <tr><th>编译器</th><th>OpenMP flag</th></tr>
+    <tr><td>GCC / Clang</td><td><code>-fopenmp</code></td></tr>
+    <tr><td>Intel ICC（旧）</td><td><code>-openmp</code></td></tr>
+    <tr><td>Intel ICC（新，推荐）</td><td><code>-qopenmp</code></td></tr>
+    <tr><td>MSVC</td><td><code>/openmp</code></td></tr>
+  </table>
+  <p><code>-fopenmp</code> 同时负责<strong>编译时启用 pragma</strong>和<strong>链接 OpenMP 运行时库</strong>（GCC 的 libgomp）。两个事一个 flag 搞定。</p>
+
+  <p><strong>关键点：<code>_OPENMP</code> 宏</strong>。开了 <code>-fopenmp</code> 后，编译器会自动定义一个名叫 <code>_OPENMP</code> 的预处理宏，值是 <code>YYYYMM</code> 格式（年 + 月），对应你用的 OpenMP 标准的发布日期。比如 <code>201511</code> = 2015 年 11 月 = OpenMP 4.5。</p>
+
+  <p><strong>用途：条件编译</strong>。让同一份代码在<strong>有 / 无 OpenMP 的环境都能编译运行</strong>。</p>
+<pre>#include &lt;iostream&gt;
+int main(void) {
+#ifdef _OPENMP
+    std::cout &lt;&lt; "Compiled with -fopenmp "
+              &lt;&lt; "(OpenMP Standard: " &lt;&lt; _OPENMP &lt;&lt; ")\n";
+#else
+    std::cout &lt;&lt; "Compiled without -fopenmp\n";
+#endif
+    return 0;
+}</pre>
+
+  <p>同一份源码两种编译结果：</p>
+<pre>$ g++ -fopenmp -o with_omp test.cpp
+$ ./with_omp
+Compiled with -fopenmp (OpenMP Standard: 201511)
+
+$ g++ -o without_omp test.cpp
+$ ./without_omp
+Compiled without -fopenmp</pre>
+
+  <p><strong>这个能力为啥重要</strong>：</p>
+  <ul>
+    <li>跨平台代码：你的库给别人用，不知道他们的编译器是否支持 OpenMP，靠 <code>_OPENMP</code> 宏隔离 OpenMP 专属代码（比如 <code>omp_get_thread_num()</code> 在没 OpenMP 的环境根本没声明，会编译失败）</li>
+    <li>检查最低版本：<code>#if _OPENMP &gt;= 201511</code> 确保只在 OpenMP 4.5+ 才用某个新特性</li>
+  </ul>
+
+  <p><strong>对比 slide 28 的"graceful degradation"</strong>：那里说不开 <code>-fopenmp</code> 时 pragma 被忽略 —— 这是<strong>语言层面</strong>的优雅降级。<code>_OPENMP</code> 宏 + <code>#ifdef</code> 是<strong>程序层面</strong>的优雅降级，让 <code>omp_get_thread_num()</code> 等运行时库调用也能优雅退掉。</p>
+</div>
+
+
+<!-- ==================== SLIDE 38 ==================== -->
+<h2 class="slide-title">Slide 38 — Terminology（术语表，对前面所有 slide 的精确定义）</h2>
+
+<img class="slide-img" src="images/slide-38.png" alt="Slide 38: OpenMP terminology glossary">
+
+<div class="explanation">
+  <p>这页是 OpenMP 术语词典。前面 slide 用过的所有概念都在这里给精确定义。重点是把"非正式叫法"对应到"OpenMP 规范用词"，便于查文档。</p>
+
+  <p><strong>thread</strong>：一个执行实体，<strong>带自己的 stack 和 thread-private memory</strong>。这是 OS 调度的最小单位（slide 14 讲过）。每个 OpenMP 线程独占一份 stack 和一些线程私有数据。</p>
+
+  <p><strong>thread number</strong>：OpenMP 给团队中每个线程编的号。<strong>primary thread（主线程）= 0</strong>，其他 child threads 从 1 开始往上编。代码里用 <code>omp_get_thread_num()</code> 查自己的编号。</p>
+
+  <blockquote>注：OpenMP 5.0 之前叫 <strong>master thread</strong>，5.0+ 改名 <strong>primary thread</strong>（更包容的术语）。新文档用 primary，老文档可能还叫 master。两者一回事。</blockquote>
+
+  <p><strong>program order</strong>：<strong>同一个线程</strong>内部，操作按源代码顺序执行的次序。注意只对单个线程内部成立 —— 不同线程之间的相对顺序由调度决定，不存在 program order。这个概念在讨论 memory model（slide 40）时关键。</p>
+
+  <p><strong>structured block</strong>：单一入口、单一出口的代码块（slide 35 详细讲过）。directive 后面必须跟 structured block。</p>
+
+  <p><strong>directive</strong>：C/C++ 里就是 <code>#pragma omp ...</code> 这一整行（或者 <code>_Pragma()</code> 宏形式）。slide 34 讲过。</p>
+
+  <p><strong>conforming program</strong>：完全遵守 OpenMP 规范的程序。<strong>不 conforming 的程序行为是 undefined</strong> —— 编译器爱怎么处理就怎么处理。比如有 race condition 的程序就是 non-conforming，所以"程序结果可能是任何东西"在规范上是合理的。</p>
+
+  <p><strong>barrier（屏障）</strong>：同步点。所有线程都到达 barrier 之前，<strong>谁也不能往后走</strong>。是最常用的同步原语。OpenMP 在很多地方<strong>隐式</strong>插 barrier：</p>
+  <ul>
+    <li>parallel region 结尾（fork 完得等所有 worker join 才能继续）</li>
+    <li><code>parallel for</code> 结尾（隐式 join）</li>
+    <li><code>single</code> / <code>section</code> 结尾</li>
+  </ul>
+  <p>也可以显式写 <code>#pragma omp barrier</code>。如果想去掉自动的 barrier，加 <code>nowait</code> 子句：<code>#pragma omp for nowait</code>。</p>
+
+  <p><strong>atomic operation</strong>：执行期间任何其他线程不能读 / 改对应内存的操作（slide 22 讲过）。硬件保证不可分割。最常用的就是 <code>#pragma omp atomic</code>。</p>
+
+  <p><strong>右上角的小图</strong>：再次画了 slide 15 的内存模型 —— 多个线程各自独立的 stack 和 registers，共享 heap / data / code 段。把这次 slide 38 的术语和图对应一下，concepts 就联通了。</p>
+</div>
+
+
+<!-- ==================== SLIDE 39 ==================== -->
+<h2 class="slide-title">Slide 39 — Execution Model（精确版的 fork/join）</h2>
+
+<img class="slide-img" src="images/slide-39.png" alt="Slide 39: OpenMP execution model — fork/join, parallel regions, teams">
+
+<div class="explanation">
+  <p>正式版的 fork/join 执行模型（slide 24 的精确化）。引入两个新术语：<strong>team of threads</strong> 和 <strong>implicit task</strong>。</p>
+
+  <p><strong>左边的图</strong>。横轴是时间，绿色是 primary thread。每次遇到 parallel region 就 fork 出一队（team），并行干活，结尾 join 回 primary。可以连续多次进出 parallel region，也可以嵌套（nested）。</p>
+
+  <p><strong>核心规则（左边 4 条）</strong>：</p>
+  <ul>
+    <li>fork / join 是 OpenMP 用 directive <strong>透明</strong>处理的，你不用手动写线程创建代码</li>
+    <li>程序<strong>始终至少有 1 个线程</strong>（primary），就算没遇到任何 parallel region 也得有它跑 main</li>
+    <li>primary thread 在 parallel region 开头 spawn 出一队 worker</li>
+    <li>primary thread 的 ID <strong>永远是 0</strong></li>
+  </ul>
+
+  <p><strong>新概念 1: team of threads（线程团队）</strong>。一个 parallel region 里的所有线程构成一个 team。team 由 1 个 primary（继承自外面）+ N 个 worker（新 spawn 的）组成。N 由 <code>OMP_NUM_THREADS</code> / <code>num_threads()</code> 子句决定。</p>
+
+  <p>注意：N 可能是 0（"<strong>zero or more additional threads</strong>"，slide 原文）。比如设 <code>num_threads(1)</code>，team 就只有 primary 一人，等于没并行 —— 但仍然算"进了 parallel region"。</p>
+
+  <p><strong>新概念 2: implicit task（隐式任务）</strong>。进入 parallel region 时，OpenMP 给 team 中<strong>每个</strong>线程生成一个"隐式任务"，每个线程执行整个 parallel block 一遍。</p>
+
+  <p>对比"explicit task"（<code>#pragma omp task</code>，OpenMP 3.0+）：explicit task 是动态创建、可以放进任务池让任意线程执行。implicit task 是 1 thread = 1 task，固定绑定。</p>
+
+  <p><strong>嵌套 parallel region</strong>。slide 上说"may be arbitrarily nested"，但有个坑：</p>
+  <ul>
+    <li>OpenMP <strong>默认禁用嵌套并行</strong>。内层 parallel 只会用 1 个线程跑（即不再 fork），避免线程爆炸。</li>
+    <li>开启嵌套：<code>OMP_NESTED=true</code> 或 <code>omp_set_nested(1)</code>。</li>
+    <li>开启后要小心：3 层嵌套 × 每层 4 线程 = 4³ = 64 线程，很容易超过核数变 oversubscription（slide 26 Q3）。</li>
+  </ul>
+
+  <p><strong>右边的紫框总结一下</strong>：</p>
+  <ol>
+    <li>遇到 <code>parallel</code> construct → 当前线程变成新 team 的 primary，spawn 0 个或多个 worker</li>
+    <li>每个线程生成一个 implicit task，执行 parallel 块的内容</li>
+    <li>parallel region 可以嵌套</li>
+    <li>OpenMP 提供同步原语（barrier、critical、atomic 等）协调线程间的任务和数据访问</li>
+  </ol>
+
+  <p><strong>跟 slide 24 的关系</strong>：slide 24 用大白话讲了 fork/join；slide 39 用 OpenMP 规范的精确术语（team / implicit task / primary）重述一遍。考试看到 "team" / "implicit task" 知道是这里的概念就行。</p>
+</div>
+
+<details class="qa"><summary><strong>Q&A 1: spawn 和 fork 是同一个意思吗？跟 Unix 的 <code>fork()</code> 有关系吗？</strong></summary>
+<p>在这页里 <strong>spawn = fork = "造出 worker 线程"</strong>，是同义词。slide 标题 "Fork threads (spawn)" 的括号就是同义解释。</p>
+
+<p><strong>但要分清两件事</strong>：</p>
+
+<p><strong>1. OpenMP 的 fork ≠ Unix 的 <code>fork(2)</code>。</strong>Unix <code>fork()</code> 造的是<strong>新进程</strong>（独立地址空间、不共享内存）；OpenMP 的 fork 造的是<strong>新线程</strong>（同一进程、<strong>共享地址空间和堆</strong>）。OpenMP 的整个模型基于共享内存，所以必须是线程。"fork" 这里是比喻——像树枝分叉，一条控制流分裂成多条。</p>
+
+<p><strong>2. spawn 在实现上通常不是真的现造线程。</strong>主流 OpenMP runtime（libgomp、iomp 等）维护一个<strong>线程池</strong>：进程启动时就预建好线程，平时它们睡在条件变量上。<code>#pragma omp parallel</code> 出现时，runtime 只是<strong>把任务推给池里的线程并叫醒它们</strong>，循环结束让它们再去睡。所以 "spawn a team" 概念上是"造一队 worker"，实现上更像"激活一队 worker"。这也是 OpenMP 进出 parallel 区开销远小于 <code>pthread_create</code> 的原因。</p>
+</details>
+
+<details class="qa"><summary><strong>Q&A 2: "N 由 OMP_NUM_THREADS / num_threads() 子句决定" —— 这里的 / 是"或"，不是除号</strong></summary>
+<p>斜杠表示<strong>"或"（or）</strong>，意思是 N 这个值可能从这两个来源中的<strong>任一个</strong>得到，不是把两个数除一下。</p>
+
+<p>实际上 OpenMP 决定 N 的来源链有 <strong>4 条</strong>，按优先级从高到低（前者覆盖后者）：</p>
+<ol>
+  <li><strong><code>num_threads(N)</code> 子句</strong>——写在 pragma 上，<strong>只对这一个 parallel 区生效</strong>，最强、最局部。</li>
+  <li><strong><code>omp_set_num_threads(N)</code></strong>——库函数，运行时调用，影响<strong>之后所有</strong>没写 <code>num_threads</code> 的 parallel 区。</li>
+  <li><strong><code>OMP_NUM_THREADS</code> 环境变量</strong>——shell 启动前设的全局默认。</li>
+  <li><strong>都没设</strong>——runtime 自己决定，通常 = <code>nproc</code>（机器逻辑核数）。</li>
+</ol>
+
+<p><strong>注意语法</strong>：pragma 上是 <code>num_threads(N)</code>（子句，不是函数）；C 代码里是 <code>omp_set_num_threads(N)</code>（函数）。两者不同名字。</p>
+
+<p><strong>例子</strong>：</p>
+<pre>#pragma omp parallel                        // 走 OMP_NUM_THREADS 或默认
+{ ... }
+
+omp_set_num_threads(4);
+#pragma omp parallel                        // 走 set 的 4
+{ ... }
+
+#pragma omp parallel num_threads(2)         // 子句强制 2，覆盖上面的 4
+{ ... }
+
+#pragma omp parallel                        // 沿用 set 的 4，不被上一行影响
+{ ... }</pre>
+
+<p><strong>子句的作用域只是那一个 parallel 区</strong>，不会改全局。区 C 用完后区 D 又回到 4。</p>
+
+<p><strong>查询函数</strong>：<code>omp_get_max_threads()</code> 查"<strong>下一个</strong> parallel 区会用几个"（不实际创建）；<code>omp_get_num_threads()</code> 查"<strong>当前</strong> parallel 区里几个线程"（在串行区调它返回 1）。</p>
+</details>
+
+<details class="qa"><summary><strong>Q&A 3: implicit task vs explicit task —— 含义、用法（<code>shared</code> / <code>single</code>），以及"递归会不会生出新线程"</strong></summary>
+<p><strong>一句话区分</strong>：</p>
+<ul>
+  <li><strong>Implicit task</strong>——你写 <code>#pragma omp parallel</code> 时，OpenMP <strong>自动</strong>给每个线程分配的工作单元。<strong>每线程一个，绑死</strong>。</li>
+  <li><strong>Explicit task</strong>——你写 <code>#pragma omp task</code> 时，<strong>显式</strong>创建的工作单元，扔进任务队列，<strong>谁有空谁来跑</strong>。</li>
+</ul>
+
+<p><strong>核心区别</strong>：</p>
+<table>
+  <tr><th>维度</th><th>Implicit task</th><th>Explicit task</th></tr>
+  <tr><td>怎么产生</td><td><code>#pragma omp parallel</code> / <code>for</code> 时自动</td><td><code>#pragma omp task</code> 显式创建</td></tr>
+  <tr><td>数量</td><td>= team 线程数</td><td>任意，可远多于线程数</td></tr>
+  <tr><td>谁来执行</td><td><strong>绑定到固定线程</strong></td><td>任何空闲线程都能抢</td></tr>
+  <tr><td>适合场景</td><td>规整、可均分（数据并行）</td><td>不规整、动态生成（递归、链表）</td></tr>
+  <tr><td>OpenMP 版本</td><td>一直都有</td><td>3.0（2008）才加入</td></tr>
+</table>
+
+<p><strong>Implicit task 例子</strong>：</p>
+<pre>#pragma omp parallel for num_threads(4)
+for (int i = 0; i &lt; 100; ++i) work(i);</pre>
+<p>100 次迭代被切成 4 段，每段塞进一个 implicit task，<strong>一一对应固定线程</strong>，不互相抢。</p>
+
+<p><strong>Explicit task 例子（递归 fib）</strong>：</p>
+<pre>int fib(int n) {
+    if (n &lt; 2) return n;
+    int x, y;
+    #pragma omp task shared(x)        // 造一个 task，跑 fib(n-1)
+        x = fib(n - 1);
+    #pragma omp task shared(y)        // 再造一个，跑 fib(n-2)
+        y = fib(n - 2);
+    #pragma omp taskwait              // 等两个 task 都完
+    return x + y;
+}
+
+int main() {
+    #pragma omp parallel
+    {
+        #pragma omp single            // 只让一个线程发起递归
+        printf("%d\n", fib(20));
+    }
+}</pre>
+
+<p><strong><code>shared(x)</code> 是什么</strong>：数据共享子句。<strong>task 对外层函数局部变量默认按 firstprivate 处理</strong>（复制一份初值，往后写副本，外面看不到）。所以不写 <code>shared(x)</code> 的话，<code>x = fib(n-1)</code> 写的是 task 的私有副本，外面那个 x 永远拿不到结果。<code>shared(x)</code> 强制 task 写到外面那块内存。</p>
+
+<p>三个数据共享子句对比：</p>
+<table>
+  <tr><th>子句</th><th>内存</th><th>初值</th></tr>
+  <tr><td><code>shared(x)</code></td><td>共用外面那块</td><td>沿用外面当前值</td></tr>
+  <tr><td><code>firstprivate(x)</code></td><td>每 task 一份私有</td><td>复制外面的值</td></tr>
+  <tr><td><code>private(x)</code></td><td>每 task 一份私有</td><td><strong>不初始化</strong>（垃圾值）</td></tr>
+</table>
+
+<p><code>taskwait</code> 保证子 task 跑完才往下走，所以父 task 的栈帧里 <code>x</code> 还活着，子 task 写 x 是安全的。</p>
+
+<p><strong><code>#pragma omp single</code> 是什么</strong>：让 team 里<strong>恰好一个线程</strong>执行接下来那段代码的 worksharing 构造。</p>
+<ul>
+  <li><strong>谁来跑</strong>：team 里任意一个（runtime 决定）</li>
+  <li><strong>其他线程</strong>：跳过这段代码</li>
+  <li><strong>末尾</strong>：implicit barrier，所有线程等"那一个"跑完才一起往下（除非加 <code>nowait</code>）</li>
+</ul>
+
+<p><strong>fib 例子里为什么用 single</strong>：不加的话，4 个线程会各调一次 <code>fib(20)</code>，重复算 4 遍。加 single 后只有 1 个线程进去启动递归，其他 3 个线程在 single 末尾的 barrier "等"——但其实<strong>它们去任务队列抢 task 干</strong>（见下）。</p>
+
+<p><code>single</code> vs <code>master</code>：</p>
+<table>
+  <tr><th></th><th><code>single</code></th><th><code>master</code></th></tr>
+  <tr><td>谁执行</td><td>任意一个线程（runtime 选）</td><td>必须是线程 0</td></tr>
+  <tr><td>结尾 barrier</td><td><strong>有</strong>（默认）</td><td><strong>没有</strong></td></tr>
+</table>
+<p>"只想跑一次"的需求，<strong>默认用 single</strong>。</p>
+
+<p><strong>线程 vs 任务的关系（最关键的一点）</strong>：</p>
+<p>"一个线程进去 single，递归生成很多 task，是不是就生出了很多新线程？"——<strong>错</strong>。线程数从头到尾固定（你 num_threads 多少就是多少），递归生成的是<strong>任务</strong>不是<strong>线程</strong>。</p>
+
+<ul>
+  <li><strong>thread</strong> = 干活的工人，数量在 <code>parallel</code> 时定死</li>
+  <li><strong>task</strong> = 待办活，数量动态、可以爆炸式增长</li>
+</ul>
+
+<p><strong>实际执行流程（4 线程跑 fib）</strong>：</p>
+<ol>
+  <li>进 <code>parallel</code>：4 个线程全部诞生（T0..T3）。</li>
+  <li>4 个线程都遇到 <code>single</code>。runtime 选 1 个（比如 T0）进入；T1/T2/T3 跳过 single 块，到末尾的 barrier。</li>
+  <li>T1/T2/T3 在 barrier 等的时候，<strong>OpenMP 标准允许它们去任务队列抢 task 跑</strong>——barrier 是 task scheduling point。</li>
+  <li>T0 进 <code>fib</code> 开始递归，遇到 <code>#pragma omp task</code>，把子问题塞进队列。T1/T2/T3 立刻可以抢。</li>
+  <li>T0 走到 <code>taskwait</code>，自己暂时没活，<strong>它也会去队列拿 task 帮忙跑</strong>（<code>taskwait</code> 也是 task scheduling point）。</li>
+  <li>所有任务跑完，4 个线程在 single 末尾 barrier 汇合，parallel 区结束。</li>
+</ol>
+
+<pre>时间 →
+T0：│ 进 single │ 跑 fib 顶层 │ 边产 task │ taskwait │ 帮跑队列 task │ 出 single │
+T1：│ 跳过 single │ ──────────────抢 task ──> 抢 task ──> ........... │
+T2：│ 跳过 single │ ──────────────抢 task ──> 抢 task ──> ........... │
+T3：│ 跳过 single │ ──────────────抢 task ──> 抢 task ──> ........... │
+                                                              ↑ 全员汇合</pre>
+
+<p><strong>为什么这么设计</strong>：如果 single 真的让 T1/T2/T3 干等，<code>parallel { single { ... task ... } }</code> 这个常见模式就退化成串行了。OpenMP 故意把"等 barrier"和"任务调度点"绑在一起：<strong>等同步点的线程会被 runtime 拉去队列干活</strong>，这样 explicit task 才能真正并行起来。</p>
+</details>
+
+
+<!-- ==================== SLIDE 40 ==================== -->
+<h2 class="slide-title">Slide 40 — Memory Model（relaxed consistency 和 shared/private 的精确定义）</h2>
+
+<img class="slide-img" src="images/slide-40.png" alt="Slide 40: OpenMP memory model — relaxed consistency, shared/private semantics">
+
+<div class="explanation">
+  <p>这页给出 OpenMP 内存模型的精确规则。两个核心概念：<strong>relaxed consistency（宽松一致性）</strong> 和 <strong>shared / private 变量的访问语义</strong>。</p>
+
+  <p><strong>1. Relaxed Consistency（宽松一致性）</strong>。OpenMP 不保证"一个线程的写立即被其他线程看到"。每个线程有自己的<strong>临时视图（temporary view）</strong>，包括寄存器、CPU cache、其他本地存储。线程的写可能先停在自己的临时视图里，过一会才同步到主存。</p>
+
+  <p><strong>具体后果</strong>。线程 A 把 <code>x</code> 改成 5，但这个 5 可能还在 A 的 L1 cache 里没刷到主存。线程 B 此时去读 <code>x</code>，可能读到旧值（甚至读到 A 的中间状态）。</p>
+
+  <p><strong>为什么要 relaxed？</strong>因为<strong>性能</strong>。如果每次写都立刻同步到主存（strict consistency），CPU 缓存全废了。relaxed 让每次访问基本走 cache（纳秒级），靠程序员显式同步来保证关键节点的可见性。</p>
+
+  <p><strong>怎么强制视图同步到主存？</strong>用 <strong>flush 操作</strong>。OpenMP 在很多同步点会自动 flush：</p>
+  <ul>
+    <li><code>barrier</code> 隐式或显式</li>
+    <li><code>critical</code> 进入和退出</li>
+    <li><code>atomic</code> 操作</li>
+    <li><code>parallel</code> 区域开始和结束</li>
+    <li>显式 <code>#pragma omp flush(x)</code>（很少手写，由上面这些隐式触发）</li>
+  </ul>
+
+  <p>没有 flush 就没有可见性保证。这就是为啥写多线程代码必须用同步原语 —— 不只是为了排他访问，也是为了让其他线程看到你的更新。</p>
+
+  <p><strong>2. Shared 变量的语义</strong>（紫框第 2 条）：parallel block 里对 shared 变量的每次引用都<strong>直接指向块外那个原始变量</strong>。所有线程<strong>共用同一个地址</strong>。所以读写都对原版生效，但<strong>看到的值取决于何时 flush</strong>（受 relaxed consistency 影响）。</p>
+
+  <p><strong>3. Private 变量的语义</strong>（紫框第 3 条）：parallel block 里每个 private 变量<strong>每个线程都新建一个</strong>，类型和大小跟原版一样，但是<strong>独立的内存</strong>。每个线程访问的是自己的副本，互不干扰。</p>
+
+  <p>注意：private 变量<strong>初值是未定义的</strong>（除非用 <code>firstprivate</code> 子句要求继承外部初值）。退出 parallel region 后这些 private 副本被销毁，外部原变量的值<strong>保持不变</strong>（除非用 <code>lastprivate</code> 把最后迭代的值带出来）。</p>
+
+  <p><strong>对应到 slide 26 Q6 的内容</strong>。Q6 用 OpenMP 的伪代码"捕获 &amp;A" / "每线程新建 B" 解释了 shared / private；slide 40 是这套语义的<strong>规范定义</strong>。Q6 是 how，slide 40 是 what。</p>
+
+  <p><strong>实战 tip</strong>：</p>
+  <ul>
+    <li>怀疑可见性问题（一个线程的更新另一个看不到）→ 加 barrier 或换 atomic</li>
+    <li>怀疑被意外共享（应该是 private 的变量被多个线程改）→ 显式加 <code>private(x)</code> 或在 parallel block 内声明</li>
+    <li>调试 race condition 用 <strong>ThreadSanitizer</strong>（GCC <code>-fsanitize=thread</code>），它能追踪 happens-before 关系，比肉眼看靠谱得多</li>
+  </ul>
+</div>
+
+
+<!-- ==================== SLIDE 41 ==================== -->
+<h2 class="slide-title">Slide 41 — Parallel Regions（<code>#pragma omp parallel</code> 语法和 clauses）</h2>
+
+<img class="slide-img" src="images/slide-41.png" alt="Slide 41: parallel regions, syntax and clauses">
+
+<div class="explanation">
+  <p>这页给出 OpenMP 创建并行区的<strong>正式定义</strong>。前面 slides 讲过 fork-join 模型的概念，这里把语法和 clauses 钉死。</p>
+
+  <p><strong>执行流程（slide 顶部 4 行）</strong>：</p>
+  <ol>
+    <li>程序顺序执行，直到遇到 <code>parallel</code> directive。</li>
+    <li>遇到的那个线程<strong>第一次创建</strong>一个 team of threads（子线程们），它自己变成这个 team 的 <strong>primary thread（编号 0）</strong>。</li>
+    <li>parallel region 结束时有<strong>隐式 barrier</strong>，同步所有线程并把 children join 回去。</li>
+    <li>原来的 primary thread 继续往下顺序执行。</li>
+  </ol>
+
+  <p><strong>关键词 "first creates"</strong>。OpenMP 实现通常会<strong>缓存线程池</strong>—— 第一次进 parallel region 真的 spawn 系统线程，之后再进同一个或别的 parallel region 时，复用已有 worker，不会真的创建/销毁线程。这是 OpenMP 比手写 pthread 性能好的关键之一（避免反复 <code>pthread_create</code>）。</p>
+
+  <p><strong>语法骨架</strong>（紫框）：</p>
+  <pre>#pragma omp parallel [clause list] new-line
+    structured block</pre>
+
+  <p>"structured block" 是 OpenMP 反复出现的术语 —— 单入口单出口的代码块（不能从中间 <code>goto</code>/<code>return</code>/<code>break</code> 出去）。slide 35 已经讲过定义，这里照旧。</p>
+
+  <p><strong>Clauses 分两类</strong>。这页只是先给清单，具体语义后面分页讲：</p>
+
+  <p><strong>Control clauses（控制类）</strong>：</p>
+  <ul>
+    <li><code>if(parallel: scalar-expr)</code> — 表达式为假就<strong>退化成单线程</strong>执行（仍然进 parallel block，但只有 primary thread）。常用于"问题规模小就别开线程"。</li>
+    <li><code>num_threads(integer-expr)</code> — 指定这个 region 要开多少线程（slide 42 详细讲优先级）。</li>
+    <li><code>reduction(reduction-identifier: list)</code> — 归约操作。每个线程拿一个 private 副本累加，结束时合并到 shared 变量（如 sum、max、min）。后面专门有一页讲。</li>
+  </ul>
+
+  <p><strong>Data clauses（数据作用域类）</strong>：</p>
+  <ul>
+    <li><code>default(data-sharing-attribute)</code> — 设置默认作用域。常用 <code>default(none)</code> 强制每个变量必须显式声明 shared/private，避免漏写出 bug。</li>
+    <li><code>shared(list)</code> — 列出的变量所有线程<strong>共用同一份内存</strong>。</li>
+    <li><code>private(list)</code> — 每个线程<strong>新建独立副本</strong>，初值未定义。</li>
+    <li><code>firstprivate(list)</code> — 跟 private 一样新建副本，但<strong>初值继承</strong>外部原变量的当前值。</li>
+  </ul>
+
+  <p><strong>对比 slide 40</strong>。slide 40 给的是 shared/private 的<strong>语义</strong>（每次访问发生什么），这页给的是<strong>声明语法</strong>（怎么标注变量）。两者要配合看：写 <code>private(x)</code> 时，slide 40 告诉你"每个线程会得到一份独立的 x"。</p>
+
+  <p><strong>实战习惯</strong>：刚开始写 OpenMP 代码强烈推荐 <code>default(none)</code>，编译器会把每个未声明作用域的变量当错误报出来。这能在<em>编译期</em>抓住"我以为是 private 其实默认成了 shared"这类典型 bug，比运行时 race 好查 100 倍。</p>
+</div>
+
+<details class="qa"><summary><strong>Q&A 1: <code>if(scalar-expr)</code> 子句的用法、scalar-expr 和 integer-expr 是什么</strong></summary>
+<p><strong><code>if(scalar-expr)</code> 子句</strong>：让 parallel 区<strong>有条件地</strong>变并行——表达式真就并行，假就<strong>串行（1 个线程跑）</strong>。</p>
+
+<p>用途：并行不是免费的（线程激活、调度、cache 同步开销），<strong>任务太小并行反而更慢</strong>。<code>if</code> 让你按运行时数据规模自适应。</p>
+
+<pre>void process(double *a, int n) {
+    #pragma omp parallel for if(n &gt; 1000)
+    for (int i = 0; i &lt; n; ++i)
+        a[i] = work(a[i]);
+}
+// process(a, 50)     → if 假 → 串行
+// process(a, 100000) → if 真 → 并行</pre>
+
+<p>可选前缀 <code>if(parallel: n &gt; 1000)</code> 用在 combined construct（如 <code>parallel for</code>）想让 if 只控制其中一部分时，日常省略。</p>
+
+<p><strong>scalar-expression（标量表达式）</strong>：能算出一个<strong>单个值</strong>的表达式（不是数组、向量、结构体），结果当真值用（0 = false，非 0 = true）。</p>
+<pre>if(n &gt; 1000)              // 比较
+if(flag)                  // 变量
+if(a &gt; 0 &amp;&amp; b &lt; 100)      // 逻辑组合
+if(get_size())            // 函数返回值
+if(threshold * 2 + offset)// 算术</pre>
+
+<p><strong>integer-expression（整数表达式）</strong>：比 scalar 更严格——必须是<strong>整数类型</strong>（<code>int</code>、<code>long</code>、<code>size_t</code>），不能是浮点。用在 <code>num_threads(integer-expr)</code> 上，因为线程数必须是整数。</p>
+<pre>num_threads(8)
+num_threads(N / 2)
+num_threads(omp_get_num_procs())
+num_threads(min(N, 16))</pre>
+
+<p><strong>区别一句话</strong>：scalar-expr 接受任何标量做<em>真值判断</em>；integer-expr 只接受整数做<em>计数</em>。</p>
+</details>
+
+<details class="qa"><summary><strong>Q&A 2: <code>reduction(+:sum)</code> 语法详解，sum 跟 block 里的变量是同一个吗</strong></summary>
+<p><strong>语法拆解</strong>：</p>
+<pre>reduction ( + : sum )
+            ↑   ↑
+            │   └── 变量列表（要被规约的变量，逗号分隔）
+            └────── 二元运算符（怎么合并）</pre>
+<p>冒号是分隔符——左边"用什么运算符"，右边"对哪些变量"。</p>
+
+<p><strong>各部分能写什么</strong>：</p>
+<ul>
+  <li><strong>左边（reduction-identifier）</strong>：内置运算符 <code>+ - * &amp; | ^ &amp;&amp; || min max</code>，或自定义 <code>declare reduction</code>。</li>
+  <li><strong>右边（list）</strong>：一个或多个变量名，逗号分隔。</li>
+</ul>
+
+<p><strong>例子</strong>：</p>
+<pre>reduction(+:sum)                                     // 单变量
+reduction(+:sum, count)                              // 多变量同运算符
+reduction(+:sum) reduction(*:product) reduction(max:peak)  // 不同运算符 → 多个子句</pre>
+
+<p><strong>sum 跟 block 里的变量是同一个吗？是。</strong>子句里的 <code>sum</code> 是对外面那个变量的<strong>引用</strong>，告诉 OpenMP "循环里出现的所有 sum 请按 reduction 处理"。</p>
+<pre>double sum = 0.0;                          // ← 外面声明
+#pragma omp parallel for reduction(+:sum)  // ← 子句引用同一个名字
+for (int i = 0; i &lt; N; ++i)
+    sum += a[i];                           // ← block 里用的也是这个</pre>
+
+<p><strong>两条硬规则</strong>：</p>
+<ul>
+  <li>名字必须完全对上。子句写 <code>sum</code>、block 用 <code>total</code> → 编译错。</li>
+  <li>必须先在外面声明。OpenMP 不会替你造变量，它只接管"如何在并行区里处理这个已存在的变量"。</li>
+</ul>
+
+<p><strong>reduction 概念回顾</strong>：解决"多线程都要更新同一变量"的 race 问题。runtime 做 3 件事：</p>
+<ol>
+  <li>给每个线程造一份私有副本，按运算符的幺元初始化（<code>+</code>→0，<code>*</code>→1，<code>min</code>→类型最大值，<code>max</code>→类型最小值）。</li>
+  <li>每个线程在私有副本上累加自己分到的迭代——<strong>无锁、无 race</strong>。</li>
+  <li>循环末尾把所有私有副本用运算符合并到外面那个共享变量。</li>
+</ol>
+
+<p>所以"子句里的 sum"和"block 里的 sum"名义上同一个，循环执行期间临时被换成各线程的私有副本，结束汇合回去。这是 reduction 的核心机制。</p>
+
+<p><strong>跟 critical / atomic 的区别</strong>：critical/atomic 每次累加都加锁，开销 O(N)；reduction 只在末尾合并一次，开销 O(nthreads)。N 通常远大于 nthreads，所以 reduction 快得多。详细机制（幺元表、合并实现、浮点结合性）见 slide 59-60。</p>
+</details>
+
+
+<!-- ==================== SLIDE 42 ==================== -->
+<h2 class="slide-title">Slide 42 — Number of Threads（4 级优先级 + 编号规则）</h2>
+
+<img class="slide-img" src="images/slide-42.png" alt="Slide 42: number of threads in parallel regions">
+
+<div class="explanation">
+  <p>"我这个 parallel region 到底开几个线程？"OpenMP 用一个 4 级优先级链来回答这个问题。<strong>越靠前的优先级越高</strong>，前面的设了，后面的就被覆盖。</p>
+
+  <ol>
+    <li><strong><code>num_threads</code> clause</strong>（最高优先级）。直接写在 pragma 上：<code>#pragma omp parallel num_threads(8)</code>。这一句决定<strong>这个具体 region</strong> 用多少线程，覆盖一切其他设定。</li>
+    <li><strong><code>omp_set_num_threads(n)</code> 库函数</strong>。在程序里调用一次，影响后续所有没显式写 <code>num_threads</code> clause 的 parallel region。改完之后再开的 region 都用这个值。</li>
+    <li><strong><code>OMP_NUM_THREADS</code> 环境变量</strong>。在 shell 里 <code>export OMP_NUM_THREADS=8</code>，程序启动时读取。常用于不改代码就调线程数。</li>
+    <li><strong>实现默认</strong>（最低）。前面 3 个都没设时，OpenMP 实现自己决定，<strong>典型是机器的核心数</strong>（比如 32 核机器默认 32 个线程）。</li>
+  </ol>
+
+  <p><strong>"do not rely on it!" 是重点</strong>。slide 用斜体强调这句话 —— 不要写依赖默认值的代码。原因：</p>
+  <ul>
+    <li>不同 OpenMP 实现（GCC、Intel、Clang、Cray）默认值可能不一样。</li>
+    <li>同一实现在不同机器上、SMT 开关不同时也可能不一样（有时候是物理核数，有时候是 hyper-thread 数）。</li>
+    <li>跑在容器/cgroup 里可能拿到的"核数"是被限制后的数。</li>
+  </ul>
+  <p>所以 production 代码要么显式 <code>num_threads</code>，要么读 <code>OMP_NUM_THREADS</code>，让运维或调度脚本控制。</p>
+
+  <p><strong>线程编号规则（紫框）</strong>。一个 parallel region 里的线程<strong>从 0 编号到 n-1</strong>。0 号永远是 primary thread（创建这个 team 的那个）。</p>
+
+  <p><strong>嵌套（nested）的情况也一样</strong>。在 parallel region 里又遇到一个 <code>#pragma omp parallel</code>，每个外层线程再各自开一个内层 team —— 内层 team 的编号<strong>独立从 0 开始</strong>，不接着外层往下数。所以 <code>omp_get_thread_num()</code> 返回的是<strong>当前 team 内</strong>的编号，不是全局唯一 ID。</p>
+
+  <p><strong>常见混淆</strong>。设了 <code>OMP_NUM_THREADS=8</code> 后，<strong>每次</strong>进 parallel region 都会开 8 个线程吗？答案：取决于 dynamic mode（slide 43 讲）。dynamic 模式下 8 是<strong>上限</strong>，运行时可能给你少一点；static 模式下严格就是 8。</p>
+</div>
+
+
+<!-- ==================== SLIDE 43 ==================== -->
+<h2 class="slide-title">Slide 43 — Dynamic vs Static Modes（线程数能不能在 region 之间变）</h2>
+
+<img class="slide-img" src="images/slide-43.png" alt="Slide 43: dynamic and static modes in parallel regions">
+
+<div class="explanation">
+  <p>这页讲 OpenMP 的 <strong>dynamic mode</strong> 和 <strong>static mode</strong> —— 控制"<em>程序里多个 parallel region 之间，实际开的线程数能不能变</em>"。注意这跟后面要讲的循环<strong>调度策略</strong>里的 <code>schedule(dynamic)</code> 是<strong>完全不同的两件事</strong>，名字撞了，容易混。</p>
+
+  <p><strong>Dynamic mode（默认）</strong>。同一程序里不同 parallel region 实际拿到的线程数<strong>可以不一样</strong>。你设的（<code>num_threads</code> 或环境变量）只是<strong>上限</strong>—— OpenMP 运行时可以为了优化资源（OS 调度负载、缓存、共享同一台机器的其他作业）给你少派几个。</p>
+
+  <p>举例：<code>OMP_NUM_THREADS=16</code>，但机器现在很忙，第一个 region 给你 16 个，第二个 region 只给 12 个。代码不报错，但<strong>性能不可预测</strong>。</p>
+
+  <p><strong>Static mode（HPC 推荐）</strong>。每个 parallel region 实际开的线程数<strong>严格等于</strong>你通过 <code>num_threads</code>、<code>omp_set_num_threads()</code>、<code>OMP_NUM_THREADS</code> 之一指定的数。运行时不会自作主张减线程。</p>
+
+  <p><strong>怎么强制 static</strong>（紫框）：</p>
+  <pre>OMP_DYNAMIC=false</pre>
+  <p>在启动脚本里 export 这个环境变量即可。也可以在代码里调 <code>omp_set_dynamic(0)</code>。</p>
+
+  <p><strong>为什么 HPC 要 static？</strong></p>
+  <ul>
+    <li><strong>性能可重复</strong>。HPC 跑 benchmark 要每次时间稳定才有意义，dynamic 让线程数飘忽不定，结果没法比较。</li>
+    <li><strong>资源已经独占</strong>。HPC 节点通常被作业调度器（Slurm）独占，不存在"和别人抢"的问题，dynamic 的"让一让"就没意义。</li>
+    <li><strong>和绑核（affinity）配合</strong>。如果想把线程钉到具体核上，线程数必须固定。</li>
+  </ul>
+
+  <p><strong>什么时候 dynamic 反而合理</strong>。在共享服务器、桌面机、开发环境里，让运行时根据机器负载弹一下是合理的 —— 反正不追求 benchmark 级精度。所以默认才设成 dynamic。</p>
+
+  <p><strong>易混 tip</strong>。考试或读代码时一定区分：</p>
+  <ul>
+    <li><code>OMP_DYNAMIC=true/false</code> —— 控制 region 之间线程数能不能变。</li>
+    <li><code>schedule(dynamic, chunk)</code> —— 控制<em>同一个循环里</em>迭代怎么分给线程（动态领取 vs 静态切片）。</li>
+  </ul>
+  <p>名字相近含义完全不同。</p>
+</div>
+
+
+<!-- ==================== SLIDE 44 ==================== -->
+<h2 class="slide-title">Slide 44 — Using Threads to Get Work Done（数据并行 vs 任务并行的引子）</h2>
+
+<img class="slide-img" src="images/slide-44.png" alt="Slide 44: using threads to get work done — recall two kinds of parallelism">
+
+<div class="explanation">
+  <p>这页是个<strong>承上启下</strong>的过渡页。前面已经讲完"怎么用 OpenMP fork 出一队线程"（parallel region、线程数控制、dynamic/static），<strong>下一步</strong>是"<em>有了线程，怎么把活分给它们干</em>"。</p>
+
+  <p><strong>回顾两种并行性</strong>（这是 lecture 早期已经建立的概念）：</p>
+  <ol>
+    <li><strong>Data-level parallelism（数据并行）</strong>：同一段代码作用在不同数据上。典型：数组每个元素做同样的运算。</li>
+    <li><strong>Task-level parallelism（任务并行）</strong>：不同的代码逻辑可以同时跑。典型：递归分治、流水线、互不依赖的几段功能。</li>
+  </ol>
+
+  <p><strong>OpenMP 怎么对应这两种</strong>（紫框）：</p>
+  <ul>
+    <li><strong>worksharing</strong>（主要）→ data-level parallelism</li>
+    <li><strong>tasking</strong> → task-level parallelism</li>
+  </ul>
+
+  <p><strong>为什么说 worksharing 是"mostly"对应数据并行？</strong>因为 worksharing 三件套里：</p>
+  <ul>
+    <li><code>for</code>（loop construct）—— 切迭代分给线程，标准的数据并行。</li>
+    <li><code>sections</code> —— 把几段不同代码各分一段给一个线程，<strong>本质上是小规模任务并行</strong>，但因为活的数量在编译期就固定，归在 worksharing 里。所以 worksharing ≠ 100% 等于数据并行，只是"大体上"是。</li>
+    <li><code>single</code> —— 让某一段只跑一次，更像同步原语。</li>
+  </ul>
+
+  <p>真正灵活的任务并行（递归、动态展开）才是 <strong>tasking</strong> 的领域 —— 用 <code>#pragma omp task</code> 显式打包工作单元丢进运行时队列。</p>
+
+  <p><strong>为什么这页要单独存在？</strong>因为接下来 5～10 页全在讲 worksharing（loop construct、canonical loop、sections、single、各种 clauses），讲完才会跳到 tasking。这页相当于一个"接下来要展开的两条主线"目录，让你不会读着读着就迷失在细节里。</p>
+
+  <p><strong>记住这张分类</strong>：worksharing 三件套 + tasking 一件套 = OpenMP 把活分给线程的全部 4 种构造。后面所有的 pragma 都能放进这个分类里。</p>
+</div>
+
+
+<!-- ==================== SLIDE 45 ==================== -->
+<h2 class="slide-title">Slide 45 — Using Threads to Get Work Done（worksharing vs tasking）</h2>
+
+<img class="slide-img" src="images/slide-45.png" alt="Slide 45: worksharing vs tasking comparison">
+
+<div class="explanation">
+  <p>OpenMP 把"用多个线程把活干完"这件事分成两条路：<strong>worksharing</strong> 和 <strong>tasking</strong>。它们大致对应 slide 44 提到的两种并行性 —— worksharing → data-level parallelism，tasking → task-level parallelism。</p>
+
+  <p><strong>Worksharing：把"已经知道总量"的活均分给一队线程</strong>。典型场景就是循环：<code>for (i=0; i&lt;N; ++i) A[i]=...</code>，每个线程领走 <code>N/nthreads</code> 个迭代独立做。每个线程做的是<strong>同一段代码</strong>，只是数据子集不同。这就是 SPMD（single program multiple data）的味道。</p>
+
+  <p><strong>例子</strong>：数组遍历（最常见）；或几段彼此独立的代码块（OpenMP 用 <code>sections</code> 表达，每个 thread 拿一段不同的 section 跑）。</p>
+
+  <p><strong>Tasking：把"长得不规则"的活打包成一个个 task 丢到队列里</strong>。一个 task = <em>code + data + 内部控制变量</em>，被打包好放进运行时的任务队列；线程池里空闲的线程从队列里取任务执行，可以立刻执行也可以稍后被调度。</p>
+
+  <p>关键点是 task <strong>很便宜</strong>（轻量级数据结构，不是新建一个 OS 线程），所以可以在递归里疯狂 spawn 而不至于爆掉 —— OpenMP 运行时复用已有的 worker thread 池来执行这些 task。</p>
+
+  <p><strong>什么叫"不规则"？</strong>就是<strong>事先不知道有多少活</strong>，活的形状还会动态展开。典型代表：</p>
+  <ul>
+    <li><strong>递归函数</strong>（比如 quicksort、并行 Fibonacci）：每一层 spawn 出 1～2 个子任务，深度和数量跑起来才知道。</li>
+    <li><strong>list / tree 遍历</strong>：树有多大、链表有多长、形状是否平衡，编译期完全无法预测。</li>
+  </ul>
+
+  <p><strong>为什么不能用 worksharing 做这些？</strong>因为 worksharing 在进入循环前就要切分迭代区间 —— 如果连"迭代次数"都不存在（比如递归到一半才决定是否继续），就没法事先切分。Tasking 的本质是<strong>把"现在生成一个新工作单元"这个操作变成 O(1) 的便宜动作</strong>，让你按需动态发活。</p>
+
+  <p><strong>一句话区分</strong>：worksharing 适合"<em>规整的数据并行</em>"，tasking 适合"<em>不规则的、跑起来才知道形状的</em>并行"。后面几页会先深入讲 worksharing 的三个 construct（loop / sections / single），tasking 后面再讲。</p>
+</div>
+
+
+<!-- ==================== SLIDE 46 ==================== -->
+<h2 class="slide-title">Slide 46 — Worksharing Constructs（loop / sections / single 三件套）</h2>
+
+<img class="slide-img" src="images/slide-46.png" alt="Slide 46: OpenMP defines 3 worksharing constructs">
+
+<div class="explanation">
+  <p>OpenMP 一共定义了 <strong>3 个 worksharing construct</strong>，全都用来"在线程队里分活"。它们的区别是<strong>分活的方式不同</strong>。</p>
+
+  <p><strong>1. Loop construct（<code>#pragma omp for</code>）</strong>：把一个或多个紧跟其后的循环的<strong>迭代</strong>切成块，分给线程并行执行。这是日常最常用的一个 —— 90% 的 OpenMP 代码都是 <code>parallel for</code>。</p>
+
+  <p><strong>2. Sections construct（<code>#pragma omp sections</code>）</strong>：<strong>非迭代</strong>的 worksharing。里面写若干个 <code>#pragma omp section { ... }</code> 结构块，运行时把每个 section <strong>整体</strong>分给一个线程跑。适合"我有 3 段独立的代码，希望它们并行执行"这种场景 —— 每段可以是完全不同的逻辑（不像 loop 大家跑同一段代码不同迭代）。</p>
+
+  <p><strong>3. Single construct（<code>#pragma omp single</code>）</strong>：在 parallel region 里，标记的这块代码<strong>只让一个线程执行</strong>（不一定是 primary thread，谁先到谁跑）。常用于在并行区里做"只该做一次"的事，比如打印一行日志、读一次文件、初始化共享变量。其它没抢到的线程<strong>在 single 块出口等</strong>（除非 nowait）。</p>
+
+  <p><strong>共同的关键规则：implicit barrier</strong>。所有 worksharing construct <strong>在结构块出口都有一个隐式 barrier</strong> —— 全部线程必须到达此点才能继续。这是默认的同步保证：循环跑完之后再做下一步是安全的，因为大家都干完了自己的份。</p>
+
+  <p><strong>怎么去掉这个 barrier？</strong>加 <code>nowait</code> 子句：<code>#pragma omp for nowait</code>。意思是"我先干完的不等其他人，直接往下走"。用它要小心 —— 如果下一段代码依赖循环结果，去掉 barrier 会触发 race。典型用法：紧接着另一个独立 worksharing region 时，用 nowait 让两段重叠执行。</p>
+
+  <p><strong>易混点</strong>：worksharing construct 必须出现在 <code>parallel</code> 区域里才有意义 —— 它本身<strong>不创建线程</strong>，只是把活分给已经存在的线程队。所以你常看到合写形式 <code>#pragma omp parallel for</code>，等价于"开 parallel 区 + 立刻进入 for 分活"。</p>
+</div>
+
+<details class="qa"><summary><strong>Q&A: 为什么 <code>single</code> 算 worksharing construct？只有一个线程执行，"shared" 在哪？</strong></summary>
+<p>困惑来自 "worksharing" 这个词的字面意思——听起来像"把活分给多人干"，但 single 只让 1 个线程干，怎么也算？</p>
+
+<p><strong>核心答案</strong>：OpenMP 标准里 "worksharing" 不是按"分给几个人"定义的，而是按"<strong>这段代码总共执行几次</strong>"定义的。</p>
+
+<p><strong>parallel 区里代码的两大类</strong>：</p>
+<table>
+  <tr><th>类别</th><th>行为</th><th>例子</th></tr>
+  <tr><td><strong>Replicated（复制执行）</strong></td><td>每个线程都跑一遍，<strong>总共跑 N 次</strong></td><td>bare 代码、parallel 块体里的普通语句</td></tr>
+  <tr><td><strong>Worksharing（分担执行）</strong></td><td><strong>总共只跑一次</strong>（或 M 次迭代），分给 team 的一部分线程做</td><td><code>for</code> / <code>sections</code> / <code>single</code></td></tr>
+</table>
+
+<p>三个 worksharing construct 的共同性质：<strong>block 的执行次数和 team 大小解耦</strong>。</p>
+<ul>
+  <li><code>for</code>：循环体总共跑 M 次（M 是迭代数），分给 N 个线程平均承担 → 每个迭代只跑 1 次。</li>
+  <li><code>sections</code>：K 个 section 总共跑 K 次，分给 N 个线程 → 每个 section 只跑 1 次。</li>
+  <li><code>single</code>：1 个 block 总共跑 1 次，1 个线程承担 → block 只跑 1 次。</li>
+</ul>
+
+<p><strong>对比演示</strong>（4 线程）：</p>
+<pre>#pragma omp parallel num_threads(4)
+{
+    foo();              // replicated: foo 被调用 4 次
+
+    #pragma omp for
+    for (int i = 0; i &lt; 100; ++i)
+        bar(i);         // worksharing: bar 总共 100 次（不是 400）
+
+    #pragma omp single
+    baz();              // worksharing: baz 调用 1 次（不是 4）
+}</pre>
+<p>如果 single 算 replicated，<code>baz()</code> 会被调 4 次——但实际只调 1 次。所以从"代码运行了几遍"的角度，single 和 for / sections 是同一类。</p>
+
+<p><strong>回到 fib 例子的疑问</strong>：fib 里的 <code>single</code> 和 <code>task</code> 是<strong>两个不同的构造</strong>，各管各的事：</p>
+<ul>
+  <li><strong><code>single</code> 是 worksharing</strong>——保证 <code>fib(20)</code> 这个调用<strong>整体只发生 1 次</strong>（不是 4 次）。</li>
+  <li><strong><code>task</code> 是 tasking construct</strong>（OpenMP 单独的一类，<strong>不属于 worksharing</strong>）——把工作扔进队列让别人抢。</li>
+</ul>
+
+<p>"其他线程从队列抢 task 跑"这件事不是因为 single 是 worksharing，而是因为：(1) 其他线程跳过 single 块到了末尾的 implicit barrier（所有 worksharing 末尾都有 barrier）；(2) barrier 是 task scheduling point，runtime 拉它们去队列干 task。</p>
+
+<p>所以 single 的 worksharing 属性只贡献了"调用 1 次 + 末尾 barrier"，task 的并发是 task 系统自己的功劳。</p>
+
+<p><strong>命名的本质</strong>：single 入选 worksharing 的资格不是"分摊"，而是"<strong>非复制</strong>"。这是命名的历史遗留——标准用 "worksharing" 这个词，但实际定义更接近 "non-replicated"。</p>
+</details>
+
+<details class="qa"><summary><strong>Q&A: <code>continue</code> 在 parallel for 里合法吗？外层内层都能用？</strong></summary>
+<p><strong>核心原则</strong>：<code>continue</code> 只跳到<strong>自己所在那层循环</strong>的下一次迭代，<strong>不会跳出循环</strong>——所以不破坏 OpenMP 要求的 single-exit。<strong>外层内层都合法</strong>。</p>
+
+<p><strong>例 1：continue 在外层 parallel for</strong></p>
+<pre>#pragma omp parallel for
+for (int i = 0; i &lt; N; ++i) {
+    if (a[i] == 0) continue;     // ✅ 跳过当前 i，去做 i+1
+    process(a[i]);
+}</pre>
+<p>线程没退出循环、没退出 parallel 区，single-exit 完好。</p>
+
+<p><strong>例 2：continue 在内层（非 parallel）循环</strong></p>
+<pre>#pragma omp parallel for
+for (int i = 0; i &lt; N; ++i) {
+    for (int j = 0; j &lt; M; ++j) {
+        if (skip(i, j)) continue;  // ✅ 只跳到内层 j+1
+        work(i, j);
+    }
+}</pre>
+<p><code>continue</code> 永远作用于<strong>最内层包着它的循环</strong>，所以这里跳的是 j，外层 parallel for 完全不受影响。</p>
+
+<p><strong>例 3：内外都有 continue</strong></p>
+<pre>#pragma omp parallel for
+for (int i = 0; i &lt; N; ++i) {
+    if (mask_i[i]) continue;             // ✅ 跳外层 i
+
+    for (int j = 0; j &lt; M; ++j) {
+        if (mask_j[j]) continue;         // ✅ 跳内层 j
+        accumulate(i, j);
+    }
+}</pre>
+
+<p><strong>对比：break 在 parallel for 那层就违法</strong></p>
+<pre>#pragma omp parallel for
+for (int i = 0; i &lt; N; ++i) {
+    if (a[i] == TARGET) break;   // ❌ 编译错或 UB
+}</pre>
+<p><code>break</code> 会直接跳出 parallel for，破坏 single-exit。但 break 在<strong>内层</strong>循环里合法（只跳出内层）：</p>
+<pre>#pragma omp parallel for
+for (int i = 0; i &lt; N; ++i) {
+    for (int j = 0; j &lt; M; ++j) {
+        if (a[i][j] == 0) break;  // ✅ 只跳出 j 循环
+    }
+    process(i);
+}</pre>
+
+<p><strong>合法性总表</strong>：</p>
+<table>
+  <tr><th>控制流</th><th>parallel for 那层</th><th>内层非并行循环</th></tr>
+  <tr><td><code>continue</code></td><td>✅ 合法</td><td>✅ 合法</td></tr>
+  <tr><td><code>break</code></td><td>❌ 违法</td><td>✅ 合法</td></tr>
+  <tr><td><code>goto</code>（跳出循环外）</td><td>❌ 违法</td><td>❌ 违法</td></tr>
+  <tr><td><code>return</code></td><td>❌ 违法</td><td>❌ 违法</td></tr>
+  <tr><td><code>throw</code>（C++）</td><td>❌ 违法</td><td>❌ 违法</td></tr>
+</table>
+
+<p><strong>记忆口诀</strong>：<code>continue</code> 不会"出"循环，永远合法；<code>break</code>/<code>return</code>/<code>goto</code>/<code>throw</code> 会"出"循环，<strong>只要会跳出 parallel for 那一层就违法</strong>。</p>
+</details>
+
+
+<!-- ==================== SLIDE 47 ==================== -->
+<h2 class="slide-title">Slide 47 — Loop Construct（手动切分循环的"原始"做法）</h2>
+
+<img class="slide-img" src="images/slide-47.png" alt="Slide 47: parallelizing a loop the raw way">
+
+<div class="explanation">
+  <p>这页演示<strong>不用 worksharing construct</strong>、只用 <code>#pragma omp parallel</code> 时，要怎么手动把循环分给线程。目的是让你看到 OpenMP 帮我们省了多少事 —— 下一页就给出"OpenMP way"的对比版本。</p>
+
+  <p><strong>思路</strong>。<code>#pragma omp parallel</code> 让 <strong>每个线程都执行整段代码</strong>（SPMD 模式）。如果 block 里写一个 <code>for (i=0; i&lt;N; ++i) A[i]=...</code>，那 <em>每个线程都会跑完整 N 个迭代</em>，结果是同一份活做了 nthreads 次（既浪费又可能 race）。所以需要程序员自己根据 thread id 把区间切开。</p>
+
+  <p><strong>三个步骤（slide 右栏列出）</strong>：</p>
+  <ol>
+    <li><strong>取 worker 信息</strong>：<code>tid = omp_get_thread_num()</code> 拿自己的编号（0..nthreads-1），<code>nthreads = omp_get_num_threads()</code> 拿队伍大小。</li>
+    <li><strong>计算自己的区间</strong>（domain decomposition）：每人 <code>npoints = N / nthreads</code> 个迭代，起点 <code>mystart = tid * npoints</code>。注意整除可能除不尽，所以最后一个线程要把<strong>余数</strong>吃掉 —— 代码里 <code>if (tid == nthreads - 1) npoints += mystart;</code>（这行其实是处理余数的逻辑：让最后一个线程的工作量延伸到 N）。</li>
+    <li><strong>各自跑自己的子循环</strong>：<code>for (i = 0; i &lt; npoints; ++i) A[mystart + i] = ...</code>。</li>
+  </ol>
+
+  <p><strong>为什么这写法能避免 race？</strong>因为不同 tid 算出来的 <code>mystart</code> 区间互不重叠 —— 每个线程只写 <code>A[]</code> 里属于自己的那一段，所以即使 <code>A</code> 是 shared，也不会冲突。</p>
+
+  <p><strong>这种方式的痛点</strong>：</p>
+  <ul>
+    <li>余数处理容易写错（off-by-one 是经典 bug）。</li>
+    <li>每加一个新循环都要重抄一遍这套样板。</li>
+    <li>不同的调度策略（动态分块、按 chunk 大小、guided）要自己手写完全不一样的逻辑。</li>
+  </ul>
+
+  <p><strong>这就是为啥需要 <code>#pragma omp for</code></strong>：把上面这堆"算 mystart / npoints / 处理余数"的样板交给编译器和运行时去做。slide 48 就给出对应的简洁版本，slide 49 揭示一个常见错误。</p>
+
+  <p><strong>提到的伏笔</strong>："similar to domain decomposition in MPI, you will see this later again" —— 后面讲 MPI 时会发现这种"按 rank 切区间"的逻辑几乎一模一样，只是名字从 thread id 变成了 process rank。这是 SPMD 模型的通用套路。</p>
+</div>
+
+<details class="qa"><summary><strong>Q&A: <code>omp_get_thread_num()</code> / <code>omp_get_num_threads()</code> 含义，以及 <code>{}</code> 块"被复制 N 次"怎么理解</strong></summary>
+<p><strong>三件事确认</strong>：</p>
+<ul>
+  <li><code>omp_get_thread_num()</code> → 当前线程 ID（0 到 nthreads-1）<strong>每个线程值不同</strong>。</li>
+  <li><code>omp_get_num_threads()</code> → team 总人数<strong>所有线程读到都一样</strong>（这里都是 4）。</li>
+  <li><code>{}</code> block <strong>每个线程都会跑一遍</strong>。</li>
+</ul>
+
+<p><strong>"复制 4 次" 这个比喻要更精确一点</strong>：不是真的把代码复制 4 份，而是<strong>同一段代码</strong>被 4 个线程<strong>并发执行</strong>，每个线程各自有一份<strong>私有栈帧</strong>。所以 <code>tid</code> / <code>nthreads</code> / <code>npoints</code> / <code>mystart</code> 这些局部变量是<strong>每个线程一份</strong>，互不干扰。</p>
+
+<pre>同一份代码，4 个线程并发执行：
+
+Thread 0 栈帧:           Thread 1 栈帧:
+  tid      = 0             tid      = 1
+  nthreads = 4             nthreads = 4
+  npoints  = 250           npoints  = 250
+  mystart  = 0             mystart  = 250
+  → A[0..249]              → A[250..499]
+
+Thread 2 栈帧:           Thread 3 栈帧:
+  tid      = 2             tid      = 3
+  nthreads = 4             nthreads = 4
+  npoints  = 250           npoints  = 250
+  mystart  = 500           mystart  = 750
+  → A[500..749]            → A[750..999]</pre>
+
+<p>4 个线程的 <code>nthreads</code> <strong>值都是 4</strong>，但 <code>tid</code> <strong>各不相同</strong>——这正是"自动分工"的关键：每个线程根据自己的 <code>tid</code> 算"我处理 A 的哪一段"。</p>
+
+<p><strong>余数处理那一行的目的</strong>：</p>
+<pre>const int npoints = N / nthreads;
+const int mystart = tid * npoints;
+if (tid == nthreads - 1)
+    npoints += N - nthreads * npoints;   // 最后一个线程吞掉余数</pre>
+<p>N=1003, nthreads=4 时：1003/4=250，前 3 个线程各 250 = 750，剩 3 个 element 让 tid=3 多吞，得 253 个。这就是 "ensure to take care of remainders" 那行的用意——<strong>手动处理 N 不能被 nthreads 整除时的余数</strong>。</p>
+</details>
+
+
+<!-- ==================== SLIDE 48 ==================== -->
+<h2 class="slide-title">Slide 48 — Loop Construct（OpenMP way：用 <code>#pragma omp for</code>）</h2>
+
+<img class="slide-img" src="images/slide-48.png" alt="Slide 48: parallelizing a loop the OpenMP way">
+
+<div class="explanation">
+  <p>跟 slide 47 的"原始写法"对比：同样的循环，OpenMP 版本只多了一行 <code>#pragma omp for</code>，所有手动算 tid / mystart / 余数的代码全没了。</p>
+
+  <p><strong>关键的两行</strong>：</p>
+  <ul>
+    <li><code>#pragma omp parallel</code>（line 6）→ 开 parallel 区，spawn 一队线程。</li>
+    <li><code>#pragma omp for</code>（line 8）→ 告诉运行时："紧跟着的这个 for 循环，把它的迭代<strong>分给</strong>当前线程队"。</li>
+  </ul>
+
+  <p>没有 <code>#pragma omp for</code> 的话，每个线程会把整个循环跑一遍（slide 49 演示这个 bug）。有了它，每个线程只跑自己分到的那一片迭代。</p>
+
+  <p><strong>OpenMP 帮你做的事</strong>：</p>
+  <ul>
+    <li>自动按 <code>nthreads</code> 切分迭代区间。</li>
+    <li>自动处理 <code>N</code> 不能被 <code>nthreads</code> 整除时的余数（不会丢迭代也不会重复）。</li>
+    <li>循环结束自动加 implicit barrier（除非 <code>nowait</code>）。</li>
+    <li>可以用 <code>schedule(...)</code> 子句换调度策略，不用自己重写循环。</li>
+  </ul>
+
+  <p><strong>合写形式</strong>。日常更常见的写法是把两个 pragma 合并成 <code>#pragma omp parallel for</code>，省一层大括号。两种写法的语义在大多数情况下等价，区别只是合写时 parallel region 严格只包这一个循环；分写时 parallel region 可以包更多代码（比如循环外还有别的并行段）。</p>
+
+  <p><strong>slide 底部的紫框</strong>："Less code, fewer bugs, cleaner and more readable." 这就是 OpenMP 设计哲学的核心 —— 让程序员关注<em>哪些工作可以并行</em>，而不是<em>怎么手工切分和同步</em>。pthread 让你写一切，OpenMP 只让你写"意图"。</p>
+
+  <p><strong>常见疑问：A 数组是 shared 还是 private？</strong>默认 shared（因为它在 parallel 区外声明，按 OpenMP 默认作用域规则继承外部为 shared）。这没问题 —— 不同线程写 A 的不同 index，互不重叠。但循环变量 <code>i</code> 在 <code>#pragma omp for</code> 下<strong>会被自动设为 private</strong>（每个线程有自己的 i 副本），这是规范明文规定的，不需要你手写 <code>private(i)</code>。</p>
+</div>
+
+
+<!-- ==================== SLIDE 49 ==================== -->
+<h2 class="slide-title">Slide 49 — Loop Construct（"What's wrong here?" 缺了 <code>#pragma omp for</code>）</h2>
+
+<img class="slide-img" src="images/slide-49.png" alt="Slide 49: what's wrong here — missing omp for">
+
+<div class="explanation">
+  <p>这页是个故意挖坑的对比页。代码看起来跟 slide 48 几乎一样，但<strong>少了一行 <code>#pragma omp for</code></strong>（slide 48 line 8 那一行）—— 只剩下 <code>#pragma omp parallel</code>，里面直接写了一个普通 <code>for</code> 循环。</p>
+
+  <p><strong>哪里不对？</strong>因为没有 <code>for</code> 这个 worksharing construct，<strong>每个线程都会把整个循环从头跑到尾</strong>。假设开了 4 个线程：</p>
+  <ul>
+    <li>所有 4 个线程都跑 <code>for (i=0; i&lt;1000; ++i) A[i] = ...</code></li>
+    <li>结果 <code>A[0]</code> 被写了 4 次、<code>A[1]</code> 被写了 4 次……每个元素都被多个线程同时写。</li>
+    <li>同时还浪费了 3 倍的工作量 —— 本来想用 4 个线程加速到 1/4，结果总工作量反而是 4 倍。</li>
+  </ul>
+
+  <p><strong>更糟的：这是一个 race condition</strong>。多个线程同时写同一个 <code>A[i]</code>，最终值取决于谁后写完，结果不确定。如果 <code>A[i] = ...</code> 右边是个简单常量还能蒙混过关（不管谁写都一样），但如果右边依赖 <code>i</code> 之外的状态、或者读改写复合运算，就会出真错。</p>
+
+  <p><strong>为什么编译器不报错？</strong>因为<strong>这是合法的 OpenMP 代码</strong>。OpenMP 的语义就是 "<code>#pragma omp parallel { ... }</code> 让每个线程把 <code>{...}</code> 跑一遍"，里面写循环就字面意思每个线程跑一遍循环。要分活必须显式说"分活"（即 <code>#pragma omp for</code>），编译器不会替你猜意图。</p>
+
+  <p><strong>诊断特征</strong>。如果你写 OpenMP 程序发现：</p>
+  <ul>
+    <li>线程数越多<strong>越慢</strong>（不是越快），</li>
+    <li>结果数组里出现重复或非确定值，</li>
+  </ul>
+  <p>第一个怀疑就是"是不是漏了 <code>#pragma omp for</code>"。这是新手最常踩的坑之一，也是这页幻灯片要钉死在你脑子里的反面教材。</p>
+
+  <p><strong>正确的修法</strong>：把 <code>#pragma omp parallel</code> 改成 <code>#pragma omp parallel for</code>（合写），或者在 <code>parallel</code> 块里那个 <code>for</code> 上面再加一行 <code>#pragma omp for</code>。两种都能让 OpenMP 真正分活。</p>
+</div>
+
+
+<!-- ==================== SLIDE 50 ==================== -->
+<h2 class="slide-title">Slide 50 — Canonical Loop Structures（哪些 for 循环 OpenMP 能并行化）</h2>
+
+<img class="slide-img" src="images/slide-50.png" alt="Slide 50: canonical loop structures">
+
+<div class="explanation">
+  <p><code>#pragma omp for</code> 不是对任何 <code>for</code> 循环都生效 —— 编译器需要在<strong>进入循环前</strong>就能算出"总共有多少次迭代"，才能切分给线程。所以 OpenMP 规范要求循环必须长成<strong>canonical（标准/规范）形式</strong>。这页列的就是允许的形状。</p>
+
+  <p><strong>canonical 形式的骨架</strong>：</p>
+  <pre>for (index = start; index &lt;cmp&gt; end; index &lt;step&gt;)</pre>
+
+  <p>三个可变部分：</p>
+  <ul>
+    <li><strong>比较运算符</strong>（<code>&lt;cmp&gt;</code>）必须是 <code>&lt;</code>、<code>&lt;=</code>、<code>&gt;=</code>、<code>&gt;</code>、<code>!=</code> 之一。</li>
+    <li><strong>步长形式</strong>（<code>&lt;step&gt;</code>）必须是这几种：<code>index++</code>、<code>++index</code>、<code>index--</code>、<code>--index</code>、<code>index += inc</code>、<code>index -= inc</code>、<code>index = index + inc</code>、<code>index = inc + index</code>、<code>index = index - inc</code>。</li>
+    <li><strong><code>start</code>、<code>end</code>、<code>inc</code></strong> 必须是循环不变量（loop-invariant）—— 进入循环时确定，循环里不能改。</li>
+  </ul>
+
+  <p><strong>为什么有这些限制？</strong>因为编译器要做<strong>静态迭代次数计算</strong>。给 <code>start, end, inc</code> 和比较运算符，编译器能立刻算出 trip count = <code>(end - start) / inc</code>（按比较方向调整一下），然后把这个数除以 nthreads 就能切区间。</p>
+
+  <p>如果循环是 <code>while (some_condition)</code> 或者步长依赖循环里改的变量，编译器就<strong>没法在进入循环前知道总共要跑多少次</strong>，自然就没法切分给线程 —— 这种情况要用 <strong>tasking</strong>（前面 slide 45 提到的另一条路）。</p>
+
+  <p><strong>不能写的形式（举例）</strong>：</p>
+  <ul>
+    <li><code>for (i = 0; some_func(i); ++i)</code> —— 终止条件是个函数调用，不可静态分析。</li>
+    <li><code>for (i = 0; i &lt; n; i = i * 2)</code> —— 步长是乘法，不在 canonical 列表里。</li>
+    <li>循环体里 <code>break</code> 出去 —— 实际迭代数不可预测，OpenMP 不允许 worksharing for 里有 <code>break</code>（但允许 <code>continue</code>）。</li>
+  </ul>
+
+  <p><strong>实战建议</strong>。日常写 <code>#pragma omp for</code> 几乎都是 <code>for (int i=0; i&lt;N; ++i)</code> 这种最朴素的形式，天然就是 canonical 的，不用想。只有当你遇到"编译器报错说不是 canonical loop"时才需要回头查这个表，把循环改写成规范形状（或者换 tasking 方案）。</p>
+
+  <p><strong>另一个常被问到的点：循环索引必须是整型</strong>。OpenMP 的 canonical loop 要求 <code>index</code> 是整数类型（或 random-access 迭代器，C++ 里）。这意味着 <code>for (double x = 0.0; x &lt; 1.0; x += 0.1)</code> 这种浮点循环不能直接 <code>#pragma omp for</code> —— 因为浮点累加误差会让"总迭代次数"无法精确计算。改写成整数索引循环再在内部转浮点即可。</p>
+</div>
+
+
+<!-- ==================== SLIDE 51 ==================== -->
+<h2 class="slide-title">Slide 51 — Sections Construct（把几段独立代码各派一段）</h2>
+
+<img class="slide-img" src="images/slide-51.png" alt="Slide 51: sections construct">
+
+<div class="explanation">
+  <p><code>sections</code> 是 worksharing 三件套里的<strong>非迭代</strong>那一个 —— 不像 <code>for</code> 切迭代区间，<code>sections</code> 把<strong>一组互相独立的代码块</strong>分给线程，每块由<strong>一个</strong>线程<strong>整体执行一次</strong>。</p>
+
+  <p><strong>语法骨架</strong>（slide 上的代码）：</p>
+  <pre>#pragma omp parallel
+{
+    #pragma omp sections [nowait] [reduction(...)]
+    {
+        #pragma omp section
+            x_calculation();
+        #pragma omp section
+            y_calculation();
+        #pragma omp section
+            z_calculation();
+    }
+}</pre>
+
+  <p>外层 <code>parallel</code> 开队伍，里层 <code>sections</code> 是 worksharing 容器，每个 <code>#pragma omp section</code> 是一个待派发的独立代码块。</p>
+
+  <p><strong>分发规则</strong>。OpenMP 运行时把这 3 个 section 派给当前 team 里的线程：每个 section 被<strong>恰好一个</strong>线程执行一次。如果 team 有 4 个线程，3 个干活、1 个在 sections 出口的 implicit barrier 处等。如果只有 2 个线程，运行时会让先干完的那个再去拿剩下的 section。</p>
+
+  <p><strong>典型用途</strong>：逻辑上不一样的几段独立工作。例如同时算 x、y、z 三个独立物理量；或者一个线程读文件、一个线程做 CPU 计算、一个线程压缩输出。</p>
+
+  <p><strong>和 <code>for</code> 的本质区别</strong>。<code>for</code> 里所有线程跑<strong>同一段代码</strong>，只是数据 index 不同（SPMD）。<code>sections</code> 里每个线程跑<strong>不同的代码</strong>。所以 sections 是 OpenMP 在 worksharing 层面表达任务并行的方式，但活的数量是<strong>编译期固定</strong>的（你写了几个 section 就是几个），动态生成的任务要用 tasking。</p>
+
+  <p><strong>implicit barrier 和 nowait</strong>。和其他 worksharing 一样，sections 出口默认有 barrier —— 所有 section 跑完才一起往下走。加 <code>nowait</code>（slide 注释里明确提了）让先干完的线程不等其他人，直接出 sections 区域执行后续代码。</p>
+
+  <p><strong>注意点</strong>：</p>
+  <ul>
+    <li>section 之间<strong>不能有依赖</strong>。x_calculation 不能用到 y_calculation 的结果，否则 race。</li>
+    <li>section 数量 ≠ 线程数也没事。section 多于线程：先干完的去拿剩下的。section 少于线程：多余的线程在 barrier 等。</li>
+    <li><code>#pragma omp section</code> 必须出现在 <code>sections</code> 块的<strong>直接子层</strong>，不能嵌在 if/for 里。</li>
+  </ul>
+
+  <p><strong>实际用得多吗？</strong>不多。日常并行代码 95% 是循环（用 <code>for</code>），剩下不规则的活倾向于用更灵活的 <code>task</code>。<code>sections</code> 主要在"我有 N 段固定代码想并行"这种简单场景里出现 —— 简洁但不灵活。</p>
+</div>
+
+<details class="qa"><summary><strong>Q&A: <code>#pragma omp section</code> 必须是 sections 直接子层 —— 反例</strong></summary>
+<p><strong>本质原因</strong>：sections 用<strong>编译期静态切分</strong>——编译器看到 <code>{ #section A; #section B; #section C; }</code> 就生成 "3 个 section 分给 N 线程" 的调度代码。所以 section 必须 (1) 词法可见、(2) 个数编译期可数、(3) 不能循环生成。</p>
+
+<p><strong>反例 1：section 嵌在 if 里</strong></p>
+<pre>#pragma omp sections
+{
+    if (use_x) {
+        #pragma omp section      // ❌ 编译错
+        x_calculation();
+    }
+    #pragma omp section
+    y_calculation();
+}</pre>
+<p>不行的原因：<code>if</code> 是运行时条件，编译期不知道这个 section 是否存在。<strong>正确写法</strong>是把条件挪进 section 内部：</p>
+<pre>#pragma omp section
+{ if (use_x) x_calculation(); }   // ✅</pre>
+
+<p><strong>反例 2：section 嵌在 for 里</strong></p>
+<pre>#pragma omp sections
+{
+    for (int i = 0; i &lt; 3; ++i) {
+        #pragma omp section      // ❌ 编译错
+        work(i);
+    }
+}</pre>
+<p>不行的原因：sections 不是循环结构，每个 section 是<strong>写死的不同代码块</strong>。"循环跑 N 次相同任务"是 <code>for</code> 的活。<strong>正确做法</strong>：用 <code>#pragma omp parallel for</code>，或手动展开成 3 个 section。</p>
+
+<p><strong>反例 3：section 嵌在多余的 <code>{}</code> 里</strong></p>
+<pre>#pragma omp sections
+{
+    {                            // ← 多了一层 brace
+        #pragma omp section      // ❌ 编译错
+        x_calculation();
+    }
+}</pre>
+<p>不行的原因："直接子层"意味着 section 必须是 sections 的 <code>{}</code> <strong>第一层</strong>语句。多套 brace 破坏了层级。<strong>修复</strong>：去掉多余花括号。</p>
+
+<p><strong>反例 4：section 写在被调用的函数里（orphaned）</strong></p>
+<pre>void helper() {
+    #pragma omp section          // ❌ 孤立的 section directive
+    x_calculation();
+}
+
+#pragma omp sections
+{
+    helper();                    // section 在这里看不见
+    #pragma omp section
+    y_calculation();
+}</pre>
+<p>不行的原因：OpenMP 对 section 的识别是<strong>词法（lexical）</strong>的，必须在 sections 的源代码 <code>{}</code> 里直接看到 <code>#pragma omp section</code>，不会跨函数边界找。<strong>正确做法</strong>：</p>
+<pre>#pragma omp sections
+{
+    #pragma omp section
+    helper();                    // ✅ 整个 helper 调用作为一个 section
+    #pragma omp section
+    y_calculation();
+}</pre>
+
+<p><strong>总规则</strong>：<code>#pragma omp section</code> 必须是 sections 块 <code>{}</code> 的<strong>直接子语句，写死、明摆着、可数</strong>。</p>
+
+<p><strong>需要运行时动态决定任务数？</strong>用 <code>#pragma omp task</code>。task 是动态的，sections 是静态的，针对不同场景。</p>
+</details>
+
+
+<!-- ==================== SLIDE 52 ==================== -->
+<h2 class="slide-title">Slide 52 — Single Construct（让 parallel 区里某段只跑一次）</h2>
+
+<img class="slide-img" src="images/slide-52.png" alt="Slide 52: single construct">
+
+<div class="explanation">
+  <p><code>single</code> 是 worksharing 三件套里最特殊的一个 —— 它"分活"的方式是<strong>只让一个线程干，其他线程在出口等</strong>。听起来不像 worksharing，但本质上仍然是"在 team 里挑一个去做这块工作"。</p>
+
+  <p><strong>语义</strong>（slide 顶部）：在 parallel 区里，<code>#pragma omp single { ... }</code> 这块代码<strong>只被 team 里的一个线程执行</strong>，<strong>不一定是 primary thread</strong>（谁先到谁跑，运行时决定）。其他没抢到的线程在 single 块出口的 implicit barrier 等。</p>
+
+  <p><strong>为什么不是 primary？</strong>因为没有规定。OpenMP 故意不指定，让运行时挑一个最方便的（通常是先到达的）。如果你<strong>必须</strong>是 primary thread 跑，用 <code>#pragma omp master</code>（master 不带 implicit barrier，老语法；新版改名 <code>masked</code>）。</p>
+
+  <p><strong>典型用途</strong>（slide 代码示例 <code>exchange_boundaries()</code>）：</p>
+  <ul>
+    <li>在并行循环之间做<strong>只该做一次的串行工作</strong>，比如打印进度、读一次文件、初始化共享数据结构。</li>
+    <li>HPC 里常见的 <strong>halo exchange / boundary exchange</strong> —— 多个 worker 算自己的数据块，中间需要一个线程统一去和邻居交换边界数据，这种 unique work 用 single 包起来。</li>
+  </ul>
+
+  <p><strong>为什么不直接退出 parallel 再做？</strong>因为退出 + 重进 parallel region 有<strong>开销</strong>（即便有线程池缓存）—— 隐式 barrier 同步、再次 fork 的成本。在 parallel region 里用 single 做"插播单线程逻辑"更便宜，线程池保持温热。</p>
+
+  <p><strong>nowait 何时合理</strong>（slide 代码注释里详细给了）：默认 single 出口有 implicit barrier —— 其他线程必须等做 single 那个线程完成。<strong>但</strong>如果后续 <code>do_many_things()</code> 不依赖 <code>exchange_boundaries()</code> 改的内存，去掉 barrier 让其他线程提前往下跑就更高效。</p>
+
+  <p>这就是 slide 注释那段话的含义："IFF this function does not depend on memory locations that need to be visible after exchange_boundaries() has been executed, then adding the 'nowait' clause to the single construct is more efficient!"</p>
+
+  <p><strong>易混 tip：single vs critical</strong>。<code>critical</code> 也是"一次只有一个线程进"，但区别是：</p>
+  <ul>
+    <li><code>single</code>：所有线程到这里，<strong>只有一个跑</strong>，其他在出口等。整个执行只发生<strong>一次</strong>。</li>
+    <li><code>critical</code>：所有线程到这里都要排队进，<strong>一个一个跑</strong>。整个执行发生 <strong>nthreads 次</strong>，只是不会并发。</li>
+  </ul>
+  <p>用错会导致逻辑完全不一样（比如 critical 会重复执行 N 次"只该一次"的初始化）。</p>
+</div>
+
+<details class="qa"><summary><strong>Q&A: "critical" 这个词在 critical section 里是什么意思？</strong></summary>
+<p>"critical" 在中文里常被译成<strong>"严重的"</strong>，但那只是引申义。在 "critical section" 里，<strong>critical = 关键的、决定性的、临界的</strong>——强调"这一段代码非常关键，进错了就会出大问题"。</p>
+
+<p>词根来自希腊语 <em>kritikos</em>（"能判断、能决断"），跟 <strong>crisis</strong>（关键时刻）同源。"严重"是引申义（病到了关键转折点），核心义是"位于关键点 / 转折点"。</p>
+
+<p><strong>同语义家族的常见 critical 短语</strong>：</p>
+<ul>
+  <li><code>critical mass</code>——临界质量（刚好够引发链式反应的点）</li>
+  <li><code>critical point</code>——临界点（相变发生的温度/压力）</li>
+  <li><code>critical path</code>——关键路径（决定项目总工期的那串任务）</li>
+  <li><code>critical section</code>——关键区（决定多线程对错的那段代码）</li>
+</ul>
+
+<p>每一个 critical 都不是"严重"，而是<strong>"决定成败的关键点/段"</strong>。</p>
+
+<p><strong>词义本身不包含"排队"</strong>。critical 这个形容词只描述"这段代码很关键、很敏感、不能并发进"。"排队进入"是<strong>保护这个关键段</strong>所采用的机制（mutex / lock 排队），不是 critical 这个词的字面义。</p>
+
+<pre>critical（形容词）  → 描述区域很关键、不能并发进
+        ↓
+为了保护它，需要某种机制
+        ↓
+mutex / lock / 排队（机制）  → 实际让线程一个一个进</pre>
+
+<p>中文译名"<strong>临界区</strong>"和"<strong>关键区</strong>"都贴近原义；"严重区"离原义远，因为 critical 在中文里"严重"这个义项太抢眼。</p>
+</details>
+
+
+<!-- ==================== SLIDE 53 ==================== -->
+<h2 class="slide-title">Slide 53 — Loop Scheduling（<code>schedule</code> 子句怎么决定迭代分发）</h2>
+
+<img class="slide-img" src="images/slide-53.png" alt="Slide 53: loop scheduling — how OpenMP determines the schedule">
+
+<div class="explanation">
+  <p>这页讲 <code>#pragma omp for</code> 里那个可选的 <code>schedule(...)</code> 子句 —— 控制循环迭代<strong>怎么分给</strong>线程。换调度策略可以调<em>并行粒度</em>和<em>负载均衡</em>。</p>
+
+  <p><strong>语法</strong>：</p>
+  <pre>#pragma omp for schedule(kind[, chunk_size]) new-line
+    for-nest</pre>
+  <p>kind 是 static / dynamic / guided / runtime / auto 之一（slide 54 列详细），chunk_size 是可选块大小。</p>
+
+  <p><strong>OpenMP 怎么决定实际用什么 schedule（流程图）</strong>。运行时按这个顺序判断：</p>
+  <ol>
+    <li><strong>有没有写 <code>schedule</code> clause？</strong>没写 → 用 <strong>def-sched-var</strong>（默认调度，由实现决定，比如 GCC 默认 static、其他编译器可能不同）。</li>
+    <li>写了 → <strong>kind 是不是 <code>runtime</code>？</strong>不是 → 直接用你指定的 <code>schedule(kind, chunk)</code>。</li>
+    <li>是 <code>runtime</code> → 用 <strong>run-sched-var</strong>，它由环境变量 <code>OMP_SCHEDULE</code> 或库函数 <code>omp_set_schedule()</code> 决定。</li>
+  </ol>
+
+  <p><strong>def-sched-var / run-sched-var 是什么</strong>？OpenMP 把这些"控制运行时行为的选项"叫 <strong>internal control variables (ICV)</strong>。它们藏在运行时里，可以通过环境变量或库函数读写，但不是普通用户变量。<code>OMP_NUM_THREADS</code>、<code>OMP_DYNAMIC</code> 也是 ICV。</p>
+
+  <p><strong>右侧紫框两条警告</strong>：</p>
+  <ul>
+    <li>"def-sched-var <strong>dependents on the implementation</strong>" —— 默认调度<strong>不同编译器不一样</strong>，GCC 可能跟 clang 行为不同。</li>
+    <li>"<strong>If you rely on a specific schedule, you must always specify it in your code</strong>" —— 不要依赖默认值，跨平台/跨编译器移植时会出意外。</li>
+  </ul>
+
+  <p><strong>什么时候用 <code>schedule(runtime)</code>？</strong>当你想<strong>让运维或脚本调</strong>调度策略，不想改代码重编。例如同一份 binary 在不同输入数据下跑，每次启动设 <code>OMP_SCHEDULE=dynamic,100</code> 或 <code>static,1000</code> 调优。代码里只写 <code>schedule(runtime)</code>。</p>
+
+  <p><strong>"adjust the parallel granularity and control load balancing" 是这个 clause 的两大作用</strong>：</p>
+  <ul>
+    <li><strong>粒度（granularity）</strong>：chunk 越大，每个线程一次拿到的活越多，调度开销越小但负载越可能不均；chunk 越小，调度更细粒度但开销大。</li>
+    <li><strong>负载均衡（load balancing）</strong>：迭代之间工作量不均时（比如前半段简单、后半段复杂），dynamic/guided 能让快线程多拿活，避免 static 那种"快线程闲着等慢线程"的情况。</li>
+  </ul>
+
+  <p>下两页（54、55）会展开 5 种调度 kind 的具体含义和可视化对比。</p>
+</div>
+
+
+<!-- ==================== SLIDE 54 ==================== -->
+<h2 class="slide-title">Slide 54 — Loop Scheduling Kind（5 种调度策略的精确定义）</h2>
+
+<img class="slide-img" src="images/slide-54.png" alt="Slide 54: loop scheduling kinds — static, dynamic, guided, runtime, auto">
+
+<div class="explanation">
+  <p>OpenMP 一共定义 5 种 <code>schedule</code> kind。前 3 种是真正的<em>分发策略</em>，后 2 种是<em>把决定权延后</em>。</p>
+
+  <p><strong>1. <code>static[, chunk]</code></strong>。把循环迭代切成大小为 <code>chunk</code> 的段，<strong>循环式（cyclic）</strong>分给线程 —— 即 t0 拿第 1 段、t1 拿第 2 段、…、t(n-1) 拿第 n 段、然后 t0 又拿第 n+1 段，依次轮转。</p>
+  <p>不指定 <code>chunk</code> 时，每个线程拿<strong>大约 N/nthreads</strong> 个连续迭代（实际值因实现而异）—— 即 slide 47 那种"每人一大块连续区间"的分法。</p>
+  <p><strong>开销</strong>：分发<strong>编译期就能算出来</strong>（线程 i 拿哪些迭代是确定的），<strong>零运行时调度开销</strong>。代价：迭代工作量不均时容易负载失衡。</p>
+
+  <p><strong>2. <code>dynamic[, chunk]</code></strong>。把迭代切成 chunk 大小的段放进队列，<strong>线程一空闲就动态领取</strong>下一个可用 chunk。chunk 不指定时<strong>默认是 1</strong>。</p>
+  <p>"动态"意味着 t0 可能干完 5 个 chunk，t1 只干了 2 个 —— 谁快谁多干。<strong>负载自动均衡</strong>，但每次领 chunk 都有<strong>原子操作开销</strong>（队列指针递增），chunk 太小开销会吃掉收益。</p>
+  <p><strong>典型 chunk 选择</strong>：让单个 chunk 的执行时间至少远大于一次原子操作的开销（微秒级）。</p>
+
+  <p><strong>3. <code>guided[, chunk]</code></strong>。类似 dynamic，但 chunk 大小<strong>指数衰减</strong>—— 一开始领大块（比如剩余迭代/线程数），逐渐变小，最小不低于指定的 chunk（默认 1）。</p>
+  <p>设计直觉：开始时分大块减少调度次数，剩下少量迭代时再分细块兜底负载均衡。<strong>是 static 和 dynamic 的折中</strong>。</p>
+
+  <p><strong>4. <code>runtime</code></strong>。把决定权交给环境变量 <code>OMP_SCHEDULE</code> 或 <code>omp_set_schedule()</code>。代码里写一次 <code>schedule(runtime)</code>，部署/调优时不重编。slide 53 已经讲过流程。</p>
+
+  <p><strong>5. <code>auto</code></strong>。完全交给编译器或运行时自行决定。OpenMP 规范不规定具体策略 —— 让实现按自己的启发式选。<strong>结果不可预测，几乎不用</strong>。</p>
+
+  <p><strong>怎么选？速记</strong>：</p>
+  <ul>
+    <li>每个迭代<strong>工作量相同</strong>（数组加法、矩阵元素逐个算）→ <code>static</code>，零开销最快。</li>
+    <li>每个迭代<strong>工作量差别大</strong>（蒙特卡洛、不规则数据、有 if 提前 return）→ <code>dynamic</code> 或 <code>guided</code>，让快线程多干。</li>
+    <li>不确定 / 想后期调优 → <code>runtime</code> + <code>OMP_SCHEDULE</code>。</li>
+    <li><code>auto</code>：除非测过有提升，否则别用。</li>
+  </ul>
+
+  <p><strong>chunk 选择经验</strong>。dynamic 的 chunk 默认 1 几乎总是太小（每个迭代领一次锁），实际写代码常给 <code>dynamic, 100</code> 或更大。具体值要看每个迭代多耗时 —— 单个迭代是几纳秒就给大 chunk，是毫秒就给 chunk=1 也无所谓。</p>
+</div>
+
+
+<!-- ==================== SLIDE 55 ==================== -->
+<h2 class="slide-title">Slide 55 — Loop Scheduling Kind Visually（4 种策略的分发图）</h2>
+
+<img class="slide-img" src="images/slide-55.png" alt="Slide 55: visual comparison of static / static-n / dynamic / guided">
+
+<div class="explanation">
+  <p>这页用 4 条横向时间线把上一页的策略画出来。每条线代表一次 N 个迭代的循环，被 4 个线程（t0/t1/t2/t3）分发。颜色区分线程，色块的<strong>大小</strong>表示该线程拿到的连续迭代区间，<strong>位置</strong>表示在原始迭代序列中的位置。</p>
+
+  <p><strong>1. <code>schedule(static)</code>（不指定 chunk）</strong>。整个区间被切成 4 大块，每个线程拿<strong>一段连续区间</strong>（约 N/4）。这是最常见也最便宜的默认形态 —— 切分在<strong>编译期/进入循环时就算好</strong>，运行时零调度开销。适合每个迭代工作量基本相同的场景。</p>
+
+  <p><strong>2. <code>schedule(static, n)</code></strong>。整个区间被切成<strong>大小为 n 的小段</strong>，按 t0→t1→t2→t3→t0→t1→… 的顺序<strong>循环（cyclic）</strong>派发。图里就是 4 种颜色按顺序反复出现。</p>
+  <p><strong>为什么要这么分？</strong>当前后迭代工作量有规律性差异（比如三角矩阵循环 <code>for(i=0;i&lt;N;i++) for(j=i;j&lt;N;j++)</code>，越往后内层迭代越短），cyclic 切分能让每个线程都<strong>均匀分到"前段长后段短"的混合</strong>，比 static 那种"前 1/4 给 t0、后 1/4 给 t3"更均衡。仍然零运行时调度开销（哪个 chunk 归谁是确定的）。</p>
+
+  <p><strong>3. <code>schedule(dynamic)</code>（chunk 默认 1，图里画的是 chunk 较大的情形）</strong>。色块大小相同（每次领固定 chunk），但<strong>哪个线程领到哪一段是不确定的</strong>—— 图里看到颜色顺序乱了：可能是 t0 t1 t2 t3 t0 t2 t3 t2 t1 t0。某些线程（t2）拿到的 chunk 比别人多，某些（t3）少。</p>
+  <p><strong>这恰好是 dynamic 想达到的效果</strong>—— 谁先完成手上的 chunk 就回去队列领下一块。如果 t2 处理的是简单迭代很快做完，它就能多领；t3 撞上复杂迭代慢，就少领。负载自动平衡，代价是每次领 chunk 都要走原子操作。</p>
+
+  <p><strong>4. <code>schedule(guided)</code></strong>。最显眼的视觉特征是<strong>chunk 越往右越小</strong>。第一个 chunk 最大，依次指数衰减，最后剩很小的几块。</p>
+  <p><strong>设计哲学</strong>：开始时大块快速消化大部分工作（减少领取次数），临近结束时小块兜底（防止"最后一个大 chunk 把某个线程拖很久"的尾巴问题）。是 static 的<strong>低开销</strong>和 dynamic 的<strong>动态均衡</strong>的折中。</p>
+
+  <p><strong>对比记忆口诀</strong>：</p>
+  <ul>
+    <li><code>static</code>：连续大块，编译期切好，最便宜。</li>
+    <li><code>static, n</code>：小块循环派，编译期切好仍然便宜，应付规律性不均。</li>
+    <li><code>dynamic</code>：等大小动态领，对付不规律负载。</li>
+    <li><code>guided</code>：从大到小动态领，前期快后期细。</li>
+  </ul>
+
+  <p><strong>注意图里没画 <code>runtime</code> 和 <code>auto</code></strong>—— 因为这两个本身不定义具体分发模式，最终落到上面 4 种之一。</p>
+
+  <p><strong>"Direction of iteration" 箭头的意义</strong>。提醒你横轴是<strong>迭代序号 0 → N-1</strong>，不是时间轴。色块的<em>位置</em>对应该 chunk 在迭代序列里的位置，不是"这个线程什么时候开始执行"。所以 dynamic 图里看到的乱序，是<strong>领取顺序</strong>映射到迭代位置上的结果。</p>
+</div>
+
+
+<!-- ==================== SLIDE 56 ==================== -->
+<h2 class="slide-title">Slide 56 — Nested Loops（嵌套循环只并行最外层）</h2>
+
+<img class="slide-img" src="images/slide-56.png" alt="Slide 56: nested loops">
+
+<div class="explanation">
+  <p>这页讲一个非常容易踩的坑：<code>#pragma omp for</code> 只对它<strong>紧跟其后的那一个</strong>循环生效，<strong>不会自动展开嵌套</strong>。</p>
+
+  <p><strong>slide 代码示例</strong>（行号 6-13）：</p>
+  <pre>#pragma omp parallel
+{
+  #pragma omp for
+    for (int i = 0; i &lt; N; ++i) {     // 这层并行
+      for (int j = 0; j &lt; N; ++j) {   // 这层每个 thread 自己跑完整 N
+        A[i][j] = ...
+      }
+    }
+}</pre>
+
+  <p><strong>实际行为</strong>。N×N 个迭代被外层循环切成 N 段（按 i），每段分给一个线程。某个线程拿到 i=k 时，它自己<strong>顺序跑完</strong> j=0..N-1 的全部内层迭代。所以并行度是<strong>外层 N</strong>，不是 N²。</p>
+
+  <p><strong>什么时候这是问题？</strong>当外层循环次数 < 线程数时。比如 N=5、开了 8 个线程：只有 5 个线程拿到活，剩下 3 个空转。slide 58 会专门展开这种情形并给解决方案。</p>
+
+  <p><strong>什么时候这没问题？</strong>当外层 N >> 线程数，且 N×内层工作量 足够大时。例如 N=10000、4 线程，外层切成 4 大段每段 2500×N 的活，负载均衡也没问题，并行效率很高。</p>
+
+  <p><strong>关键术语 "structured block 必须 single point of exit"</strong>（紫框）。OpenMP 反复强调的规则：被 pragma 管辖的代码块不能从中间 <code>break</code>/<code>goto</code>/<code>return</code> 出去。<strong>对外层循环（被 <code>#pragma omp for</code> 直接管的那个）尤其严格</strong>—— 不能写 <code>break</code>。否则编译报错。</p>
+
+  <p><strong>但内层循环可以 break</strong>。因为内层循环不是被 pragma 直接管的 worksharing target，是普通顺序循环 —— 在某个线程内部 break 出内层只影响它自己拿到的那个 i 的 j 遍历，不破坏其他线程的并行结构。</p>
+
+  <p><strong>continue 一直允许</strong>。无论外层内层，<code>continue</code> 跳到下一次迭代是 OK 的 —— 不破坏 single-exit 语义。</p>
+
+  <p><strong>速记</strong>：<code>#pragma omp for</code> 默认<strong>"只展开一层"</strong>。想真正利用 N² 的并行度，要么手动重构成单层循环，要么用 <code>collapse(n)</code>（slide 57 讲）。</p>
+</div>
+
+
+<!-- ==================== SLIDE 57 ==================== -->
+<h2 class="slide-title">Slide 57 — Collapsing Nested Loops（<code>collapse(n)</code> 把嵌套展平）</h2>
+
+<img class="slide-img" src="images/slide-57.png" alt="Slide 57: collapsing nested loops">
+
+<div class="explanation">
+  <p><code>collapse(n)</code> 子句解决 slide 56 的痛点 —— 让 OpenMP 把嵌套的 <strong>n 层循环看作一个扁平的迭代空间</strong>，再分给线程。语法：</p>
+  <pre>#pragma omp for collapse(n) new-line
+    for-nest</pre>
+
+  <p>例如 <code>collapse(2)</code> 套在两层 <code>for(i)/for(j)</code> 上时，逻辑等价于把所有 (i,j) 对展开成一个长度 N×M 的单层序列，然后用 schedule 切分给线程。<strong>并行度从 N 变成 N×M</strong>。</p>
+
+  <p><strong>使用条件（slide 中部 4 条）</strong>：</p>
+  <ul>
+    <li><strong>n 必须是常量正整数</strong>。编译期就要知道展开几层。</li>
+    <li><strong>只能 collapse "perfectly nested" 的循环</strong>。perfectly nested 的定义（紫框）：<em>外层循环体里只能有一个内层循环，没有别的语句</em>。换句话说，外层 <code>for(i)</code> 的 <code>{}</code> 里只允许出现内层 <code>for(j)</code>，不能有别的代码（不能在循环之间夹一行打印或赋值）。</li>
+    <li><strong>循环边界不能依赖被 collapse 的索引</strong>。例如 <code>for(j=i; j&lt;N; ++j)</code>（j 起点用了 i）<strong>不能</strong> collapse —— 因为展平时无法静态算出 (i,j) 的总数。</li>
+    <li><strong>循环体不能修改 i 或 j</strong>。一旦索引变量被改，迭代次数就不可预测。</li>
+  </ul>
+
+  <p><strong>为什么"perfectly nested"是硬要求？</strong>因为 collapse 实质上是<strong>编译器在生成代码时把 n 层循环融合成一个虚拟的单层循环</strong>，新的虚拟索引按 (i,j,k...) 字典序遍历整个迭代笛卡尔积。如果外层循环里有别的语句，那语句应该执行 N 次还是 N×M 次？语义混乱，所以 OpenMP 直接禁止。</p>
+
+  <p><strong>好处</strong>：</p>
+  <ul>
+    <li><strong>更大的迭代空间</strong> → 线程数多时也能充分利用（不会出现外层不够分的情况）。</li>
+    <li><strong>负载更均衡</strong>。原本一个线程要顺序跑完整个内层，collapse 后内外层一起切，负载更平均。</li>
+  </ul>
+
+  <p><strong>坏处</strong>：</p>
+  <ul>
+    <li><strong>缓存局部性可能变差</strong>。原本一个线程连续访问 A[i][0..N-1]（行连续），collapse 后可能跨行跳，缓存命中率下降。所以不是所有场景都该用 collapse。</li>
+    <li><strong>代码必须写得规整</strong>。中间不能插任何语句。</li>
+  </ul>
+
+  <p><strong>速记</strong>：外层循环次数 ≥ 线程数 → 不用 collapse；外层 N 很小但内层 M 很大 → collapse(2) 通常就够。</p>
+</div>
+
+<details class="qa"><summary><strong>Q&A: <code>collapse(n)</code> 的好/坏例子对照</strong></summary>
+
+<p><strong>✅ 好例 1：完美嵌套，最常见</strong></p>
+<pre>#pragma omp parallel for collapse(2)
+for (int i = 0; i &lt; N; ++i)
+    for (int j = 0; j &lt; M; ++j)
+        A[i][j] = compute(i, j);</pre>
+<p>外层循环体<strong>只有内层循环这一件事</strong>——这是 perfectly nested。OpenMP 折叠成 N×M 的迭代空间分给线程。</p>
+
+<p><strong>✅ 好例 2：三层折叠</strong></p>
+<pre>#pragma omp parallel for collapse(3)
+for (int i = 0; i &lt; N; ++i)
+    for (int j = 0; j &lt; M; ++j)
+        for (int k = 0; k &lt; K; ++k)
+            grid[i][j][k] = init(i, j, k);</pre>
+<p>n 是几就折叠最外面 n 层，要求这 n 层都层层完美嵌套。</p>
+
+<p><strong>✅ 好例 3：内层 body 可以是任意代码</strong></p>
+<pre>#pragma omp parallel for collapse(2)
+for (int i = 0; i &lt; N; ++i)
+    for (int j = 0; j &lt; M; ++j) {
+        double tmp = A[i][j] * 2;
+        if (tmp &gt; THRESHOLD) tmp = THRESHOLD;
+        B[i][j] = tmp;
+    }</pre>
+<p>"完美嵌套"只约束<strong>外层和内层之间不能有东西</strong>，最内层 body 里写啥都行。</p>
+
+<p><strong>🚫 坏例 1：外层和内层之间有别的代码（最常见错）</strong></p>
+<pre>#pragma omp parallel for collapse(2)
+for (int i = 0; i &lt; N; ++i) {
+    double row_init = setup(i);     // ❌ 外层有非内层循环的代码
+    for (int j = 0; j &lt; M; ++j)
+        A[i][j] = row_init * j;
+}</pre>
+<p>修法：放弃 collapse 只并行外层（让 setup 仍能放外层）：</p>
+<pre>#pragma omp parallel for             // ← 不 collapse
+for (int i = 0; i &lt; N; ++i) {
+    double row_init = setup(i);
+    for (int j = 0; j &lt; M; ++j)
+        A[i][j] = row_init * j;
+}</pre>
+
+<p><strong>🚫 坏例 2：在循环里改循环变量</strong></p>
+<pre>#pragma omp parallel for collapse(2)
+for (int i = 0; i &lt; N; ++i)
+    for (int j = 0; j &lt; M; ++j) {
+        if (a[i][j] == 0) j = M;     // ❌ 修改 j 试图早退
+        process(i, j);
+    }</pre>
+<p>OpenMP 把 i, j 折叠成线性迭代空间，需要靠 i, j 反推自己跑到哪了；自己改索引会让计算彻底乱套。即使没 collapse，OpenMP for 也禁止改循环变量。修法：用 if 跳过，不改索引。</p>
+
+<p><strong>🚫 坏例 3：n 不是常量</strong></p>
+<pre>int level = read_config();
+#pragma omp parallel for collapse(level)   // ❌ level 不是编译期常量
+for (...) ...</pre>
+<p>n <strong>必须编译期能确定</strong>（字面量、<code>const int</code>、<code>#define</code>、<code>constexpr</code>），编译器要在编译期就知道折叠几层。</p>
+
+<p><strong>🚫 坏例 4：内层边界依赖外层（三角形迭代）</strong></p>
+<pre>#pragma omp parallel for collapse(2)
+for (int i = 0; i &lt; N; ++i)
+    for (int j = i; j &lt; N; ++j)         // ❌ j 的下界是 i
+        process(i, j);</pre>
+<p>OpenMP 5.0 之前<strong>只允许矩形迭代空间</strong>（每层边界都是循环不变量）。这种"三角形"迭代传统 collapse 处理不了。修法：放弃 collapse 只并行外层，或升级到 OpenMP 5.0+（支持非矩形）。</p>
+
+<p><strong>判断流程</strong>：</p>
+<pre>能 collapse(n) 吗？逐条检查：
+1. n 是编译期常量正整数？     否 → 不行
+2. 最外面 n 层是完美嵌套？    否 → 不行
+3. 循环边界都是循环不变量？    否 → 旧标准不行
+4. 不修改循环变量？           否 → UB
+5. 内层 body 里逻辑随便写？   ✅  → 通过</pre>
+
+<p><strong>collapse 收益的具体体现</strong>（N=8, M=2, nthreads=8）：</p>
+<ul>
+  <li>不 collapse：8 个 i 分给 8 个线程，每人 1 个 i，但每个线程内部还要串行跑 2 次 j——线程之间只能切到 i 粒度。</li>
+  <li>collapse(2)：16 个 (i,j) 摊平后分给 8 个线程，每人 2 个迭代——粒度更细，<strong>外层 N 小时优势巨大</strong>。</li>
+</ul>
+</details>
+
+
+<!-- ==================== SLIDE 58 ==================== -->
+<h2 class="slide-title">Slide 58 — Collapsing Nested Loops（两个具体例子：N=5 太小 + GEMV）</h2>
+
+<img class="slide-img" src="images/slide-58.png" alt="Slide 58: examples — small dimension and GEMV">
+
+<div class="explanation">
+  <p>这页给 collapse 的<strong>两个实战例子</strong>，正好对应"该用 collapse"和"要不要用 collapse"两种典型场景。</p>
+
+  <p><strong>左例：外层维度太小（N=5）</strong></p>
+  <pre>double A[5][10000];
+#pragma omp for collapse(2)
+  for (int i = 0; i &lt; 5; ++i)
+    for (int j = 0; j &lt; 10000; ++j)
+      A[i][j] = ... // do something</pre>
+
+  <p>外层只有 5 次迭代。如果不写 collapse，开 8 个线程时<strong>只有 5 个干活</strong>（每人拿一个 i），剩下 3 个在 implicit barrier 处空等。资源浪费严重。</p>
+
+  <p>加 <code>collapse(2)</code> 后，迭代空间变成 5×10000=50000，8 个线程每人分约 6250 个 (i,j)，全部 utilized。这是 collapse 最典型的<strong>救火场景</strong> —— "外层维度小，内层维度大"。</p>
+
+  <p>slide 原话：<em>"Without the collapse(2) clause, only 5 threads work on the loop in parallel, the others are idle"</em> —— 直接点破问题。</p>
+
+  <p><strong>右例：GEMV（matrix-vector product，矩阵-向量乘）</strong></p>
+  <pre>const int N = 1000;
+double x[N], y[N];      // vectors
+double A[N][N];          // matrix
+// initialize data...
+
+#pragma omp parallel
+{
+  #pragma omp for collapse(2)
+    for (int i = 0; i &lt; N; ++i)      // line 12
+      y[i] = 0.0;
+      for (int j = 0; j &lt; N; ++j)    // line 14
+        y[i] += A[i][j] * x[j];
+}</pre>
+
+  <p>底部紫框抛了一个反思题：<em>"Can you collapse the loops in line 12 and line 14?"</em></p>
+
+  <p><strong>答案：不能</strong>。原因有两个：</p>
+  <ol>
+    <li><strong>不是 perfectly nested</strong>。外层循环体里在内层循环之前有一句 <code>y[i] = 0.0</code>。这违反 slide 57 的硬规则 —— 外层 <code>{}</code> 里除了内层循环外不能有别的语句。</li>
+    <li><strong>即便结构允许，也有 race</strong>。collapse(2) 把 (i,j) 展平后，多个线程可能<strong>同时拿到同一个 i 但不同 j</strong>的迭代 —— 它们都会写 <code>y[i] += ...</code>，这是经典 race condition（不是简单的索引不重叠了）。原本的"按 i 切"方案里，每个线程独占一段 i，写自己那段 y[i] 不冲突。</li>
+  </ol>
+
+  <p><strong>怎么修？</strong>常见做法：</p>
+  <ul>
+    <li>把 <code>y[i] = 0.0</code> 拆出去做单独的并行循环（先并行清零，再并行 GEMV），这样外层就 perfectly nested 了，<em>但</em>仍然有 race 问题。</li>
+    <li>真正想 collapse + 安全 → 内层加 <code>reduction(+:y[i])</code> 或者用 atomic 累加，但开销大。</li>
+    <li><strong>实际最简单</strong>：N=1000 已经够大，外层 i 切给线程就足够并行了，<strong>根本不用 collapse</strong>。所以这道题的精神是"看清楚什么时候 collapse 不适用"，不是"想办法强行 collapse"。</li>
+  </ul>
+
+  <p><strong>对比左右两例的核心教训</strong>：collapse 不是"嵌套循环就该加"的优化，而是"<strong>外层不够分</strong>时才用"的工具。当外层已经足够大（GEMV 里 N=1000 vs. 几十个线程），用 collapse 反而引入新问题（perfectly nested 限制 + 潜在 race），得不偿失。</p>
+</div>
+
+
+<!-- ==================== SLIDE 59 ==================== -->
+<h2 class="slide-title">Slide 59 — Reduction（把 N 个值规约成 1 个的并行模式）</h2>
+
+<img class="slide-img" src="images/slide-59.png" alt="Slide 59: reduction overview">
+
+<div class="explanation">
+  <p><strong>Reduction（规约）</strong>是一个非常常见的并行模式：<strong>用一个可结合的二元运算符 ⊕，把 O(N) 个输入合并成 O(1) 个输出</strong>。</p>
+
+  <p><strong>典型例子</strong>：</p>
+  <ul>
+    <li>找数组的最大/最小值（⊕ = max / min）。</li>
+    <li>求和、平方和（⊕ = +）。</li>
+    <li>线性代数里的内积（点积是"乘+加"的混合规约）。</li>
+    <li>逻辑运算的全 true / 任一 true（⊕ = && / ||）。</li>
+  </ul>
+
+  <p><strong>为什么需要专门的 reduction 子句？</strong>因为天真写法（多个线程都写同一个 sum 变量）必然 race。用 critical 或 atomic 包起来正确但<strong>慢得离谱</strong>—— 每次累加都要拿锁。reduction 的优雅做法是：<strong>每个线程用自己的私有副本累加，最后合并一次</strong>。</p>
+
+  <p><strong>语法</strong>：</p>
+  <pre>#pragma omp for reduction(reduction-identifier: list) [other clauses] new-line
+    for-nest</pre>
+
+  <p><strong>reduction-identifier</strong>：用哪个二元运算符。OpenMP 内置的有 <code>+ - * &amp; | ^ &amp;&amp; || min max</code>。</p>
+
+  <p><strong>list</strong>：要被规约的变量列表，逗号分隔。可以在同一 pragma 里写多个 reduction 子句（用不同运算符）。</p>
+
+  <p><strong>同一变量可以出现多次吗？</strong>不能 —— 一个变量在<strong>多个 reduction</strong>子句里只能出现一次（否则语义不清）。</p>
+
+  <p><strong>用户自定义 reduction</strong>。除了内置运算符，OpenMP 还支持 <code>#pragma omp declare reduction(...)</code> 让你定义自己的合并操作（比如对 struct 的合并、对 std::vector 的拼接）。日常用得少，但很灵活。</p>
+
+  <p><strong>初值（slide 右下表）</strong>。OpenMP 给每个线程的私有副本<strong>按运算符自动初始化</strong>：</p>
+  <ul>
+    <li><code>+, -, |, ^, ||</code> → 0</li>
+    <li><code>*, &amp;&amp;</code> → 1</li>
+    <li><code>&amp;</code> → ~0（全 1）</li>
+    <li><code>min</code> → 类型的最大值（这样任何输入都比它小）</li>
+    <li><code>max</code> → 类型的最小值（这样任何输入都比它大）</li>
+  </ul>
+
+  <p><strong>为什么这么设？</strong>因为这些值是各自运算符的<strong>幺元（identity element）</strong>—— 跟任何 x 做运算结果都是 x。这样初始化保证空线程或第一个累加不引入偏差。例如 max 的幺元必须比一切都小，所以选类型最小值；+ 的幺元是 0；* 的幺元是 1。</p>
+
+  <p><strong>关键性质：可结合（associative）</strong>。Reduction 假设 ⊕ 满足 <code>(a⊕b)⊕c = a⊕(b⊕c)</code>，这样合并顺序不影响结果。整数 + 严格满足；<strong>浮点 + 不严格满足</strong>（舍入误差），所以并行 reduce 浮点和串行 reduce 浮点的<strong>最低位可能差几个 ULP</strong>。需要严格可重现时要用别的方案。</p>
+</div>
+
+<details class="qa"><summary><strong>Q&A: 用 atomic / critical 替代 reduction 的代码长什么样？为什么慢？</strong></summary>
+
+<p><strong>版本 1：reduction（推荐）</strong></p>
+<pre>double sum = 0.0;
+#pragma omp parallel for reduction(+: sum)
+for (int i = 0; i &lt; N; ++i)
+    sum += a[i];</pre>
+<p>每线程私有累加，结束合并一次，锁/原子操作只 <strong>O(nthreads)</strong> 次。</p>
+
+<p><strong>版本 2：atomic（正确但慢）</strong></p>
+<pre>double sum = 0.0;
+#pragma omp parallel for
+for (int i = 0; i &lt; N; ++i) {
+    #pragma omp atomic
+    sum += a[i];                  // 每次累加用硬件原子指令
+}</pre>
+<p><code>#pragma omp atomic</code> 让 <code>sum += a[i]</code> 变成原子操作（编译器生成 lock-prefixed CPU 指令，如 x86 <code>lock xadd</code>）。<strong>每次累加都付原子指令开销，O(N)</strong>。更糟的是 cache line ping-pong：N 个线程争同一个 sum 所在的 cache line，每次原子加都把这条 line 从别人的 L1 偷过来——可能<strong>比串行还慢</strong>。</p>
+
+<p><strong>版本 3：critical（正确但更慢）</strong></p>
+<pre>double sum = 0.0;
+#pragma omp parallel for
+for (int i = 0; i &lt; N; ++i) {
+    #pragma omp critical
+    sum += a[i];                  // 每次累加都要拿一次互斥锁
+}</pre>
+<p><code>critical</code> 用<strong>软件互斥锁</strong>，比 atomic 重得多。每次累加要拿锁/加/放锁，锁本身的开销比一条原子指令贵 10~100 倍。</p>
+
+<p><strong>版本 4：手动模仿 reduction（reduction 的内部实现）</strong></p>
+<pre>double sum = 0.0;
+#pragma omp parallel
+{
+    double local_sum = 0.0;       // 每线程私有累加器
+    #pragma omp for nowait
+    for (int i = 0; i &lt; N; ++i)
+        local_sum += a[i];        // 无锁，写自己的局部变量
+
+    #pragma omp atomic            // 末尾合并一次
+    sum += local_sum;
+}</pre>
+<p>性能跟 <code>reduction(+:sum)</code> 几乎一样：核心循环无锁，末尾每线程 1 次原子加，共 nthreads 次。</p>
+
+<p><strong>性能对比（N=1M, 8 线程）</strong>：</p>
+<table>
+  <tr><th>写法</th><th>锁/原子次数</th><th>相对耗时</th></tr>
+  <tr><td><code>reduction(+:sum)</code></td><td>~8</td><td><strong>1×（基线）</strong></td></tr>
+  <tr><td>手写 local_sum + 末尾 atomic</td><td>~8</td><td>~1×</td></tr>
+  <tr><td>循环里 <code>atomic</code></td><td>1,000,000</td><td><strong>10×~100× 慢</strong></td></tr>
+  <tr><td>循环里 <code>critical</code></td><td>1,000,000</td><td><strong>100×~1000× 慢</strong></td></tr>
+</table>
+
+<p>差距是<strong>数量级</strong>，不是几个百分点。reduction 把锁开销从 O(N) 降到 O(nthreads)，N 越大优势越大。这就是 slide 59 强调 reduction "elegant" 的原因。</p>
+
+<p><strong>顺便：atomic vs critical 的简单区分</strong>：</p>
+<table>
+  <tr><th></th><th><code>atomic</code></th><th><code>critical</code></th></tr>
+  <tr><td>实现</td><td>硬件原子指令（一条 CPU 指令）</td><td>软件互斥锁（OS/库实现）</td></tr>
+  <tr><td>适用语句</td><td>只能 <code>x op= expr</code>、<code>x++</code> 等简单更新</td><td>任意代码块</td></tr>
+  <tr><td>开销</td><td>低</td><td>高（贵 10~100 倍）</td></tr>
+</table>
+<p>临界区是"对标量做简单更新"时，<strong>永远优先 atomic</strong>；复杂代码块或 atomic 不支持的运算才用 critical。</p>
+</details>
+
+
+<!-- ==================== SLIDE 60 ==================== -->
+<h2 class="slide-title">Slide 60 — Reduction（数组求和的完整代码示例）</h2>
+
+<img class="slide-img" src="images/slide-60.png" alt="Slide 60: reduction example — sum array elements">
+
+<div class="explanation">
+  <p>这页用最经典的"并行求数组和"把上一页的概念落地。</p>
+
+  <pre>double a[1000];
+// initialize data... 5
+double sum = 0.0;     // 初始化重要！
+#pragma omp parallel
+{
+  #pragma omp for reduction(+: sum)
+    for (int i = 0; i &lt; 1000; ++i)
+      sum += a[i];
+}
+return 0;</pre>
+
+  <p><strong>逐行讲解（slide 底部 line-by-line）</strong>：</p>
+
+  <p><strong>line 6（<code>sum = 0.0</code>）</strong>。<code>sum</code> 在 parallel 区<strong>外</strong>声明并初始化为 0，存在<strong>共享主存</strong>里。这是规约最终落地的目标变量。<strong>必须显式初始化</strong> —— OpenMP 不会替你清零外部 sum，它只清零各线程的私有副本。</p>
+
+  <p><strong>line 9（<code>#pragma omp for reduction(+: sum)</code>）</strong>。OpenMP 看到 <code>reduction(+: sum)</code>，做两件事：</p>
+  <ol>
+    <li>给<strong>每个线程创建一份 sum 的私有副本</strong>。</li>
+    <li>把这些副本<strong>初始化为 0</strong>（因为运算符是 <code>+</code>，幺元是 0）。</li>
+  </ol>
+  <p>所以 line 11 里 <code>sum += a[i]</code> 实际写的是<strong>线程自己的私有 sum</strong>，互不干扰，没有 race。</p>
+
+  <p><strong>line 11（<code>sum += a[i]</code>）</strong>。每个线程把自己分到的那一段 <code>a[i]</code> 累加进自己的私有 sum。具体哪个线程拿到哪些 i 取决于 schedule 策略（这里没指定，默认 static 切分）。所以<strong>每个线程私有 sum 的最终值取决于它分到了哪些 a[i]</strong>，不同 schedule 会让各线程的私有 sum 不一样。</p>
+
+  <p><strong>line 12（循环出口）</strong>。OpenMP 在循环结束的 implicit barrier 时做<strong>合并（reduce）</strong>：把所有线程的私有 sum 用 + 操作累加到外部那个共享 sum 上。所以最终 <code>sum_final = sum_initial + Σ private_sum_i</code>。</p>
+
+  <p><strong>"It will <em>add</em> these partial sums to whatever the value of sum was before the reduction" 这句关键</strong>。如果 sum 进入 parallel 时是 5（不是 0），最终结果会是 5 + 所有 a[i] 的和。这是个<strong>容易踩的坑</strong>—— 重复进同一个 reduction region 时，外部累加变量必须每次重置，否则数值会越加越大。</p>
+
+  <p><strong>合并阶段的实现</strong>。OpenMP 实现通常用<strong>树形规约</strong>（log nthreads 次合并）或者<strong>顺序原子加</strong>（nthreads 次加）。前者更快但要求运算符严格可结合，后者实现简单。具体策略由编译器决定，应用代码不需要关心。</p>
+
+  <p><strong>这个例子的并行模式总结</strong>：</p>
+  <ul>
+    <li><strong>切割阶段</strong>：循环迭代被 schedule 切给线程。</li>
+    <li><strong>独立累加阶段</strong>：每个线程在私有 sum 上累加自己那段，<em>无锁无竞争</em>。</li>
+    <li><strong>合并阶段</strong>：所有私有 sum 在 barrier 处统一汇入共享 sum，<em>只发生一次</em>。</li>
+  </ul>
+  <p>这就是为什么 reduction 比 critical 包累加快得多 —— critical 的开销是 O(N) 次加锁，reduction 是 O(nthreads) 次合并 + 一次原子（或树形规约）。N 通常远大于 nthreads，差距巨大。</p>
+</div>
+
+
+<!-- ==================== SLIDE 61 ==================== -->
+<h2 class="slide-title">Slide 61 — Reduction（"这段代码对吗？" —— process_result 放错位置的坑）</h2>
+
+<img class="slide-img" src="images/slide-61.png" alt="Slide 61: reduction — is this code correct?">
+
+<div class="explanation">
+  <p>这页是一个<strong>陷阱题</strong>。slide 把 slide 60 的代码改了一行，加了 <code>process_result(sum)</code>，问"<em>Is this code correct?</em>"</p>
+
+  <pre>double sum = 0.0;
+#pragma omp parallel
+{
+  #pragma omp for reduction(+: sum)
+    for (int i = 0; i &lt; 1000; ++i)
+      sum += a[i];
+    process_result(sum);   // ← 注意这行的位置
+}
+return 0;</pre>
+
+  <p><strong>第一个要看清楚的事：<code>process_result(sum)</code> 在哪？</strong>for 循环体没写 <code>{}</code>，所以 for 的 body 只有 <code>sum += a[i];</code> 这一句。<code>process_result(sum)</code> 是<strong>循环结束之后</strong>的语句，但它<strong>还在 <code>#pragma omp parallel</code> 那对大括号里</strong>。意思是：它仍然在并行区里，所有线程都会执行它。</p>
+
+  <p><strong>这段代码"会不会崩"？</strong>不会，编译能过、运行不报错。<strong>但语义几乎一定不是程序员想要的</strong>。</p>
+
+  <p><strong>问题 1：<code>process_result</code> 被调用了 <code>nthreads</code> 次，不是 1 次。</strong>因为它在 parallel 区里、又不在任何 worksharing 构造下，每个线程都会执行一次。如果 <code>process_result</code> 是"打印结果"或"写入文件"，你会得到 nthreads 行重复输出，甚至 nthreads 个线程并发写文件造成内容交错。</p>
+
+  <p><strong>问题 2：但每次调用读到的 sum 是对的。</strong>这点容易让初学者糊涂 —— 既然每个线程有私有 sum，<code>process_result(sum)</code> 读到的是哪个？答：<strong>读的是共享 sum，并且已经合并完了</strong>。原因有两条：</p>
+  <ul>
+    <li><strong>reduction 的私有副本生命周期只在 worksharing 构造（<code>#pragma omp for</code>）内部。</strong>循环一结束，私有副本就被合并到外面那个共享 sum 然后销毁。</li>
+    <li><strong><code>#pragma omp for</code> 末尾有 implicit barrier。</strong>所有线程都得等合并做完才能往下走，所以 <code>process_result(sum)</code> 读到的一定是最终结果。</li>
+  </ul>
+
+  <p><strong>所以症状是</strong>：结果数值正确，但被重复处理 nthreads 次。日志被刷屏、文件被重复写、计数器被重复加 —— 这才是 bug。</p>
+
+  <p><strong>怎么修？</strong>把 <code>process_result(sum)</code> 包到只让一个线程执行的构造里：</p>
+  <pre>#pragma omp parallel
+{
+  #pragma omp for reduction(+: sum)
+    for (int i = 0; i &lt; 1000; ++i)
+      sum += a[i];
+
+  #pragma omp single        // 或 master
+    process_result(sum);
+}</pre>
+  <p><code>single</code> 让<strong>任意一个线程</strong>执行（其他线程在 single 末尾的 barrier 等它），<code>master</code> 让<strong>线程 0</strong>执行（默认无 barrier）。两者都能保证只调用一次。</p>
+
+  <p><strong>更干净的写法</strong>：把 <code>process_result(sum)</code> 移出 parallel 区，不要塞在里面：</p>
+  <pre>#pragma omp parallel for reduction(+: sum)
+  for (int i = 0; i &lt; 1000; ++i)
+    sum += a[i];
+
+process_result(sum);    // 串行区，自然只调用一次</pre>
+  <p>"<strong>只在并行区里放真正需要并行的东西</strong>"是 OpenMP 的常用风格。</p>
+
+  <p><strong>这页要学到的一般教训</strong>：parallel 区里的<strong>每一行非 worksharing 代码</strong>都会被所有线程跑一遍。看到 parallel 区里有 I/O、有副作用函数、有计数器自增，都要先问"这是想让<strong>每个</strong>线程做，还是让<strong>一个</strong>线程做？"答案如果是后者，必须用 <code>single</code> / <code>master</code> / <code>critical</code> 之一显式收窄。</p>
+</div>
+
+<details class="qa"><summary><strong>C 语法补充：没有花括号的 for，body 只是下一条语句</strong></summary>
+<p>看 slide 61 的代码时容易误读——以为 <code>process_result(sum)</code> 在 for 循环内部。其实 <strong>C 里没有花括号的 for/if/while，body 只是<u>紧接着的那一条</u>语句</strong>，不看缩进。</p>
+<pre>for (int i = 0; i &lt; 1000; ++i)
+    sum += a[i];               // ← for 的 body 只有这一句
+    process_result(sum);       // ← 这行不在 for 里！只是缩进让它看起来像</pre>
+<p>等价于：</p>
+<pre>for (int i = 0; i &lt; 1000; ++i) {
+    sum += a[i];
+}
+process_result(sum);           // 在 for 之后</pre>
+<p>类似的坑（跟 OpenMP 无关，是 C 本身）：</p>
+<pre>if (x &gt; 0)
+    foo();
+    bar();      // ← 不在 if 里！永远会执行</pre>
+<p><strong>习惯</strong>：始终写花括号，避免被这个坑到。slide 61 故意不写就是要让你踩一次记住。</p>
+</details>
+
+
+<!-- ==================== SLIDE 62 ==================== -->
+<h2 class="slide-title">Slide 62 — Next time：OpenMP examples</h2>
+
+<img class="slide-img" src="images/slide-62.png" alt="Slide 62: Next time — OpenMP examples">
+
+<div class="explanation">
+  <p>过渡页。下次课用具体例子串起来这一节学到的所有 OpenMP 概念（<code>parallel</code> / <code>for</code> / <code>schedule</code> / <code>shared</code>·<code>private</code>·<code>firstprivate</code> / <code>critical</code>·<code>atomic</code> / <code>barrier</code> / <code>reduction</code>），看它们怎么组合到真实问题里。</p>
+</div>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'cs2050-lec5-highlights';
+  const state = {
+    highlightMode: false,
+    eraserMode: false,
+    currentColor: 'yellow',
+    highlights: []
+  };
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      state.highlights = raw ? JSON.parse(raw) : [];
+    } catch (e) { state.highlights = []; }
+  }
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.highlights));
+  }
+  function genId() {
+    return 'hl_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  }
+
+  // ---------- Toolbar ----------
+  function buildToolbar() {
+    const tb = document.createElement('div');
+    tb.id = 'hl-toolbar';
+    tb.innerHTML =
+      '<button id="hl-mode-btn" class="hl-btn">高亮模式: 关</button>' +
+      '<span class="hl-color-picker">' +
+        '<span class="hl-color" data-color="yellow" title="黄"></span>' +
+        '<span class="hl-color" data-color="green"  title="绿"></span>' +
+        '<span class="hl-color" data-color="pink"   title="粉"></span>' +
+        '<span class="hl-color" data-color="blue"   title="蓝"></span>' +
+      '</span>' +
+      '<button id="hl-eraser-btn" class="hl-btn">🧽 橡皮擦: 关</button>' +
+      '<button id="hl-toggle-btn" class="hl-btn">隐藏标记</button>' +
+      '<button id="hl-clear-btn" class="hl-btn">清除全部</button>';
+    document.body.appendChild(tb);
+
+    const modeBtn = document.getElementById('hl-mode-btn');
+    const eraserBtn = document.getElementById('hl-eraser-btn');
+
+    function refreshModeUI() {
+      modeBtn.textContent = '高亮模式: ' + (state.highlightMode ? '开' : '关');
+      modeBtn.classList.toggle('active', state.highlightMode);
+      eraserBtn.textContent = '🧽 橡皮擦: ' + (state.eraserMode ? '开' : '关');
+      eraserBtn.classList.toggle('active', state.eraserMode);
+      document.body.classList.toggle('hl-active', state.highlightMode);
+      document.body.classList.toggle('hl-eraser', state.eraserMode);
+    }
+
+    modeBtn.addEventListener('click', () => {
+      state.highlightMode = !state.highlightMode;
+      if (state.highlightMode) state.eraserMode = false;  // mutually exclusive
+      refreshModeUI();
+    });
+    eraserBtn.addEventListener('click', () => {
+      state.eraserMode = !state.eraserMode;
+      if (state.eraserMode) state.highlightMode = false;  // mutually exclusive
+      refreshModeUI();
+    });
+
+    tb.querySelectorAll('.hl-color').forEach(el => {
+      el.addEventListener('click', () => {
+        state.currentColor = el.dataset.color;
+        tb.querySelectorAll('.hl-color').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+      });
+    });
+    tb.querySelector('.hl-color[data-color="yellow"]').classList.add('selected');
+
+    const toggleBtn = document.getElementById('hl-toggle-btn');
+    toggleBtn.addEventListener('click', () => {
+      const hidden = document.body.classList.toggle('hl-hidden');
+      toggleBtn.textContent = hidden ? '显示标记' : '隐藏标记';
+    });
+
+    document.getElementById('hl-clear-btn').addEventListener('click', () => {
+      if (!confirm('清除全部高亮?')) return;
+      state.highlights = [];
+      save();
+      clearAllVisuals();
+    });
+  }
+
+  // ---------- Image highlights ----------
+  function setupImages() {
+    document.querySelectorAll('.slide-img').forEach(img => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'hl-img-wrapper';
+      img.parentNode.insertBefore(wrapper, img);
+      wrapper.appendChild(img);
+      attachImageDrag(img, wrapper);
+    });
+  }
+
+  function attachImageDrag(img, wrapper) {
+    let dragging = false;
+    let startX = 0, lockedY = 0;
+    let preview = null;
+    let rect = null;
+
+    img.addEventListener('mousedown', (e) => {
+      if (!state.highlightMode) return;
+      e.preventDefault();
+      rect = img.getBoundingClientRect();
+      startX = e.clientX - rect.left;
+      lockedY = e.clientY - rect.top;   // y locked at mousedown — strict horizontal
+      dragging = true;
+
+      preview = document.createElement('div');
+      preview.className = 'hl-img-mark';
+      preview.dataset.color = state.currentColor;
+      preview.style.left = (startX / rect.width * 100) + '%';
+      preview.style.top  = (lockedY / rect.height * 100) + '%';
+      preview.style.width = '0';
+      preview.style.pointerEvents = 'none';
+      wrapper.appendChild(preview);
+    });
+
+    function onMove(e) {
+      if (!dragging) return;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      preview.style.left  = (xs / rect.width * 100) + '%';
+      preview.style.width = ((xe - xs) / rect.width * 100) + '%';
+    }
+    function onUp(e) {
+      if (!dragging) return;
+      dragging = false;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      const widthPx = xe - xs;
+      if (widthPx < 8) {
+        if (preview) preview.remove();
+        preview = null;
+        return;
+      }
+      const data = {
+        type: 'image',
+        img_src: img.getAttribute('src'),
+        y_pct: lockedY / rect.height * 100,
+        x_start_pct: xs / rect.width * 100,
+        x_end_pct: xe / rect.width * 100,
+        color: state.currentColor,
+        id: genId()
+      };
+      state.highlights.push(data);
+      save();
+      preview.dataset.hlId = data.id;
+      preview.style.pointerEvents = 'auto';
+      preview.title = '橡皮擦模式下点击删除';
+      preview.addEventListener('click', (ev) => {
+        if (!state.eraserMode) return;
+        ev.stopPropagation();
+        removeHighlight(data.id);
+      });
+      preview = null;
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  function applyImageHighlight(data) {
+    const img = document.querySelector('.slide-img[src="' + cssEscape(data.img_src) + '"]');
+    if (!img) return;
+    const wrapper = img.parentElement;
+    if (!wrapper.classList.contains('hl-img-wrapper')) return;
+    const m = document.createElement('div');
+    m.className = 'hl-img-mark';
+    m.dataset.color = data.color;
+    m.dataset.hlId = data.id;
+    m.style.left = data.x_start_pct + '%';
+    m.style.width = (data.x_end_pct - data.x_start_pct) + '%';
+    m.style.top = data.y_pct + '%';
+    m.title = '橡皮擦模式下点击删除';
+    m.addEventListener('click', (ev) => {
+      if (!state.eraserMode) return;
+      ev.stopPropagation();
+      removeHighlight(data.id);
+    });
+    wrapper.appendChild(m);
+  }
+
+  function cssEscape(s) {
+    return s.replace(/"/g, '\\"');
+  }
+
+  // ---------- Text highlights ----------
+  function setupTextSelection() {
+    document.addEventListener('mouseup', (e) => {
+      if (!state.highlightMode) return;
+      if (e.target.closest('#hl-toolbar')) return;
+      if (e.target.classList && e.target.classList.contains('slide-img')) return;
+      if (e.target.classList && e.target.classList.contains('hl-img-mark')) return;
+
+      // Tiny delay so selection is finalized
+      setTimeout(() => {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        const text = sel.toString();
+        if (text.length === 0) return;
+
+        const range = sel.getRangeAt(0);
+        const ctx = computeContext(range);
+        if (!ctx) return;
+
+        const data = {
+          type: 'text',
+          text: text,
+          contextBefore: ctx.before,
+          contextAfter: ctx.after,
+          color: state.currentColor,
+          id: genId()
+        };
+        wrapRange(range, data);
+        state.highlights.push(data);
+        save();
+        sel.removeAllRanges();
+      }, 0);
+    });
+  }
+
+  function computeContext(range) {
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) root = root.parentElement;
+    // Walk up until we hit a block-level container
+    while (root && root.tagName && !/^(P|LI|TD|H1|H2|H3|H4|DIV|BODY|PRE|BLOCKQUOTE|SUMMARY)$/.test(root.tagName)) {
+      root = root.parentElement;
+    }
+    if (!root) return null;
+    const fullText = root.textContent;
+    const startOffset = nodeOffset(root, range.startContainer, range.startOffset);
+    const endOffset = nodeOffset(root, range.endContainer, range.endOffset);
+    if (startOffset < 0 || endOffset < 0) return null;
+    const CTX = 25;
+    return {
+      before: fullText.slice(Math.max(0, startOffset - CTX), startOffset),
+      after: fullText.slice(endOffset, endOffset + CTX)
+    };
+  }
+
+  function nodeOffset(root, node, offsetInNode) {
+    let total = 0;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    let n;
+    while ((n = walker.nextNode())) {
+      if (n === node) return total + offsetInNode;
+      total += n.textContent.length;
+    }
+    return -1;
+  }
+
+  function wrapRange(range, data) {
+    // Collect all text-node sub-ranges first (avoid mutation during traversal)
+    const fragments = [];
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) {
+      fragments.push({ node: root, start: range.startOffset, end: range.endOffset });
+    } else {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+      let n;
+      while ((n = walker.nextNode())) {
+        if (!range.intersectsNode(n)) continue;
+        const start = (n === range.startContainer) ? range.startOffset : 0;
+        const end   = (n === range.endContainer)   ? range.endOffset   : n.textContent.length;
+        if (end > start) fragments.push({ node: n, start, end });
+      }
+    }
+    fragments.forEach(f => {
+      const r = document.createRange();
+      try {
+        r.setStart(f.node, f.start);
+        r.setEnd(f.node, f.end);
+        const m = document.createElement('mark');
+        m.className = 'hl-text-mark';
+        m.dataset.color = data.color;
+        m.dataset.hlId = data.id;
+        m.title = '橡皮擦模式下点击删除';
+        m.addEventListener('click', (ev) => {
+          if (!state.eraserMode) return;
+          ev.stopPropagation();
+          removeHighlight(data.id);
+        });
+        r.surroundContents(m);
+      } catch (e) { /* skip fragment */ }
+    });
+  }
+
+  function applyTextHighlight(data) {
+    const target = data.contextBefore + data.text + data.contextAfter;
+    const root = document.body;
+    const nodes = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => {
+        if (n.parentElement && n.parentElement.closest('script, style, #hl-toolbar')) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }, false);
+    let nd;
+    while ((nd = walker.nextNode())) nodes.push(nd);
+    const fullText = nodes.map(n => n.textContent).join('');
+    const idx = fullText.indexOf(target);
+    if (idx === -1) return;
+
+    const startPos = idx + data.contextBefore.length;
+    const endPos = startPos + data.text.length;
+    let cum = 0, startNode = null, startOff = 0, endNode = null, endOff = 0;
+    for (const n of nodes) {
+      const len = n.textContent.length;
+      if (!startNode && startPos >= cum && startPos < cum + len) {
+        startNode = n; startOff = startPos - cum;
+      }
+      if (startNode && endPos > cum && endPos <= cum + len) {
+        endNode = n; endOff = endPos - cum; break;
+      }
+      cum += len;
+    }
+    if (!startNode || !endNode) return;
+    const range = document.createRange();
+    try {
+      range.setStart(startNode, startOff);
+      range.setEnd(endNode, endOff);
+      wrapRange(range, data);
+    } catch (e) {}
+  }
+
+  // ---------- Remove / clear ----------
+  function removeHighlight(id) {
+    state.highlights = state.highlights.filter(h => h.id !== id);
+    save();
+    document.querySelectorAll('[data-hl-id="' + id + '"]').forEach(el => {
+      if (el.tagName === 'MARK') {
+        const p = el.parentNode;
+        while (el.firstChild) p.insertBefore(el.firstChild, el);
+        p.removeChild(el);
+        p.normalize();
+      } else {
+        el.remove();
+      }
+    });
+  }
+  function clearAllVisuals() {
+    document.querySelectorAll('.hl-img-mark').forEach(el => el.remove());
+    document.querySelectorAll('mark.hl-text-mark').forEach(el => {
+      const p = el.parentNode;
+      while (el.firstChild) p.insertBefore(el.firstChild, el);
+      p.removeChild(el);
+      p.normalize();
+    });
+  }
+
+  // ---------- Init ----------
+  function init() {
+    load();
+    buildToolbar();
+    setupImages();
+    setupTextSelection();
+    // Apply existing highlights once layout is ready
+    window.addEventListener('load', () => {
+      state.highlights.forEach(h => {
+        if (h.type === 'image') applyImageHighlight(h);
+        else if (h.type === 'text') applyTextHighlight(h);
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+</body>
+</html>
