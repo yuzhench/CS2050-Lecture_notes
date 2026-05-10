@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>CS 2050 Lecture 6 - 复习笔记</title>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    max-width: 980px;
+    margin: 40px auto;
+    padding: 0 24px;
+    line-height: 1.7;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 {
+    border-bottom: 3px solid #1f6feb;
+    padding-bottom: 10px;
+  }
+  h2.slide-title {
+    color: #1f6feb;
+    margin-top: 50px;
+    border-left: 5px solid #1f6feb;
+    padding-left: 12px;
+  }
+  h3 {
+    color: #333;
+    margin-top: 28px;
+  }
+  .slide-img {
+    display: block;
+    max-width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin: 16px 0 24px 0;
+  }
+  .explanation {
+    background: #fff;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
+  }
+  .qa {
+    background: #fff8e1;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border-left: 4px solid #f0a500;
+    margin-top: 20px;
+  }
+  .qa h3 { margin-top: 0; color: #b8730e; }
+  .qa ul li { margin-bottom: 8px; }
+  details.qa > summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #b8730e;
+    font-size: 1.08em;
+    padding: 6px 0;
+    user-select: none;
+    list-style: none;
+  }
+  details.qa > summary::before {
+    content: "▶ ";
+    display: inline-block;
+    transition: transform 0.15s;
+  }
+  details.qa[open] > summary::before {
+    content: "▼ ";
+  }
+  details.qa > summary:hover { color: #f0a500; }
+  details.qa[open] > summary { margin-bottom: 14px; }
+  code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.92em;
+  }
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th { background: #1f6feb; color: white; }
+  blockquote {
+    border-left: 4px solid #1f6feb;
+    margin: 16px 0;
+    padding: 4px 16px;
+    color: #555;
+    background: #eef4ff;
+  }
+  .takeaway {
+    background: #e8f5e9;
+    border-left: 4px solid #2e7d32;
+    padding: 14px 20px;
+    margin-top: 20px;
+    border-radius: 4px;
+  }
+
+  /* ============================================
+     Highlight feature (image + text)
+     ============================================ */
+  #hl-toolbar {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .hl-btn {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    user-select: none;
+  }
+  .hl-btn:hover { background: #e8e8e8; }
+  .hl-btn.active { background: #1f6feb; color: white; border-color: #1f6feb; }
+  .hl-color-picker {
+    display: inline-flex;
+    gap: 6px;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    padding: 0 10px;
+  }
+  .hl-color {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    display: inline-block;
+    box-sizing: border-box;
+  }
+  .hl-color.selected { border-color: #333; }
+  .hl-color[data-color="yellow"] { background: rgba(255, 235, 59, 0.85); }
+  .hl-color[data-color="green"]  { background: rgba(102, 187, 106, 0.85); }
+  .hl-color[data-color="pink"]   { background: rgba(236, 64, 122, 0.75); }
+  .hl-color[data-color="blue"]   { background: rgba(79, 195, 247, 0.85); }
+
+  body.hl-active { cursor: crosshair; }
+  body.hl-active .slide-img { cursor: crosshair; }
+  body.hl-eraser { cursor: not-allowed; }
+  body.hl-eraser .slide-img { cursor: not-allowed; }
+  body.hl-eraser .hl-img-mark,
+  body.hl-eraser mark.hl-text-mark {
+    outline: 2px dashed #d32f2f;
+    outline-offset: 1px;
+    cursor: pointer !important;
+  }
+
+  .hl-img-wrapper {
+    position: relative;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin: 16px 0 24px 0;
+  }
+  .hl-img-wrapper > .slide-img { margin: 0; }
+
+  .hl-img-mark {
+    position: absolute;
+    height: 14px;
+    transform: translateY(-50%);
+    border-radius: 2px;
+    mix-blend-mode: multiply;
+    pointer-events: auto;
+  }
+  .hl-img-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.65); }
+  .hl-img-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.55); }
+  .hl-img-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.50); }
+  .hl-img-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.55); }
+
+  mark.hl-text-mark {
+    padding: 1px 1px;
+    border-radius: 2px;
+    color: inherit;
+  }
+  mark.hl-text-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.55); }
+  mark.hl-text-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.40); }
+  mark.hl-text-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.30); }
+  mark.hl-text-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.40); }
+
+  body.hl-hidden .hl-img-mark { background: transparent !important; }
+  body.hl-hidden mark.hl-text-mark {
+    background: transparent !important;
+    padding: 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>CS 2050 Lecture 6 - 复习笔记</h1>
+<p><em>主题：Introduction to OpenMP（共享内存并行编程入门）</em></p>
+
+<blockquote>
+  Lecture 6 的前半段（slide 2–5）是行政内容（期末考试时间、HW1 仓库、Gradescope 提交格式、SSH 集群暂缓使用），这里跳过。技术内容从 slide 6 开始。
+</blockquote>
+
+<!-- ==================== SLIDE 6 ==================== -->
+<h2 class="slide-title">Slide 6 — OpenMP: Open Multi-Processing（是什么 / 不是什么）</h2>
+
+<img class="slide-img" src="images/slide-06.png" alt="Slide 6: OpenMP introduction">
+
+<div class="explanation">
+  <p>这一页是 OpenMP 的"自我介绍"，正反两面分别说明 <strong>它是什么</strong> 和 <strong>它不是什么</strong>，目的是先把边界划清楚再开始用。</p>
+
+  <h3>OpenMP 是什么（绿色 ✓）</h3>
+  <ul>
+    <li><strong>An API for explicit, direct multi-threaded parallelism on shared memory architectures</strong> —— 显式、直接控制多线程，运行在共享内存机器上。"显式"指由程序员说哪里并行；"直接"指线程层面而非更高层抽象；"共享内存"指所有线程共用同一块物理内存（也就是 Lecture 5 讲的同一个进程内）。</li>
+    <li><strong>3 大组件</strong>：
+      <ul>
+        <li><strong>Compiler directives</strong>（编译器指令，<code>#pragma omp ...</code>）—— 加在 C/C++/Fortran 源码里告诉编译器"这段并行化"。</li>
+        <li><strong>Runtime library calls</strong>（运行时库函数，如 <code>omp_get_thread_num()</code>、<code>omp_set_num_threads()</code>）—— 程序运行时查询/设置线程信息。</li>
+        <li><strong>Environment variables</strong>（环境变量，如 <code>OMP_NUM_THREADS</code>）—— 不改代码也能控制行为（比如启动多少线程）。</li>
+      </ul>
+    </li>
+    <li><strong>A standard widely used in industry and academic codes</strong> —— 工业界和学术界的事实标准；编译器（GCC、Clang、Intel ICC、IBM XL）都原生支持。</li>
+  </ul>
+
+  <h3>OpenMP 不是什么（红色 ✗）</h3>
+  <ul>
+    <li><strong>不会帮你检查 data races / deadlocks / 是否符合标准</strong> —— OpenMP 只是给你工具，正确性仍然是程序员的责任。这点很关键，下页 slide 8 的 race condition 就是反例。</li>
+    <li><strong>不为分布式内存系统设计</strong> —— 跨多台机器（不同进程、各自独立内存）要用 MPI，而不是 OpenMP。</li>
+    <li><strong>不为并行 I/O 设计</strong> —— 读写大文件的并行化要用 MPI-IO、HDF5 这种专门系统。</li>
+  </ul>
+
+  <div class="takeaway">
+    💡 <strong>定位</strong>：OpenMP = "在同一台机器、同一块内存里把循环和任务多线程化"的标准 API。它是"加速器"，不是"安全网"。
+  </div>
+</div>
+
+
+<!-- ==================== SLIDE 7 ==================== -->
+<h2 class="slide-title">Slide 7 — OpenMP 的渐进式特性 与 <code>-fopenmp</code> 编译选项</h2>
+
+<img class="slide-img" src="images/slide-07.png" alt="Slide 7: OpenMP usage and tradeoffs">
+
+<div class="explanation">
+  <p>这页讲 <strong>为什么 OpenMP 这么受欢迎</strong>，以及它和 MPI 在工程上的取舍。</p>
+
+  <h3>左图：Performance vs Time/Effort 曲线</h3>
+  <p>横轴是"投入的时间和精力"，纵轴是"性能"。三条曲线代表三种并行化策略：</p>
+  <ul>
+    <li><strong>OpenMP（绿）</strong>：起点很低（顺序程序），<strong>稍微改几行就能立刻见效</strong>。曲线一开始就陡升，但很快趋于平缓 —— 因为 OpenMP 受限于单机的核心数，再投入也涨不动了。</li>
+    <li><strong>MPI（红）</strong>：前期一段虚线 "Code does not work" —— 改成 MPI 要重写消息传递逻辑，这段时间程序根本跑不起来。<strong>但一旦跑通，可以扩展到成百上千节点，天花板比 OpenMP 高得多</strong>。</li>
+    <li><strong>MPI + OpenMP（蓝）</strong>：节点间用 MPI、节点内用 OpenMP 的混合（hybrid）模式 —— 投入最大、上限最高，是 HPC 程序最常见的最终形态。</li>
+  </ul>
+
+  <h3>右侧三个要点</h3>
+  <ul>
+    <li><strong>"Add to existing sequential code"</strong> —— OpenMP 是 <em>渐进式（incremental）</em> 的：不需要重写程序，只在热点循环上加一行 <code>#pragma omp parallel for</code>，原顺序版本仍然完整保留。这和 MPI 形成鲜明对比 —— MPI 通常要从架构层面重写。</li>
+    <li><strong>编译器对 <code>#pragma</code> 默认忽略</strong>，所以一份源代码可以同时在支持 OpenMP 的环境（开 <code>-fopenmp</code>）和不支持的环境（不开就当顺序代码）下编译。GCC 必须加 <code>-fopenmp</code> 才会真正解释这些 pragma 并链接 libgomp 运行时；不加这个 flag 编译出来的就是单线程版。</li>
+    <li><strong>OpenACC</strong> 是另一个基于 directive 的并行模型，目标主要是 GPU。设计哲学相同（"不重写代码，加 pragma 即可"），但运行的硬件不同。</li>
+  </ul>
+
+  <p><strong>编译命令示例</strong>：</p>
+<pre>gcc -fopenmp -O2 my_program.c -o my_program
+./my_program                  # 默认按机器核心数启动线程
+OMP_NUM_THREADS=4 ./my_program  # 用环境变量控制只跑 4 个线程</pre>
+
+  <blockquote>💡 这页的潜台词：<strong>OpenMP 的"低门槛"是它最大的优势</strong> —— 投入小、风险低、保留顺序版本作为参照（可以方便地对比正确性）。</blockquote>
+</div>
+
+
+<!-- ==================== SLIDE 8 ==================== -->
+<h2 class="slide-title">Slide 8 — Race Condition in Counter Class（为什么并行不能"想当然"）</h2>
+
+<img class="slide-img" src="images/slide-08.png" alt="Slide 8: Race condition in counter class">
+
+<div class="explanation">
+  <p>这页是整个 lecture 最重要的一页，给出了一个看似简单到不会出错的例子，揭示 <strong>并行编程的根本陷阱</strong>。</p>
+
+  <h3>问题代码</h3>
+<pre>void increment() { ++count_; }   // 看起来"一句"代码</pre>
+  <p>C++ 源码看起来是一条语句，但 <strong>CPU 实际执行的不是一条指令</strong>。反汇编后可以看到 <code>++count_</code> 编译成 <strong>3 条机器指令</strong>：</p>
+<pre>mov edx, DWORD PTR [rax]   ; ① load: 把内存地址 rax 处的值读到寄存器 edx
+add edx, 1                 ; ② add: 寄存器 edx += 1
+mov DWORD PTR [rax], edx   ; ③ store: 把寄存器 edx 的值写回内存</pre>
+  <p>这就是经典的 <strong>load–modify–store</strong> 三步组合。在单线程下没问题；在多线程下 —— 灾难。</p>
+
+  <h3>为什么是 race condition</h3>
+  <p>左侧的紫色小图是关键：<strong>每个线程有自己独立的 stack 和 registers</strong>（程序计数器 PC 也是私有的），但 <strong>heap、data、code 段是所有线程共享的</strong>。<code>count_</code> 是对象成员，在 heap 上 —— 所有线程访问的是同一份。</p>
+
+  <p>但 <code>edx</code>、<code>rax</code> 这些寄存器是 <strong>线程私有</strong> 的（每个线程有自己的 register file）。这意味着一个线程"读到 edx 里"的旧值，另一个线程是看不到的，仍以为内存里的值没变。</p>
+
+  <p><strong>下面是一个会导致丢更新的交错（interleaving）</strong>，假设初始 <code>count_ = 5</code>，两个线程同时调用 <code>increment()</code>：</p>
+<pre>时间   线程 0                                      线程 1                                      内存中 count_
+─────  ─────────────────────────────────────────  ─────────────────────────────────────────  ────────────
+t1     mov edx, [rax]   ; T0.edx = 5                                                          5
+t2                                                 mov edx, [rax]   ; T1.edx = 5              5
+t3     add edx, 1       ; T0.edx = 6                                                          5
+t4                                                 add edx, 1       ; T1.edx = 6              5
+t5     mov [rax], edx   ; 写回 6                                                              6
+t6                                                 mov [rax], edx   ; 写回 6                  6  ← 应该是 7！</pre>
+  <p>两次 increment 应该让 <code>count_</code> 从 5 变成 7，但因为两个线程都基于 "5" 这个旧值计算，最后只 +1。<strong>"丢失更新（lost update）"</strong>。</p>
+
+  <h3>为什么这特别危险</h3>
+  <ul>
+    <li><strong>非确定性</strong>：交错顺序取决于 OS 调度、CPU 缓存、负载等等，每次跑结果可能都不一样。这次正确不代表下次正确。</li>
+    <li><strong>很难复现</strong>：开 debugger 一步步看，反而把交错"打散"了，bug 消失（"Heisenbug"）。</li>
+    <li><strong>OpenMP 不会帮你检测</strong>（呼应 slide 6 的红色 ✗）—— 编译能过、不报错、跑出来就是错。</li>
+  </ul>
+
+  <h3>怎么解决（lecture 里之后会展开）</h3>
+  <ul>
+    <li><strong>原子操作</strong>：<code>#pragma omp atomic</code> 或 C++11 <code>std::atomic&lt;int&gt;</code> —— 让 load+modify+store 在硬件层不可分割。</li>
+    <li><strong>临界区</strong>：<code>#pragma omp critical</code> —— 用锁保证一次只有一个线程进入这段代码。</li>
+    <li><strong>归约</strong>：<code>#pragma omp parallel for reduction(+:count_)</code> —— 每个线程算自己的局部和，循环结束后再合并，避免争用。</li>
+  </ul>
+
+  <div class="takeaway">
+    🎯 <strong>核心一句话</strong>：<strong>"一行 C++ 代码"在底层往往是多步指令；并行下任何一步都可能被打断、被另一线程穿插。<code>++</code>、<code>--</code>、<code>+=</code> 这种"看起来原子"的操作在多线程里几乎永远是错的。</strong>
+  </div>
+</div>
+
+<details class="qa">
+  <summary>📌 Q&amp;A 补充要点（点击展开）</summary>
+
+  <h4>Q1：为什么不能让编译器把 <code>++count_</code> 编译成一条原子指令？</h4>
+  <p>x86 其实<em>有</em>这种指令（<code>lock inc DWORD PTR [rax]</code>），但默认不会生成，因为<strong>原子版本比普通版本慢一个数量级</strong>（要锁住 cache line、做内存屏障）。在大多数代码里 <code>count_</code> 是单线程访问的，付那份代价毫无道理。所以编译器默认按"最快路径"生成普通的 load-add-store；要原子语义必须显式声明（<code>std::atomic</code>、<code>#pragma omp atomic</code>），编译器才会改成 lock 前缀指令。</p>
+
+  <hr>
+
+  <h4>Q2：寄存器 <code>rax</code> 和 <code>edx</code> 是什么？为什么"线程私有"？</h4>
+  <p>x86-64 通用寄存器，<code>rax</code> 是 64 位、<code>edx</code> 是 32 位（rdx 的低 32 位）。slide 里 <code>[rax]</code> 表示 "rax 寄存器存的是地址，访问该地址处的内存"。</p>
+  <p>"线程私有"不是说每个线程有一套<em>物理</em>寄存器（CPU 核里寄存器就那么几个），而是 <strong>OS 切换线程时会把当前线程的寄存器值保存到该线程的栈上、再加载新线程之前保存的值</strong>。这叫 <em>context switch（上下文切换）</em>。所以从软件视角看，每个线程都有自己一套寄存器状态，互不干扰。</p>
+
+  <hr>
+
+  <h4>Q3：左边那张紫色小图（Stack/Registers/Heap/Data/Code）想表达什么？</h4>
+  <p>同一个进程里多个线程的内存视图：</p>
+  <ul>
+    <li><strong>每个线程独占</strong>：自己的 Stack（局部变量、调用栈）、自己的 Registers（PC、edx、rax 等）。</li>
+    <li><strong>所有线程共享</strong>：Heap（<code>malloc</code>/<code>new</code> 出来的对象，比如 <code>count_</code>）、Data 段（全局变量、静态变量）、Code 段（程序指令）。</li>
+  </ul>
+  <p>race condition 的根源就在这：<strong>共享数据（heap 上的 count_）+ 私有寄存器（看不见对方的中间状态）= 谁也不知道对方读到的是不是最新值</strong>。</p>
+</details>
+
+
+<!-- ==================== SLIDE 9 ==================== -->
+<h2 class="slide-title">Slide 9 — Example 1: OpenMP in Action（章节分隔）</h2>
+
+<img class="slide-img" src="images/slide-09.png" alt="Slide 9: Example 1 OpenMP in action section divider">
+
+<div class="explanation">
+  <p>章节过渡页 —— 接下来要进入 OpenMP 的第一个动手例子。课件本身没有更多文字内容，老师会在这里现场演示。</p>
+  <p><strong>预期内容</strong>（基于 OpenMP 的入门标准结构）：把一个简单的 <code>for</code> 循环（如数组初始化或 <code>saxpy</code>）加上 <code>#pragma omp parallel for</code>，用 <code>omp_get_thread_num()</code> 打印线程 ID，观察多线程版本和单线程版本的运行差异，并用 <code>OMP_NUM_THREADS</code> 改变线程数比较时间。</p>
+</div>
+
+
+<!-- ==================== SLIDE 10 ==================== -->
+<h2 class="slide-title">Slide 10 — Example 2: Numeric Integration（数值积分，章节分隔）</h2>
+
+<img class="slide-img" src="images/slide-10.png" alt="Slide 10: Example 2 numeric integration section divider">
+
+<div class="explanation">
+  <p>第二个例子的引入页，公式是 <strong>梯形法（trapezoidal rule）</strong> 对 <code>∫<sub>a</sub><sup>b</sup> sin(x) dx</code> 的离散近似：</p>
+  <pre>∫ₐᵇ sin(x) dx  ≈  [ sin(a)/2  +  sin(b)/2  +  Σᵢ₌₁ⁿ⁻¹ sin(xᵢ) ]  · Δx</pre>
+  <p>把区间 <code>[a, b]</code> 等分成 <code>n</code> 段、宽度 <code>Δx = (b-a)/n</code>，每个内部点 <code>xᵢ</code> 算 <code>sin(xᵢ)</code>、两个端点取一半权重，加起来再乘 Δx。</p>
+
+  <p><strong>为什么这是 OpenMP 教学的"明星例子"</strong>：</p>
+  <ul>
+    <li><strong>典型的 reduction 模式</strong>：每次循环算一个 <code>sin(xᵢ)</code>，把所有结果相加。如果直接 <code>#pragma omp parallel for</code> 然后 <code>sum += ...</code>，就是 slide 8 的 race condition 翻版（多个线程同时写 <code>sum</code>）。正确写法是 <code>reduction(+:sum)</code>，每个线程维护自己的局部和、循环后再合并。</li>
+    <li><strong>计算密集、迭代之间完全独立</strong> —— 没有数据依赖，是教学上"加速比最干净"的例子。</li>
+    <li><strong>数学上有解析解</strong> <code>= -cos(b) + cos(a)</code>，可以直接验证并行结果是否正确。</li>
+  </ul>
+
+  <h3>① 顺序版（baseline）</h3>
+<pre>#include &lt;stdio.h&gt;
+#include &lt;math.h&gt;
+
+double integrate_sin(double a, double b, long n) {
+    double dx = (b - a) / n;
+    double sum = 0.5 * sin(a) + 0.5 * sin(b);   // 两个端点权重 1/2
+    for (long i = 1; i &lt; n; i++) {
+        double xi = a + i * dx;
+        sum += sin(xi);
+    }
+    return sum * dx;
+}
+
+int main(void) {
+    double a = 0.0, b = M_PI;
+    long n = 100000000;            // 1e8 个区间
+    double approx = integrate_sin(a, b, n);
+    double exact  = -cos(b) + cos(a);   // 解析解 = 2.0
+    printf("approx = %.12f\nexact  = %.12f\nerror  = %.2e\n",
+           approx, exact, fabs(approx - exact));
+    return 0;
+}</pre>
+
+  <h3>② 错误并行版 —— 直接加 <code>parallel for</code>（会触发 race condition）</h3>
+<pre>#pragma omp parallel for                 // ❌ 错误！
+for (long i = 1; i &lt; n; i++) {
+    double xi = a + i * dx;
+    sum += sin(xi);                      // 多个线程同时读改写 sum，正是 slide 8 的场景
+}</pre>
+  <p>编译能通过、程序也能跑完，但每次结果都不一样、且明显小于真值。原因就是 slide 8 讲的：<code>sum += sin(xi)</code> 是 load-modify-store 三步，多个线程交错时会丢更新。</p>
+
+  <h3>③ 正确并行版 —— 用 <code>reduction(+:sum)</code></h3>
+<pre>#include &lt;stdio.h&gt;
+#include &lt;math.h&gt;
+#include &lt;omp.h&gt;
+
+double integrate_sin(double a, double b, long n) {
+    double dx = (b - a) / n;
+    double sum = 0.5 * sin(a) + 0.5 * sin(b);
+
+    #pragma omp parallel for reduction(+:sum)    // ✅ 关键
+    for (long i = 1; i &lt; n; i++) {
+        double xi = a + i * dx;
+        sum += sin(xi);
+    }
+    return sum * dx;
+}
+
+int main(void) {
+    double a = 0.0, b = M_PI;
+    long n = 100000000;
+
+    double t0 = omp_get_wtime();
+    double approx = integrate_sin(a, b, n);
+    double t1 = omp_get_wtime();
+
+    double exact = -cos(b) + cos(a);
+    printf("threads = %d\n", omp_get_max_threads());
+    printf("approx  = %.12f\n", approx);
+    printf("exact   = %.12f\n", exact);
+    printf("error   = %.2e\n", fabs(approx - exact));
+    printf("time    = %.3f s\n", t1 - t0);
+    return 0;
+}</pre>
+
+  <p><strong>编译 / 运行</strong>：</p>
+<pre>gcc -fopenmp -O2 integrate.c -lm -o integrate
+OMP_NUM_THREADS=1 ./integrate    # 单线程基线
+OMP_NUM_THREADS=4 ./integrate    # 4 线程
+OMP_NUM_THREADS=8 ./integrate    # 8 线程，对比加速比</pre>
+
+  <h3><code>reduction(+:sum)</code> 在背后做了什么</h3>
+  <p>这一句 directive 会让 OpenMP 自动展开成下面这种等价代码（伪码）：</p>
+<pre>// 进入 parallel 区域时，每个线程拿到一份"私有的 sum"
+double sum_private = 0;          // 每线程一份，初值取决于运算符（+ → 0、* → 1、min → +∞ ...）
+
+// 各线程在自己的 sum_private 上累加，互不干扰 —— 没有 race
+for (i 属于该线程的循环子集) {
+    sum_private += sin(a + i * dx);
+}
+
+// 退出 parallel 区域前，OpenMP 把所有线程的 sum_private 合并回原 sum
+#pragma omp atomic
+sum += sum_private;              // 这一步是临界的，但只发生 N_threads 次，开销可忽略</pre>
+
+  <p>所以 <code>reduction</code> 的本质是 <strong>"先各算各的，最后一次合并"</strong>，把昂贵的同步从"每次循环 1 次"降到"每个线程 1 次"。这是数值并行最常见的模式。</p>
+
+  <h3>④ 进阶：用 <code>sections</code> 把端点也并行起来</h3>
+  <p>两个端点 <code>sin(a)/2</code> 和 <code>sin(b)/2</code> 是两个完全独立的小任务，可以用 <strong><code>#pragma omp sections</code></strong> 让它们各跑在一个线程上。<code>sections</code> 是 OpenMP 的 <strong>任务并行（task parallelism）</strong>构造 —— 适合一组性质不同、彼此独立的代码块（呼应 Lecture 5 slide 11 讲过的 task-level parallelism）。</p>
+
+<pre>double integrate_sin(double a, double b, long n) {
+    double dx = (b - a) / n;
+    double end_a = 0.0, end_b = 0.0, mid = 0.0;
+
+    #pragma omp parallel
+    {
+        // ── 端点用 sections：两块独立任务，各跑一个线程 ──
+        #pragma omp sections
+        {
+            #pragma omp section
+            { end_a = 0.5 * sin(a); }
+
+            #pragma omp section
+            { end_b = 0.5 * sin(b); }
+        }   // 隐式 barrier：两个 section 都做完才继续
+
+        // ── 中间求和用 for + reduction：数据并行 ──
+        #pragma omp for reduction(+:mid)
+        for (long i = 1; i &lt; n; i++) {
+            mid += sin(a + i * dx);
+        }
+    }
+
+    return (end_a + end_b + mid) * dx;
+}</pre>
+
+  <p><strong>几个要点</strong>：</p>
+  <ul>
+    <li><strong>外层用一个 <code>#pragma omp parallel</code> 包住</strong>，里面再分别用 <code>sections</code> 和 <code>for</code>。这样只 fork 一次线程组，<code>sections</code> 做完后同一组线程接着做循环 —— 比"两次 <code>parallel</code>"开销小。</li>
+    <li><strong>每个 <code>section</code> 块由一个线程执行</strong>。如果 <code>sections</code> 数量少于线程数，多出来的线程在该构造里闲着；如果 <code>sections</code> 多于线程数，OpenMP 会把多个 section 派给同一个线程（仍是串行处理它们）。</li>
+    <li><strong><code>sections</code> 末尾默认有 barrier</strong>，保证两个端点都算完才进入下一段。如果你确实不需要等（罕见），可以加 <code>nowait</code>。</li>
+    <li><strong>这种写法的实际收益几乎可以忽略</strong> —— 两个 <code>sin()</code> 调用 ≈ 几十纳秒，OpenMP 派发一次 <code>sections</code> 的开销远比这大。所以这个例子适合<strong>讲语法</strong>，不适合用来真的提速。</li>
+  </ul>
+
+  <p><strong><code>sections</code> 的真实使用场景</strong>是各任务本身有相当工作量的情况，比如：</p>
+  <ul>
+    <li>一个 section 算 FFT、另一个 section 同时做矩阵转置、第三个 section 加载下一批数据 —— 三件不同的事并行。</li>
+    <li>流水线的不同阶段（read → preprocess → write）可以放在不同 section 里同时进行。</li>
+  </ul>
+
+  <p><strong>对比：<code>sections</code> vs <code>parallel for</code></strong></p>
+  <table>
+    <tr><th></th><th><code>parallel for</code></th><th><code>sections</code></th></tr>
+    <tr><td>并行类型</td><td>数据并行 (data parallelism)</td><td>任务并行 (task parallelism)</td></tr>
+    <tr><td>适用场景</td><td>多次重复同样操作（循环迭代）</td><td>几件不同的、互相独立的事</td></tr>
+    <tr><td>线程分配</td><td>循环范围切片，按调度策略分给线程</td><td>每个 section 块整体派给一个线程</td></tr>
+    <tr><td>本例对应部分</td><td>中间 1e8 次 <code>sin(xi)</code> 累加</td><td>两个端点 <code>sin(a)/2</code>、<code>sin(b)/2</code></td></tr>
+  </table>
+
+  <h3>常见踩坑</h3>
+  <ul>
+    <li><strong>忘了 <code>-fopenmp</code></strong>：编译能过，但 pragma 被忽略，跑出来仍是单线程。</li>
+    <li><strong>用 <code>critical</code> 替代 <code>reduction</code></strong>：把 <code>sum += sin(xi)</code> 套进 <code>#pragma omp critical</code> 也能正确，但每次循环都加锁，比单线程还慢。<code>reduction</code> 才是该场景的正确工具。</li>
+    <li><strong>循环变量类型</strong>：<code>i</code> 用 <code>long</code> 而不是 <code>int</code>，因为 <code>n</code> 上亿时 <code>int</code> 会溢出。</li>
+    <li><strong>验证用解析解</strong>：每次跑都打印 <code>error</code>，错误的并行实现会让误差忽大忽小（race condition 的特征），正确实现则误差稳定（只受浮点 round-off 影响）。</li>
+  </ul>
+</div>
+
+
+<!-- ==================== SLIDE 11 ==================== -->
+<h2 class="slide-title">Slide 11 — Example 3: Sieve of Eratosthenes（埃拉托色尼筛法，章节分隔）</h2>
+
+<img class="slide-img" src="images/slide-11.png" alt="Slide 11: Example 3 sieve of eratosthenes section divider">
+
+<div class="explanation">
+  <p>第三个例子：<strong>用埃拉托色尼筛法找质数</strong>。古希腊数学家 Eratosthenes 的方法，思路是：</p>
+  <ol>
+    <li>列出 <code>2 .. N</code> 所有数。</li>
+    <li>从最小未划掉的数 <code>p = 2</code> 开始，把 <code>p</code> 的倍数划掉。</li>
+    <li>找下一个未划掉的数作为新的 <code>p</code>，重复上一步。</li>
+    <li>当 <code>p² &gt; N</code> 时停止 —— 剩下未划掉的就都是质数。</li>
+  </ol>
+
+  <h3>关键问题：为什么是 <code>p² &gt; N</code> 停止，不是 <code>2p &gt; N</code>？</h3>
+
+  <p>这是初学时最容易卡住的点。直觉上你会想："要划掉 <code>p</code> 的倍数 <code>2p, 3p, ...</code>，只要 <code>2p &gt; N</code> 就没有倍数可划了，应该停了。" —— 这个想法不对，因为它<strong>忽略了一个关键观察：所有 <code>k·p</code>（<code>k &lt; p</code>）已经被更小的质数划掉了</strong>。</p>
+
+  <p><strong>具体看一下 <code>p = 7</code>，<code>N = 100</code> 的情形</strong>：</p>
+<pre>p = 7 时，"7 的倍数"分别是：
+  7·2 = 14   ← 已经在 p=2 时划掉
+  7·3 = 21   ← 已经在 p=3 时划掉
+  7·4 = 28   ← 已经在 p=2 时划掉（4 = 2·2）
+  7·5 = 35   ← 已经在 p=5 时划掉
+  7·6 = 42   ← 已经在 p=2 时划掉（6 = 2·3）
+  7·7 = 49   ← 第一个还没被划过的 7 的倍数！
+  7·8 = 56   ← 已经在 p=2 时划掉
+  ...</pre>
+  <p>规律很清楚：<strong>只有从 <code>p·p</code> 开始的倍数，才是过去没人划过的"新工作"</strong>。所有 <code>k·p</code>（<code>k &lt; p</code>）都已经被处理 <code>k</code> 时（或处理 <code>k</code> 的某个质因数时）划掉了。</p>
+
+  <p><strong>所以正确的算法是</strong>：</p>
+  <ul>
+    <li>每个 <code>p</code> 的内层循环 <strong>从 <code>p·p</code> 开始</strong>（不是 <code>2p</code>），步长 <code>p</code>。</li>
+    <li>外层循环 <strong>当 <code>p·p &gt; N</code> 时停止</strong> —— 因为再大的 <code>p</code>，第一个"新倍数" <code>p·p</code> 已经超出 <code>N</code> 了，没事可做。</li>
+  </ul>
+
+  <p><strong>为什么剩下的数一定是质数（p² &gt; N 之后）</strong>：用反证法 —— 假设 <code>c ≤ N</code> 是合数，那么 <code>c = a·b</code> 且 <code>1 &lt; a ≤ b</code>。两边平方关系给出 <code>a² ≤ a·b = c ≤ N</code>，所以 <code>a ≤ √N</code>。也就是说<strong>任何 ≤ N 的合数，必定有一个 ≤ √N 的（质）因子</strong>。我们在 <code>p ≤ √N</code> 时已经把所有这种因子的倍数都划完了，所以 <code>√N &lt; p ≤ N</code> 范围里剩下没划掉的，必是质数。</p>
+
+  <div class="takeaway">
+    🎯 一句话：<strong>"<code>2p &gt; N</code> 停止"会得到正确结果，但浪费了大量重复工作；"<code>p² &gt; N</code> 停止"是把"已经被前面更小的质数划过"这部分活动跳过的精确边界。</strong>
+  </div>
+
+  <h3>① 顺序版（C 实现）</h3>
+<pre>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;math.h&gt;
+
+void sieve(long N, char *is_prime) {
+    // is_prime[i] = 1 表示 i 是质数候选，0 表示已划掉
+    memset(is_prime, 1, N + 1);
+    is_prime[0] = is_prime[1] = 0;     // 0、1 不是质数
+
+    for (long p = 2; p * p &lt;= N; p++) {     // 注意：p*p &lt;= N
+        if (!is_prime[p]) continue;          // 已被前面的质数划掉，跳过
+        for (long k = p * p; k &lt;= N; k += p) {   // 从 p*p 开始
+            is_prime[k] = 0;
+        }
+    }
+}
+
+int main(void) {
+    long N = 100000000;                  // 1 亿
+    char *is_prime = malloc(N + 1);
+    sieve(N, is_prime);
+
+    long count = 0;
+    for (long i = 2; i &lt;= N; i++) if (is_prime[i]) count++;
+    printf("primes ≤ %ld : %ld\n", N, count);
+    free(is_prime);
+    return 0;
+}</pre>
+
+  <h3>② 并行版 —— 把内层"划倍数"循环并行化</h3>
+  <p>外层选下一个 <code>p</code> 必须串行（因为下一个 <code>p</code> 的选择依赖前面所有划过的标记），<strong>但内层"把 p 的倍数全划掉"是天然可并行的</strong>：每次循环只是把 <code>is_prime[k]</code> 写成 0，不同的 <code>k</code> 写不同位置，不冲突。</p>
+
+<pre>#include &lt;omp.h&gt;
+
+void sieve_parallel(long N, char *is_prime) {
+    memset(is_prime, 1, N + 1);
+    is_prime[0] = is_prime[1] = 0;
+
+    long limit = (long)sqrt((double)N);
+    for (long p = 2; p &lt;= limit; p++) {
+        if (!is_prime[p]) continue;
+
+        // 内层循环并行划倍数
+        #pragma omp parallel for schedule(static)
+        for (long k = p * p; k &lt;= N; k += p) {
+            is_prime[k] = 0;       // 多线程写不同 k，不会冲突
+        }
+    }
+}</pre>
+
+  <p><strong>这里没有 race condition</strong>，原因是：</p>
+  <ul>
+    <li>所有线程都只写 <strong>常量 0</strong>，且写的位置 <code>k = p·p, p·p+p, ...</code> 互不相同。</li>
+    <li>即使理论上"两个线程同时写同一字节"，写的也是同一个值（0），结果一致。</li>
+    <li>没有 read-modify-write 的步骤（不像 slide 8 那种 <code>++</code>）。</li>
+  </ul>
+</div>
+
+<details class="qa">
+  <summary>📌 Q&amp;A：能不能用 <code>collapse(2)</code> 把外层和内层一起并行？</summary>
+
+  <p><strong>不能</strong>，OpenMP 会拒绝。原因要分两层看。</p>
+
+  <h4>OpenMP 对 <code>collapse(n)</code> 的硬规定</h4>
+  <p><code>collapse(n)</code> 把 n 层嵌套循环线性化成一层来分配给线程。为此 OpenMP 标准对内层循环的 <strong>bound（边界）</strong>和 <strong>step（增量）</strong>有以下要求：</p>
+
+  <table>
+    <tr><th>版本</th><th>内层 bound 对外层 index 的依赖</th><th>内层 step 对外层 index 的依赖</th></tr>
+    <tr><td>OpenMP 4.x 及以前</td><td>❌ 不允许（必须 loop-invariant）</td><td>❌ 不允许</td></tr>
+    <tr><td>OpenMP 5.0+</td><td>✅ 允许，但只能是 <strong>1 阶（affine / 线性）</strong></td><td>❌ 仍然不允许（必须 loop-invariant）</td></tr>
+  </table>
+
+  <p>一句话浓缩：<strong>bound 的限制 5.0 放宽了一档（常量 → 一阶），step 始终是常量级别</strong>。</p>
+
+  <h4>Sieve 的双重违规</h4>
+<pre>for (long p = 2; p*p &lt;= N; p++) {
+    for (long k = p*p; k &lt;= N; k += p) {
+        is_prime[k] = 0;
+    }
+}</pre>
+  <ul>
+    <li><strong>bound 起点 <code>p*p</code></strong>：是 p 的<strong>二次</strong>式，不是 affine —— 5.0+ 也接不了。</li>
+    <li><strong>step <code>p</code></strong>：依赖外层变量 p —— 任何版本都不允许。</li>
+  </ul>
+  <p>两条都中，所以无论 OpenMP 哪个版本都拒绝 <code>collapse(2)</code>。</p>
+
+  <h4>"理论上能不能算？"</h4>
+  <p>能。给定 N，总迭代数 = <code>Σ⌊(N - p²)/p⌋ + 1</code>（p 从 2 到 ⌊√N⌋）；给定线性化下标 i，反推 (p, k) 也能做（前缀和 + 二分）。但这套预处理 + 索引反推会把每次迭代的 <code>is_prime[k] = 0</code>（一条内存写）变成"一次二分查找 + 一条内存写"，<strong>反推开销可能比循环体本身还贵</strong>。所以 OpenMP 委员会把规则定在 affine 上 —— 不是不能算，是"算了反而更慢"，标准统一拒掉省得用户踩坑。</p>
+
+  <hr>
+
+  <h4>追问：那 <code>static</code> 是不是这版的瓶颈？是不是该换成 <code>dynamic</code>？</h4>
+  <p><strong>不是 static 的锅，dynamic 在这里反而会更慢</strong>。两个理由：</p>
+  <ul>
+    <li><strong>对单个固定的 p，内层每次迭代工作量完全一样</strong>（都是一条 <code>is_prime[k] = 0</code>）—— 没有"有的迭代慢、有的迭代快"这种事，static 直接均分就是最优。</li>
+    <li><strong>static 大块切分还顺带防止 false sharing</strong>：线程 0 写 <code>[p², p²+chunk]</code>、线程 1 写下一个 chunk，互相离得远，不抢同一条 cache line。换成 <code>schedule(dynamic, 1)</code> 或 <code>schedule(static, 1)</code>（round-robin 一格一格分）反而会让多个线程频繁触碰同一条 cache line，性能掉得更厉害。</li>
+  </ul>
+
+  <p><strong>真正的痛点是外层每个 p 都要 fork–join 一次</strong>。当 p 接近 √N 时内层只剩几十次写内存（几纳秒），但 OpenMP 起一组线程要 ~μs 级开销 —— 开线程比干活贵几个数量级。这才是方法 ③ 要修的洞。</p>
+</details>
+
+<div class="explanation" style="margin-top: 24px;">
+  <h3>③ 加阈值：什么时候根本不该开 fork</h3>
+
+  <p>方法 ③ <strong>不改算法、不动数据布局</strong>，只是加一道护栏 —— "工作量够大才并行，不够就直接串行"。这是个便宜补丁，针对性地消除大 p 时的负收益。</p>
+
+<pre>for (long p = 2; p &lt;= limit; p++) {
+    if (!is_prime[p]) continue;
+
+    long count = (N - p * p) / p + 1;        // 这个 p 内层会迭代多少次
+    if (count &lt; 10000) {
+        // 太短，开线程不划算，直接串行
+        for (long k = p * p; k &lt;= N; k += p) is_prime[k] = 0;
+    } else {
+        #pragma omp parallel for schedule(static)
+        for (long k = p * p; k &lt;= N; k += p) is_prime[k] = 0;
+    }
+}</pre>
+
+  <p><strong>它解决了什么</strong>：</p>
+  <ul>
+    <li>大 p 时不再 fork – 消除 "fork–join 开销 &gt; 实际工作" 那段负收益区</li>
+  </ul>
+
+  <p><strong>它没解决什么</strong>：</p>
+  <ul>
+    <li>外层 p 仍然完全串行 —— 不能让多个不同 p 同时进行</li>
+    <li>cache 不友好 —— <code>is_prime[]</code> 整体很大（N=10⁸ 时 100 MB），每次内层循环都要把数据从内存来回搬到 L1/L2，命中率低</li>
+    <li>整个流程仍然是 memory-bound —— 哪怕开 16 线程，性能很快被内存带宽卡住，scaling 饱和</li>
+  </ul>
+
+  <h3>④ 真正的换思路：分块筛（Segmented Sieve）</h3>
+  <p>把 <code>[2, N]</code> 切成若干块（每块 ~ L2 cache 大小，比如 256 KB），每个线程认领一块。先串行算出 <code>[2, √N]</code> 范围内所有的"小质数表"，然后<strong>每个线程独立地用这张表去划掉自己块里的合数</strong>。</p>
+
+  <p><strong>带来的三个好处</strong>：</p>
+  <ul>
+    <li><strong>外层 p 不再是全局 barrier</strong> —— 各线程各干各的，块之间互不依赖。</li>
+    <li><strong>数据留在 L2 里</strong> —— 处理一块时反复访问的就那 256 KB，不再每次都从主存拖回来。</li>
+    <li><strong>fork–join 只发生一次</strong> —— 整个 sieve 用一个 <code>parallel</code> region 包住，不再每个 p 都 fork。</li>
+  </ul>
+
+  <p>对 <code>N ≥ 10⁹</code> 这种规模，segmented sieve 几乎是必须的；方法 ② / ③ 在那种 N 下会被内存带宽完全卡死。</p>
+
+  <div class="takeaway">
+    🎯 方法 ② 是"能跑"，方法 ③ 是"打补丁去掉负收益"，方法 ④ 才是"按硬件特性重构算法"。三者展示了并行优化的三层境界：先正确、再去掉浪费、最后重新设计。
+  </div>
+
+  <h3>编译运行</h3>
+<pre>gcc -fopenmp -O2 sieve.c -lm -o sieve
+OMP_NUM_THREADS=1 ./sieve
+OMP_NUM_THREADS=8 ./sieve</pre>
+
+  <p>对 <code>N = 10⁸</code>，应该能看到 <code>primes ≤ 100000000 : 5761455</code>（这是已知结果，可以拿来验证正确性）。</p>
+
+  <blockquote>💡 这三个例子（slide 9–11）由易到难铺开：例 1 演示语法、例 2 引出 reduction、例 3 引出"算法本身的结构决定能怎么并行"以及 schedule 的取舍。</blockquote>
+</div>
+
+
+<!-- ==================== SLIDE 12 ==================== -->
+<h2 class="slide-title">Slide 12 — Next Time: MPI（下一讲预告）</h2>
+
+<img class="slide-img" src="images/slide-12.png" alt="Slide 12: Next time MPI">
+
+<div class="explanation">
+  <p>预告 Lecture 7 的主题：<strong>MPI（Message Passing Interface）</strong>。右边那张图把 OpenMP 和 MPI 的位置画清楚了，是整个 HPC 编程模型层级的全景：</p>
+
+<pre>┌──────────────────────────────────────────────────────────────┐
+│  Cluster level（distributed memory，跨节点）                  │
+│                                                                │
+│  ┌─────────────────────┐ ←─ Message passing ─→ ┌─────────────┐ │
+│  │ Node 0 (shared mem) │                       │ Node 1 ...  │ │
+│  │  ┌──┬──┬──┐         │                       │             │ │
+│  │  │T1│T2│T3│ OpenMP  │                       │             │ │
+│  │  └──┴──┴──┘         │                       │             │ │
+│  │   多线程进程         │                       │             │ │
+│  └─────────────────────┘                       └─────────────┘ │
+└──────────────────────────────────────────────────────────────┘</pre>
+
+  <ul>
+    <li><strong>节点内（Node level）</strong>：内存共享 → 用 <strong>OpenMP</strong>（多线程，前面 7 节课讲的）。</li>
+    <li><strong>节点间（Cluster level）</strong>：内存不共享 → 用 <strong>MPI</strong>（多进程，靠消息传递通信，呼应 Lecture 5 提到过的 IPC + MPI）。</li>
+    <li><strong>实际 HPC 程序</strong>：通常 <strong>MPI + OpenMP 混合</strong>（slide 7 那条蓝线）—— 节点间 MPI、节点内 OpenMP，把两层并行同时榨干。</li>
+  </ul>
+
+  <div class="takeaway">
+    🎯 这页是承上启下：把"共享内存的 OpenMP"放回"分布式 HPC"的大图里，告诉你它只是工具箱里的一件，下一讲补上另一件 MPI。
+  </div>
+</div>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'cs2050-lec6-highlights';
+  const state = {
+    highlightMode: false,
+    eraserMode: false,
+    currentColor: 'yellow',
+    highlights: []
+  };
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      state.highlights = raw ? JSON.parse(raw) : [];
+    } catch (e) { state.highlights = []; }
+  }
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.highlights));
+  }
+  function genId() {
+    return 'hl_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  }
+
+  // ---------- Toolbar ----------
+  function buildToolbar() {
+    const tb = document.createElement('div');
+    tb.id = 'hl-toolbar';
+    tb.innerHTML =
+      '<button id="hl-mode-btn" class="hl-btn">高亮模式: 关</button>' +
+      '<span class="hl-color-picker">' +
+        '<span class="hl-color" data-color="yellow" title="黄"></span>' +
+        '<span class="hl-color" data-color="green"  title="绿"></span>' +
+        '<span class="hl-color" data-color="pink"   title="粉"></span>' +
+        '<span class="hl-color" data-color="blue"   title="蓝"></span>' +
+      '</span>' +
+      '<button id="hl-eraser-btn" class="hl-btn">🧽 橡皮擦: 关</button>' +
+      '<button id="hl-toggle-btn" class="hl-btn">隐藏标记</button>' +
+      '<button id="hl-clear-btn" class="hl-btn">清除全部</button>';
+    document.body.appendChild(tb);
+
+    const modeBtn = document.getElementById('hl-mode-btn');
+    const eraserBtn = document.getElementById('hl-eraser-btn');
+
+    function refreshModeUI() {
+      modeBtn.textContent = '高亮模式: ' + (state.highlightMode ? '开' : '关');
+      modeBtn.classList.toggle('active', state.highlightMode);
+      eraserBtn.textContent = '🧽 橡皮擦: ' + (state.eraserMode ? '开' : '关');
+      eraserBtn.classList.toggle('active', state.eraserMode);
+      document.body.classList.toggle('hl-active', state.highlightMode);
+      document.body.classList.toggle('hl-eraser', state.eraserMode);
+    }
+
+    modeBtn.addEventListener('click', () => {
+      state.highlightMode = !state.highlightMode;
+      if (state.highlightMode) state.eraserMode = false;
+      refreshModeUI();
+    });
+    eraserBtn.addEventListener('click', () => {
+      state.eraserMode = !state.eraserMode;
+      if (state.eraserMode) state.highlightMode = false;
+      refreshModeUI();
+    });
+
+    tb.querySelectorAll('.hl-color').forEach(el => {
+      el.addEventListener('click', () => {
+        state.currentColor = el.dataset.color;
+        tb.querySelectorAll('.hl-color').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+      });
+    });
+    tb.querySelector('.hl-color[data-color="yellow"]').classList.add('selected');
+
+    const toggleBtn = document.getElementById('hl-toggle-btn');
+    toggleBtn.addEventListener('click', () => {
+      const hidden = document.body.classList.toggle('hl-hidden');
+      toggleBtn.textContent = hidden ? '显示标记' : '隐藏标记';
+    });
+
+    document.getElementById('hl-clear-btn').addEventListener('click', () => {
+      if (!confirm('清除全部高亮?')) return;
+      state.highlights = [];
+      save();
+      clearAllVisuals();
+    });
+  }
+
+  // ---------- Image highlights ----------
+  function setupImages() {
+    document.querySelectorAll('.slide-img').forEach(img => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'hl-img-wrapper';
+      img.parentNode.insertBefore(wrapper, img);
+      wrapper.appendChild(img);
+      attachImageDrag(img, wrapper);
+    });
+  }
+
+  function attachImageDrag(img, wrapper) {
+    let dragging = false;
+    let startX = 0, lockedY = 0;
+    let preview = null;
+    let rect = null;
+
+    img.addEventListener('mousedown', (e) => {
+      if (!state.highlightMode) return;
+      e.preventDefault();
+      rect = img.getBoundingClientRect();
+      startX = e.clientX - rect.left;
+      lockedY = e.clientY - rect.top;
+      dragging = true;
+
+      preview = document.createElement('div');
+      preview.className = 'hl-img-mark';
+      preview.dataset.color = state.currentColor;
+      preview.style.left = (startX / rect.width * 100) + '%';
+      preview.style.top  = (lockedY / rect.height * 100) + '%';
+      preview.style.width = '0';
+      preview.style.pointerEvents = 'none';
+      wrapper.appendChild(preview);
+    });
+
+    function onMove(e) {
+      if (!dragging) return;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      preview.style.left  = (xs / rect.width * 100) + '%';
+      preview.style.width = ((xe - xs) / rect.width * 100) + '%';
+    }
+    function onUp(e) {
+      if (!dragging) return;
+      dragging = false;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      const widthPx = xe - xs;
+      if (widthPx < 8) {
+        if (preview) preview.remove();
+        preview = null;
+        return;
+      }
+      const data = {
+        type: 'image',
+        img_src: img.getAttribute('src'),
+        y_pct: lockedY / rect.height * 100,
+        x_start_pct: xs / rect.width * 100,
+        x_end_pct: xe / rect.width * 100,
+        color: state.currentColor,
+        id: genId()
+      };
+      state.highlights.push(data);
+      save();
+      preview.dataset.hlId = data.id;
+      preview.style.pointerEvents = 'auto';
+      preview.title = '橡皮擦模式下点击删除';
+      preview.addEventListener('click', (ev) => {
+        if (!state.eraserMode) return;
+        ev.stopPropagation();
+        removeHighlight(data.id);
+      });
+      preview = null;
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  function applyImageHighlight(data) {
+    const img = document.querySelector('.slide-img[src="' + cssEscape(data.img_src) + '"]');
+    if (!img) return;
+    const wrapper = img.parentElement;
+    if (!wrapper.classList.contains('hl-img-wrapper')) return;
+    const m = document.createElement('div');
+    m.className = 'hl-img-mark';
+    m.dataset.color = data.color;
+    m.dataset.hlId = data.id;
+    m.style.left = data.x_start_pct + '%';
+    m.style.width = (data.x_end_pct - data.x_start_pct) + '%';
+    m.style.top = data.y_pct + '%';
+    m.title = '橡皮擦模式下点击删除';
+    m.addEventListener('click', (ev) => {
+      if (!state.eraserMode) return;
+      ev.stopPropagation();
+      removeHighlight(data.id);
+    });
+    wrapper.appendChild(m);
+  }
+
+  function cssEscape(s) {
+    return s.replace(/"/g, '\\"');
+  }
+
+  // ---------- Text highlights ----------
+  function setupTextSelection() {
+    document.addEventListener('mouseup', (e) => {
+      if (!state.highlightMode) return;
+      if (e.target.closest('#hl-toolbar')) return;
+      if (e.target.classList && e.target.classList.contains('slide-img')) return;
+      if (e.target.classList && e.target.classList.contains('hl-img-mark')) return;
+
+      setTimeout(() => {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        const text = sel.toString();
+        if (text.length === 0) return;
+
+        const range = sel.getRangeAt(0);
+        const ctx = computeContext(range);
+        if (!ctx) return;
+
+        const data = {
+          type: 'text',
+          text: text,
+          contextBefore: ctx.before,
+          contextAfter: ctx.after,
+          color: state.currentColor,
+          id: genId()
+        };
+        wrapRange(range, data);
+        state.highlights.push(data);
+        save();
+        sel.removeAllRanges();
+      }, 0);
+    });
+  }
+
+  function computeContext(range) {
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) root = root.parentElement;
+    while (root && root.tagName && !/^(P|LI|TD|H1|H2|H3|H4|DIV|BODY|PRE|BLOCKQUOTE|SUMMARY)$/.test(root.tagName)) {
+      root = root.parentElement;
+    }
+    if (!root) return null;
+    const fullText = root.textContent;
+    const startOffset = nodeOffset(root, range.startContainer, range.startOffset);
+    const endOffset = nodeOffset(root, range.endContainer, range.endOffset);
+    if (startOffset < 0 || endOffset < 0) return null;
+    const CTX = 25;
+    return {
+      before: fullText.slice(Math.max(0, startOffset - CTX), startOffset),
+      after: fullText.slice(endOffset, endOffset + CTX)
+    };
+  }
+
+  function nodeOffset(root, node, offsetInNode) {
+    let total = 0;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    let n;
+    while ((n = walker.nextNode())) {
+      if (n === node) return total + offsetInNode;
+      total += n.textContent.length;
+    }
+    return -1;
+  }
+
+  function wrapRange(range, data) {
+    const fragments = [];
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) {
+      fragments.push({ node: root, start: range.startOffset, end: range.endOffset });
+    } else {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+      let n;
+      while ((n = walker.nextNode())) {
+        if (!range.intersectsNode(n)) continue;
+        const start = (n === range.startContainer) ? range.startOffset : 0;
+        const end   = (n === range.endContainer)   ? range.endOffset   : n.textContent.length;
+        if (end > start) fragments.push({ node: n, start, end });
+      }
+    }
+    fragments.forEach(f => {
+      const r = document.createRange();
+      try {
+        r.setStart(f.node, f.start);
+        r.setEnd(f.node, f.end);
+        const m = document.createElement('mark');
+        m.className = 'hl-text-mark';
+        m.dataset.color = data.color;
+        m.dataset.hlId = data.id;
+        m.title = '橡皮擦模式下点击删除';
+        m.addEventListener('click', (ev) => {
+          if (!state.eraserMode) return;
+          ev.stopPropagation();
+          removeHighlight(data.id);
+        });
+        r.surroundContents(m);
+      } catch (e) { /* skip fragment */ }
+    });
+  }
+
+  function applyTextHighlight(data) {
+    const target = data.contextBefore + data.text + data.contextAfter;
+    const root = document.body;
+    const nodes = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => {
+        if (n.parentElement && n.parentElement.closest('script, style, #hl-toolbar')) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }, false);
+    let nd;
+    while ((nd = walker.nextNode())) nodes.push(nd);
+    const fullText = nodes.map(n => n.textContent).join('');
+    const idx = fullText.indexOf(target);
+    if (idx === -1) return;
+
+    const startPos = idx + data.contextBefore.length;
+    const endPos = startPos + data.text.length;
+    let cum = 0, startNode = null, startOff = 0, endNode = null, endOff = 0;
+    for (const n of nodes) {
+      const len = n.textContent.length;
+      if (!startNode && startPos >= cum && startPos < cum + len) {
+        startNode = n; startOff = startPos - cum;
+      }
+      if (startNode && endPos > cum && endPos <= cum + len) {
+        endNode = n; endOff = endPos - cum; break;
+      }
+      cum += len;
+    }
+    if (!startNode || !endNode) return;
+    const range = document.createRange();
+    try {
+      range.setStart(startNode, startOff);
+      range.setEnd(endNode, endOff);
+      wrapRange(range, data);
+    } catch (e) {}
+  }
+
+  // ---------- Remove / clear ----------
+  function removeHighlight(id) {
+    state.highlights = state.highlights.filter(h => h.id !== id);
+    save();
+    document.querySelectorAll('[data-hl-id="' + id + '"]').forEach(el => {
+      if (el.tagName === 'MARK') {
+        const p = el.parentNode;
+        while (el.firstChild) p.insertBefore(el.firstChild, el);
+        p.removeChild(el);
+        p.normalize();
+      } else {
+        el.remove();
+      }
+    });
+  }
+  function clearAllVisuals() {
+    document.querySelectorAll('.hl-img-mark').forEach(el => el.remove());
+    document.querySelectorAll('mark.hl-text-mark').forEach(el => {
+      const p = el.parentNode;
+      while (el.firstChild) p.insertBefore(el.firstChild, el);
+      p.removeChild(el);
+      p.normalize();
+    });
+  }
+
+  // ---------- Init ----------
+  function init() {
+    load();
+    buildToolbar();
+    setupImages();
+    setupTextSelection();
+    window.addEventListener('load', () => {
+      state.highlights.forEach(h => {
+        if (h.type === 'image') applyImageHighlight(h);
+        else if (h.type === 'text') applyTextHighlight(h);
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+</body>
+</html>

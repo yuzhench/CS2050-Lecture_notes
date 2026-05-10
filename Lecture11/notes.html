@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>CS 2050 Lecture 11 - 复习笔记</title>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    max-width: 980px;
+    margin: 40px auto;
+    padding: 0 24px;
+    line-height: 1.7;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 {
+    border-bottom: 3px solid #1f6feb;
+    padding-bottom: 10px;
+  }
+  h2.slide-title {
+    color: #1f6feb;
+    margin-top: 50px;
+    border-left: 5px solid #1f6feb;
+    padding-left: 12px;
+  }
+  h3 {
+    color: #333;
+    margin-top: 28px;
+  }
+  .slide-img {
+    display: block;
+    max-width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin: 16px 0 24px 0;
+  }
+  .explanation {
+    background: #fff;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
+  }
+  .qa {
+    background: #fff8e1;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border-left: 4px solid #f0a500;
+    margin-top: 20px;
+  }
+  .qa h3 { margin-top: 0; color: #b8730e; }
+  .qa ul li { margin-bottom: 8px; }
+  details.qa > summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #b8730e;
+    font-size: 1.08em;
+    padding: 6px 0;
+    user-select: none;
+    list-style: none;
+  }
+  details.qa > summary::before {
+    content: "▶ ";
+    display: inline-block;
+    transition: transform 0.15s;
+  }
+  details.qa[open] > summary::before {
+    content: "▼ ";
+  }
+  details.qa > summary:hover { color: #f0a500; }
+  details.qa[open] > summary { margin-bottom: 14px; }
+  code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.92em;
+  }
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th { background: #1f6feb; color: white; }
+  blockquote {
+    border-left: 4px solid #1f6feb;
+    margin: 16px 0;
+    padding: 4px 16px;
+    color: #555;
+    background: #eef4ff;
+  }
+  .takeaway {
+    background: #e8f5e9;
+    border-left: 4px solid #2e7d32;
+    padding: 14px 20px;
+    margin-top: 20px;
+    border-radius: 4px;
+  }
+
+  /* ============================================
+     Highlight feature (image + text)
+     ============================================ */
+  #hl-toolbar {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .hl-btn {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    user-select: none;
+  }
+  .hl-btn:hover { background: #e8e8e8; }
+  .hl-btn.active { background: #1f6feb; color: white; border-color: #1f6feb; }
+  .hl-color-picker {
+    display: inline-flex;
+    gap: 6px;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    padding: 0 10px;
+  }
+  .hl-color {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    display: inline-block;
+    box-sizing: border-box;
+  }
+  .hl-color.selected { border-color: #333; }
+  .hl-color[data-color="yellow"] { background: rgba(255, 235, 59, 0.85); }
+  .hl-color[data-color="green"]  { background: rgba(102, 187, 106, 0.85); }
+  .hl-color[data-color="pink"]   { background: rgba(236, 64, 122, 0.75); }
+  .hl-color[data-color="blue"]   { background: rgba(79, 195, 247, 0.85); }
+
+  body.hl-active { cursor: crosshair; }
+  body.hl-active .slide-img { cursor: crosshair; }
+  body.hl-eraser { cursor: not-allowed; }
+  body.hl-eraser .slide-img { cursor: not-allowed; }
+  body.hl-eraser .hl-img-mark,
+  body.hl-eraser mark.hl-text-mark {
+    outline: 2px dashed #d32f2f;
+    outline-offset: 1px;
+    cursor: pointer !important;
+  }
+
+  .hl-img-wrapper {
+    position: relative;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin: 16px 0 24px 0;
+  }
+  .hl-img-wrapper > .slide-img { margin: 0; }
+
+  .hl-img-mark {
+    position: absolute;
+    height: 14px;
+    transform: translateY(-50%);
+    border-radius: 2px;
+    mix-blend-mode: multiply;
+    pointer-events: auto;
+  }
+  .hl-img-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.65); }
+  .hl-img-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.55); }
+  .hl-img-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.50); }
+  .hl-img-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.55); }
+
+  mark.hl-text-mark {
+    padding: 1px 1px;
+    border-radius: 2px;
+    color: inherit;
+  }
+  mark.hl-text-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.55); }
+  mark.hl-text-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.40); }
+  mark.hl-text-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.30); }
+  mark.hl-text-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.40); }
+
+  body.hl-hidden .hl-img-mark { background: transparent !important; }
+  body.hl-hidden mark.hl-text-mark {
+    background: transparent !important;
+    padding: 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>CS 2050 Lecture 11 - 复习笔记</h1>
+<p><em>主题：Homework 1 Question 5 复盘 + Example 1 (VTune profiling 入门) + Example 2 (GPU 节点)</em></p>
+
+<blockquote>
+  Lecture 11 是教授本人主讲的常规课（共 27 页 slides，2026-03-03）。前半部分复盘 <strong>HW1 Q5</strong>——让学生自选问题对比 Python 与 C++ 的性能（cross product / 遗传算法 / Conway's Game of Life / Black-Scholes Monte Carlo / 暴力破解口令），看看"Python 慢"这件事到底有多慢。后半部分进入两个新 example：用 Intel <strong>VTune</strong> 分析 LAMMPS 这种真实大型 C++ 项目的性能热点；以及"认识一下学校 GPU 节点"。<br>
+  本讲 slides 数量少、每页信息密度不高，所以笔记按"一页一节"组织。Slide 1 是封面、Slide 2–6 是 Setup / Quiz / HW 链接 / Q&A repo 这种纯行政内容，全部跳过；正式内容从 <strong>Slide 7</strong>（上次 Slurm 问题的 follow-up）开始。
+</blockquote>
+
+
+<!-- ==================== SLIDE 7 ==================== -->
+<h2 class="slide-title">Slide 7 — 上次 Slurm 问题的 follow-up：为什么要"从 login node 提交 batch 作业"</h2>
+
+<img class="slide-img" src="images/slide-07.png" alt="Slide 7: GitHub issue 截图，教授回复 submit.slurm 在 dynamic node 上 'CPU binding outside of job step allocation' 报错的原因">
+
+<div class="explanation">
+  <h3>这页讲什么</h3>
+  <p>Slide 7 直接贴出了 <code>questions-and-answers</code> repo 上的一个 issue：标题是 <em>"submit.slurm fails with 'CPU binding outside of job step allocation' on dynamic nodes &amp;&amp; srun timing out"</em>。一名学生在交互式登录到一个 GPU 节点（dynamic node，用 Open OnDemand 起的会话）之后，又在那个会话里 <code>sbatch submit.sh</code> 提交了第二个作业，结果 srun 直接报 CPU binding 错误并超时。教授（wcw398）几天后回了一条详细解释——这页就是把这个回复贴在了 slides 上，作为对上一讲遗留问题的官方答复。</p>
+
+  <h3>问题的根源：环境变量被前一个 Slurm 作业污染了</h3>
+  <p>Slurm 的执行模型是<strong>每个 job 启动前会被分配一组环境变量</strong>来描述它的资源（哪几个 CPU 核、多少内存等）。其中一个很关键的变量是 <code>SLURM_CPU_BIND</code>，形如：</p>
+<pre><code>SLURM_CPU_BIND=quiet,mask_cpu:0x0010000000</code></pre>
+  <p>这个变量告诉新作业"<em>你被允许用这台机器的哪几个 CPU 核</em>"——掩码 <code>0x0010000000</code> 用 bit 位指定核号。</p>
+
+  <p>问题出在两层 Slurm 嵌套：</p>
+  <ul>
+    <li><strong>第一层</strong>：你通过 Open OnDemand "Code Server – COMPSCI 2050 (GPU)" 起了交互式会话，Slurm 为这个会话分配了节点 N1 + 一组 CPU 掩码 M1，把 <code>SLURM_CPU_BIND=...M1...</code> 写进当前 shell 的环境。</li>
+    <li><strong>第二层</strong>：你在这个 shell 里 <code>sbatch submit.sh</code>，Slurm 起了第二个作业，调度到节点 N2 + 一组完全不同的 CPU 掩码 M2。</li>
+  </ul>
+  <p>Slurm 在启动第二个作业时，<em>大部分</em> SLURM_* 环境变量它会主动重写成新作业的值。但 <code>SLURM_CPU_BIND</code> 被它判定为"不重要"，于是<strong>没有重写，把第一个作业的旧掩码 M1 一路转发给了 N2</strong>。N2 上没有匹配 M1 的核，就报 <em>"CPU binding outside of job step allocation"</em>——你试图绑到一些根本没分配给你的核上。</p>
+
+  <h3>为什么 <code>--export=NONE</code> 不是好用的修法</h3>
+  <p>显然的修法是让 sbatch 不要转发当前 shell 的环境变量——这就是 <code>sbatch --export=NONE submit.sh</code> 的语义（不导出任何变量给新作业）。但教授解释这个方案"比预想的难"：因为 <strong>nothing is forwarded</strong>——连 PATH、Spack 设置（指 Spack 包管理器加载的模块路径，课程编译环境靠它）这些<em>必要</em>的变量也不会传过去，新作业里 <code>g++</code>、<code>module load …</code> 都找不到，得手动一条条加回来。代价太高。</p>
+
+  <h3>所以教授给的最终建议</h3>
+  <p>"always submit batch jobs from the login node"——<strong>永远从 login node 提交 batch 作业</strong>。login node 是干净的、不在任何 Slurm 作业里，<code>SLURM_CPU_BIND</code> 这种变量根本不存在，不会被转发污染。流程是：</p>
+  <ol>
+    <li>登录 cluster 的 login node（ssh 上去，或者 OnDemand 的 "Linux Desktop on academic" 这种 CPU shell，<em>不要</em>用 GPU 交互会话）。</li>
+    <li>在 login node 上 <code>sbatch submit.sh</code>。</li>
+    <li>需要交互调试再 <code>srun --pty bash</code>。</li>
+  </ol>
+  <p>规则一句话：<strong>不要在一个 Slurm 作业里再 sbatch 第二个 Slurm 作业</strong>。</p>
+</div>
+
+<div class="takeaway">
+  💡 sbatch 会把当前 shell 的 SLURM_* 变量原样转发给新作业。如果当前 shell 本身就在另一个 Slurm 会话里，<code>SLURM_CPU_BIND</code> 等"不被 Slurm 重写"的变量就会污染新作业，触发 CPU binding 错误。<code>--export=NONE</code> 太激进会丢 PATH/Spack。**实操规则：永远从 login node 提交 batch 作业。**
+</div>
+
+
+<script>
+(function() {
+  const STORAGE_KEY = 'cs2050-lec11-highlights';
+  const state = {
+    highlightMode: false,
+    eraserMode: false,
+    currentColor: 'yellow',
+    highlights: []
+  };
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      state.highlights = raw ? JSON.parse(raw) : [];
+    } catch (e) { state.highlights = []; }
+  }
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.highlights));
+  }
+  function genId() {
+    return 'hl_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  }
+
+  // ---------- Toolbar ----------
+  function buildToolbar() {
+    const tb = document.createElement('div');
+    tb.id = 'hl-toolbar';
+    tb.innerHTML =
+      '<button id="hl-mode-btn" class="hl-btn">高亮模式: 关</button>' +
+      '<span class="hl-color-picker">' +
+        '<span class="hl-color" data-color="yellow" title="黄"></span>' +
+        '<span class="hl-color" data-color="green"  title="绿"></span>' +
+        '<span class="hl-color" data-color="pink"   title="粉"></span>' +
+        '<span class="hl-color" data-color="blue"   title="蓝"></span>' +
+      '</span>' +
+      '<button id="hl-eraser-btn" class="hl-btn">🧽 橡皮擦: 关</button>' +
+      '<button id="hl-toggle-btn" class="hl-btn">隐藏标记</button>' +
+      '<button id="hl-clear-btn" class="hl-btn">清除全部</button>';
+    document.body.appendChild(tb);
+
+    const modeBtn = document.getElementById('hl-mode-btn');
+    const eraserBtn = document.getElementById('hl-eraser-btn');
+
+    function refreshModeUI() {
+      modeBtn.textContent = '高亮模式: ' + (state.highlightMode ? '开' : '关');
+      modeBtn.classList.toggle('active', state.highlightMode);
+      eraserBtn.textContent = '🧽 橡皮擦: ' + (state.eraserMode ? '开' : '关');
+      eraserBtn.classList.toggle('active', state.eraserMode);
+      document.body.classList.toggle('hl-active', state.highlightMode);
+      document.body.classList.toggle('hl-eraser', state.eraserMode);
+    }
+
+    modeBtn.addEventListener('click', () => {
+      state.highlightMode = !state.highlightMode;
+      if (state.highlightMode) state.eraserMode = false;
+      refreshModeUI();
+    });
+    eraserBtn.addEventListener('click', () => {
+      state.eraserMode = !state.eraserMode;
+      if (state.eraserMode) state.highlightMode = false;
+      refreshModeUI();
+    });
+
+    tb.querySelectorAll('.hl-color').forEach(el => {
+      el.addEventListener('click', () => {
+        state.currentColor = el.dataset.color;
+        tb.querySelectorAll('.hl-color').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+      });
+    });
+    tb.querySelector('.hl-color[data-color="yellow"]').classList.add('selected');
+
+    const toggleBtn = document.getElementById('hl-toggle-btn');
+    toggleBtn.addEventListener('click', () => {
+      const hidden = document.body.classList.toggle('hl-hidden');
+      toggleBtn.textContent = hidden ? '显示标记' : '隐藏标记';
+    });
+
+    document.getElementById('hl-clear-btn').addEventListener('click', () => {
+      if (!confirm('清除全部高亮?')) return;
+      state.highlights = [];
+      save();
+      clearAllVisuals();
+    });
+  }
+
+  // ---------- Image highlights ----------
+  function setupImages() {
+    document.querySelectorAll('.slide-img').forEach(img => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'hl-img-wrapper';
+      img.parentNode.insertBefore(wrapper, img);
+      wrapper.appendChild(img);
+      attachImageDrag(img, wrapper);
+    });
+  }
+
+  function attachImageDrag(img, wrapper) {
+    let dragging = false;
+    let startX = 0, lockedY = 0;
+    let preview = null;
+    let rect = null;
+
+    img.addEventListener('mousedown', (e) => {
+      if (!state.highlightMode) return;
+      e.preventDefault();
+      rect = img.getBoundingClientRect();
+      startX = e.clientX - rect.left;
+      lockedY = e.clientY - rect.top;
+      dragging = true;
+
+      preview = document.createElement('div');
+      preview.className = 'hl-img-mark';
+      preview.dataset.color = state.currentColor;
+      preview.style.left = (startX / rect.width * 100) + '%';
+      preview.style.top  = (lockedY / rect.height * 100) + '%';
+      preview.style.width = '0';
+      preview.style.pointerEvents = 'none';
+      wrapper.appendChild(preview);
+    });
+
+    function onMove(e) {
+      if (!dragging) return;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      preview.style.left  = (xs / rect.width * 100) + '%';
+      preview.style.width = ((xe - xs) / rect.width * 100) + '%';
+    }
+    function onUp(e) {
+      if (!dragging) return;
+      dragging = false;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      const widthPx = xe - xs;
+      if (widthPx < 8) {
+        if (preview) preview.remove();
+        preview = null;
+        return;
+      }
+      const data = {
+        type: 'image',
+        img_src: img.getAttribute('src'),
+        y_pct: lockedY / rect.height * 100,
+        x_start_pct: xs / rect.width * 100,
+        x_end_pct: xe / rect.width * 100,
+        color: state.currentColor,
+        id: genId()
+      };
+      state.highlights.push(data);
+      save();
+      preview.dataset.hlId = data.id;
+      preview.style.pointerEvents = 'auto';
+      preview.title = '橡皮擦模式下点击删除';
+      preview.addEventListener('click', (ev) => {
+        if (!state.eraserMode) return;
+        ev.stopPropagation();
+        removeHighlight(data.id);
+      });
+      preview = null;
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  function applyImageHighlight(data) {
+    const img = document.querySelector('.slide-img[src="' + cssEscape(data.img_src) + '"]');
+    if (!img) return;
+    const wrapper = img.parentElement;
+    if (!wrapper.classList.contains('hl-img-wrapper')) return;
+    const m = document.createElement('div');
+    m.className = 'hl-img-mark';
+    m.dataset.color = data.color;
+    m.dataset.hlId = data.id;
+    m.style.left = data.x_start_pct + '%';
+    m.style.width = (data.x_end_pct - data.x_start_pct) + '%';
+    m.style.top = data.y_pct + '%';
+    m.title = '橡皮擦模式下点击删除';
+    m.addEventListener('click', (ev) => {
+      if (!state.eraserMode) return;
+      ev.stopPropagation();
+      removeHighlight(data.id);
+    });
+    wrapper.appendChild(m);
+  }
+
+  function cssEscape(s) {
+    return s.replace(/"/g, '\\"');
+  }
+
+  // ---------- Text highlights ----------
+  function setupTextSelection() {
+    document.addEventListener('mouseup', (e) => {
+      if (!state.highlightMode) return;
+      if (e.target.closest('#hl-toolbar')) return;
+      if (e.target.classList && e.target.classList.contains('slide-img')) return;
+      if (e.target.classList && e.target.classList.contains('hl-img-mark')) return;
+
+      setTimeout(() => {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        const text = sel.toString();
+        if (text.length === 0) return;
+
+        const range = sel.getRangeAt(0);
+        const ctx = computeContext(range);
+        if (!ctx) return;
+
+        const data = {
+          type: 'text',
+          text: text,
+          contextBefore: ctx.before,
+          contextAfter: ctx.after,
+          color: state.currentColor,
+          id: genId()
+        };
+        wrapRange(range, data);
+        state.highlights.push(data);
+        save();
+        sel.removeAllRanges();
+      }, 0);
+    });
+  }
+
+  function computeContext(range) {
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) root = root.parentElement;
+    while (root && root.tagName && !/^(P|LI|TD|H1|H2|H3|H4|DIV|BODY|PRE|BLOCKQUOTE|SUMMARY)$/.test(root.tagName)) {
+      root = root.parentElement;
+    }
+    if (!root) return null;
+    const fullText = root.textContent;
+    const startOffset = nodeOffset(root, range.startContainer, range.startOffset);
+    const endOffset = nodeOffset(root, range.endContainer, range.endOffset);
+    if (startOffset < 0 || endOffset < 0) return null;
+    const CTX = 25;
+    return {
+      before: fullText.slice(Math.max(0, startOffset - CTX), startOffset),
+      after: fullText.slice(endOffset, endOffset + CTX)
+    };
+  }
+
+  function nodeOffset(root, node, offsetInNode) {
+    let total = 0;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    let n;
+    while ((n = walker.nextNode())) {
+      if (n === node) return total + offsetInNode;
+      total += n.textContent.length;
+    }
+    return -1;
+  }
+
+  function wrapRange(range, data) {
+    const fragments = [];
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) {
+      fragments.push({ node: root, start: range.startOffset, end: range.endOffset });
+    } else {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+      let n;
+      while ((n = walker.nextNode())) {
+        if (!range.intersectsNode(n)) continue;
+        const start = (n === range.startContainer) ? range.startOffset : 0;
+        const end   = (n === range.endContainer)   ? range.endOffset   : n.textContent.length;
+        if (end > start) fragments.push({ node: n, start, end });
+      }
+    }
+    fragments.forEach(f => {
+      const r = document.createRange();
+      try {
+        r.setStart(f.node, f.start);
+        r.setEnd(f.node, f.end);
+        const m = document.createElement('mark');
+        m.className = 'hl-text-mark';
+        m.dataset.color = data.color;
+        m.dataset.hlId = data.id;
+        m.title = '橡皮擦模式下点击删除';
+        m.addEventListener('click', (ev) => {
+          if (!state.eraserMode) return;
+          ev.stopPropagation();
+          removeHighlight(data.id);
+        });
+        r.surroundContents(m);
+      } catch (e) { /* skip fragment */ }
+    });
+  }
+
+  function applyTextHighlight(data) {
+    const target = data.contextBefore + data.text + data.contextAfter;
+    const root = document.body;
+    const nodes = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => {
+        if (n.parentElement && n.parentElement.closest('script, style, #hl-toolbar')) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }, false);
+    let nd;
+    while ((nd = walker.nextNode())) nodes.push(nd);
+    const fullText = nodes.map(n => n.textContent).join('');
+    const idx = fullText.indexOf(target);
+    if (idx === -1) return;
+
+    const startPos = idx + data.contextBefore.length;
+    const endPos = startPos + data.text.length;
+    let cum = 0, startNode = null, startOff = 0, endNode = null, endOff = 0;
+    for (const n of nodes) {
+      const len = n.textContent.length;
+      if (!startNode && startPos >= cum && startPos < cum + len) {
+        startNode = n; startOff = startPos - cum;
+      }
+      if (startNode && endPos > cum && endPos <= cum + len) {
+        endNode = n; endOff = endPos - cum; break;
+      }
+      cum += len;
+    }
+    if (!startNode || !endNode) return;
+    const range = document.createRange();
+    try {
+      range.setStart(startNode, startOff);
+      range.setEnd(endNode, endOff);
+      wrapRange(range, data);
+    } catch (e) {}
+  }
+
+  // ---------- Remove / clear ----------
+  function removeHighlight(id) {
+    state.highlights = state.highlights.filter(h => h.id !== id);
+    save();
+    document.querySelectorAll('[data-hl-id="' + id + '"]').forEach(el => {
+      if (el.tagName === 'MARK') {
+        const p = el.parentNode;
+        while (el.firstChild) p.insertBefore(el.firstChild, el);
+        p.removeChild(el);
+        p.normalize();
+      } else {
+        el.remove();
+      }
+    });
+  }
+  function clearAllVisuals() {
+    document.querySelectorAll('.hl-img-mark').forEach(el => el.remove());
+    document.querySelectorAll('mark.hl-text-mark').forEach(el => {
+      const p = el.parentNode;
+      while (el.firstChild) p.insertBefore(el.firstChild, el);
+      p.removeChild(el);
+      p.normalize();
+    });
+  }
+
+  // ---------- Init ----------
+  function init() {
+    load();
+    buildToolbar();
+    setupImages();
+    setupTextSelection();
+    window.addEventListener('load', () => {
+      state.highlights.forEach(h => {
+        if (h.type === 'image') applyImageHighlight(h);
+        else if (h.type === 'text') applyTextHighlight(h);
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+</body>
+</html>

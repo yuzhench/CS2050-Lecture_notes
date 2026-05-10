@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>CS 2050 Lecture 12 - 复习笔记</title>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    max-width: 980px;
+    margin: 40px auto;
+    padding: 0 24px;
+    line-height: 1.7;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 {
+    border-bottom: 3px solid #1f6feb;
+    padding-bottom: 10px;
+  }
+  h2.slide-title {
+    color: #1f6feb;
+    margin-top: 50px;
+    border-left: 5px solid #1f6feb;
+    padding-left: 12px;
+  }
+  h3 {
+    color: #333;
+    margin-top: 28px;
+  }
+  .slide-img {
+    display: block;
+    max-width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin: 16px 0 24px 0;
+  }
+  .explanation {
+    background: #fff;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
+  }
+  .qa {
+    background: #fff8e1;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border-left: 4px solid #f0a500;
+    margin-top: 20px;
+  }
+  .qa h3 { margin-top: 0; color: #b8730e; }
+  .qa ul li { margin-bottom: 8px; }
+  details.qa > summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #b8730e;
+    font-size: 1.08em;
+    padding: 6px 0;
+    user-select: none;
+    list-style: none;
+  }
+  details.qa > summary::before {
+    content: "▶ ";
+    display: inline-block;
+    transition: transform 0.15s;
+  }
+  details.qa[open] > summary::before {
+    content: "▼ ";
+  }
+  details.qa > summary:hover { color: #f0a500; }
+  details.qa[open] > summary { margin-bottom: 14px; }
+  code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.92em;
+  }
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th { background: #1f6feb; color: white; }
+  blockquote {
+    border-left: 4px solid #1f6feb;
+    margin: 16px 0;
+    padding: 4px 16px;
+    color: #555;
+    background: #eef4ff;
+  }
+  .takeaway {
+    background: #e8f5e9;
+    border-left: 4px solid #2e7d32;
+    padding: 14px 20px;
+    margin-top: 20px;
+    border-radius: 4px;
+  }
+  .formula {
+    background: #fff;
+    border: 1px solid #d0d7de;
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin: 10px 0;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 1.02em;
+    overflow-x: auto;
+  }
+
+  /* ============================================
+     Highlight feature (image + text)
+     ============================================ */
+  #hl-toolbar {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .hl-btn {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    user-select: none;
+  }
+  .hl-btn:hover { background: #e8e8e8; }
+  .hl-btn.active { background: #1f6feb; color: white; border-color: #1f6feb; }
+  .hl-color-picker {
+    display: inline-flex;
+    gap: 6px;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    padding: 0 10px;
+  }
+  .hl-color {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    display: inline-block;
+    box-sizing: border-box;
+  }
+  .hl-color.selected { border-color: #333; }
+  .hl-color[data-color="yellow"] { background: rgba(255, 235, 59, 0.85); }
+  .hl-color[data-color="green"]  { background: rgba(102, 187, 106, 0.85); }
+  .hl-color[data-color="pink"]   { background: rgba(236, 64, 122, 0.75); }
+  .hl-color[data-color="blue"]   { background: rgba(79, 195, 247, 0.85); }
+
+  body.hl-active { cursor: crosshair; }
+  body.hl-active .slide-img { cursor: crosshair; }
+  body.hl-eraser { cursor: not-allowed; }
+  body.hl-eraser .slide-img { cursor: not-allowed; }
+  body.hl-eraser .hl-img-mark,
+  body.hl-eraser mark.hl-text-mark {
+    outline: 2px dashed #d32f2f;
+    outline-offset: 1px;
+    cursor: pointer !important;
+  }
+
+  .hl-img-wrapper {
+    position: relative;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin: 16px 0 24px 0;
+  }
+  .hl-img-wrapper > .slide-img { margin: 0; }
+
+  .hl-img-mark {
+    position: absolute;
+    height: 14px;
+    transform: translateY(-50%);
+    border-radius: 2px;
+    mix-blend-mode: multiply;
+    pointer-events: auto;
+  }
+  .hl-img-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.65); }
+  .hl-img-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.55); }
+  .hl-img-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.50); }
+  .hl-img-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.55); }
+
+  mark.hl-text-mark {
+    padding: 1px 1px;
+    border-radius: 2px;
+    color: inherit;
+  }
+  mark.hl-text-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.55); }
+  mark.hl-text-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.40); }
+  mark.hl-text-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.30); }
+  mark.hl-text-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.40); }
+
+  body.hl-hidden .hl-img-mark { background: transparent !important; }
+  body.hl-hidden mark.hl-text-mark {
+    background: transparent !important;
+    padding: 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>CS 2050 Lecture 12 - 复习笔记</h1>
+<p><em>主题：Strong Scaling (Amdahl) vs Weak Scaling (Gustafson) + NVIDIA Nsight Systems / Nsight Compute 工具介绍</em></p>
+
+<blockquote>
+  Lecture 12（2026-03-05）只有 11 张 slides，结构非常清晰：<br>
+  ① 行政（Slide 2–5）：GPU 资源、HW3、Q&amp;A repo、Final Project 草案；<br>
+  ② Quiz（Slide 6）：单精度浮点占多少 bit；<br>
+  ③ <strong>本讲核心（Slide 7–8）</strong>：Strong Scaling 与 Weak Scaling 两套衡量并行加速比的范式，对应 Amdahl &amp; Gustafson；<br>
+  ④ 工具（Slide 9–10）：NVIDIA <strong>Nsight Systems</strong>（system-wide profiler）和 <strong>Nsight Compute</strong>（CUDA kernel profiler）；<br>
+  ⑤ 课程站点（Slide 11）：Challenges &amp; Leaderboards。
+</blockquote>
+
+
+<!-- ==================== SLIDE 1 ==================== -->
+<h2 class="slide-title">Slide 1 — 封面</h2>
+
+<img class="slide-img" src="images/slide-01.png" alt="Slide 1: HIGH PERFORMANCE COMPUTING FOR SCIENCE AND ENGINEERING, Harvard University CS 2050, Lecture 12, March 5, 2026">
+
+<div class="explanation">
+  <p>课程标题页。本讲是 CS 2050 第 12 讲，2026 年 3 月 5 日（春季学期，HW3 那一周）。题目里的 "Harvard University" 是模板字段，slides 在 Harvard 与本课程之间共用样式。Lecture 12 把上一讲（Lecture 11）VTune profiling 的"<strong>用工具找瓶颈</strong>"主线延续了下来——只是把 CPU 工具换成 GPU 工具（Nsight 系列），并先用 Amdahl/Gustafson 把"加速比到底能涨到哪"这个理论框架补上。</p>
+</div>
+
+
+<!-- ==================== SLIDE 2 ==================== -->
+<h2 class="slide-title">Slide 2 — Setup：Request a GPU</h2>
+
+<img class="slide-img" src="images/slide-02.png" alt="Slide 2: Setup, Request a GPU - Open OnDemand 'Code Server - COMPSCI 2050 (GPU)' 启动表单截图">
+
+<div class="explanation">
+  <p>行政页：让大家进入 Open OnDemand → <code>Interactive Apps</code> → <code>Code Server – COMPSCI 2050 (GPU)</code>，<strong>Number of hours = 2</strong>，<strong>Number of GPUs = 1</strong>，点 Launch。</p>
+  <p>页面下方的小字写明了一个本讲会反复用到的事实：<em>Each GPU allocated also allocates <strong>12 CPU cores</strong> and <strong>48 GB</strong> of memory</em>——选 1 GPU = 自动配 12 核 + 48 GB。这是学校 cluster 的固定打包，不能拆。</p>
+  <p>注意：上一讲（Lecture 11 Slide 7）刚强调过<em>不要在 GPU 交互会话里再 sbatch 二次作业</em>，会因 <code>SLURM_CPU_BIND</code> 被转发而报 "CPU binding outside of job step allocation"。本讲虽然要在这个 Code Server GPU 会话里跑 Nsight，但只是<strong>直接 srun / 直接命令行</strong>，不再嵌套 sbatch，所以不冲突。</p>
+</div>
+
+
+<!-- ==================== SLIDE 3 ==================== -->
+<h2 class="slide-title">Slide 3 — Homework 3 仓库</h2>
+
+<img class="slide-img" src="images/slide-03.png" alt="Slide 3: GitHub 上 cs-2050/homework-3 仓库截图，question-1..question-7 子目录，README 说明 due Thursday March 12">
+
+<div class="explanation">
+  <p>行政页。HW3 已经在 GitHub Classroom 上发布：<code>cs-2050/homework-3</code> repo，里面有 <strong>question-1 ~ question-7</strong> 七个子目录，README 写明 <em>"due by 11:59pm on Thursday March 12"</em>——也就是本讲后第 7 天。</p>
+  <p>本讲并没有现场讲 HW3 题目，只是把仓库地址展示出来，并提示 <em>"Begin with the setup instructions in the next section, and don't forget the submission instructions at the bottom"</em>——意味着 HW3 跟前两次一样有专门的 setup（环境+脚本）和 submission（git push 到自己 fork 的 repo）流程。</p>
+</div>
+
+
+<!-- ==================== SLIDE 4 ==================== -->
+<h2 class="slide-title">Slide 4 — Questions and Answers 仓库</h2>
+
+<img class="slide-img" src="images/slide-04.png" alt="Slide 4: cs-2050/questions-and-answers 仓库截图，README 写 'Please create issues in this repository to ask questions about the course.'">
+
+<div class="explanation">
+  <p>行政页。课程的"答疑频道"放在 GitHub 的 <code>cs-2050/questions-and-answers</code> repo——<strong>提问方式是开 issue</strong>，不是邮件、不是 Ed Discussion。这一点贯穿整个课程：上一讲 Slide 7 那个 Slurm CPU binding 问题就是这里的某个 issue 的回复。</p>
+  <p>对学生意味着：① 提问公开可搜，先搜旧 issue；② 教授/TA 回复也公开，所有人受益；③ 引用问题时直接给 issue URL 就行。</p>
+</div>
+
+
+<!-- ==================== SLIDE 5 ==================== -->
+<h2 class="slide-title">Slide 5 — Final Project 草案</h2>
+
+<img class="slide-img" src="images/slide-05.png" alt="Slide 5: cs-2050/project 仓库 README 截图，标题 'CS 2050 Final Project'，警告框说 'This is a DRAFT of the final project specification, as of March 5, 2026.'">
+
+<div class="explanation">
+  <p>行政页。期末项目 spec 已经先放出 <strong>草稿（DRAFT）</strong>，时间戳就是今天：<em>"as of March 5, 2026"</em>。教授强调"在接下来两周里 review 并提问，<strong>基于反馈我们会在 Spring Recess 末再 finalize</strong>"。换句话说现在版本可能还会改，但骨架已定。</p>
+  <p>骨架（README "Overview" 段）：</p>
+  <ul>
+    <li><strong>个人项目</strong>（individually）。</li>
+    <li>选一个有<em>计算瓶颈</em>的算法/问题，写出 serial 版本。</li>
+    <li>开发 <strong>parallel</strong> 版本：用 <strong>OpenMP、MPI、CUDA</strong>。</li>
+    <li>分析<strong>性能与 scaling</strong>，并使用 profiling tools（即 Lecture 11 的 VTune + 本讲的 Nsight 系列）。</li>
+    <li>额外探索一个超出课程核心材料的话题。</li>
+  </ul>
+  <p>所以本讲的 Strong/Weak Scaling 和 Nsight 工具，<em>都是为期末项目准备的"必备语言"</em>——不是讲完就忘的内容。</p>
+</div>
+
+
+<!-- ==================== SLIDE 6 ==================== -->
+<h2 class="slide-title">Slide 6 — BITS AND BYTES 小测：单精度浮点几位？</h2>
+
+<img class="slide-img" src="images/slide-06.png" alt="Slide 6: BITS AND BYTES - 'How many bits (and bytes) are used to store a single precision floating point number?' 选项 16/32/64/128 bits">
+
+<div class="explanation">
+  <h3>这页讲什么</h3>
+  <p>课堂小测，问<strong>单精度（single precision）</strong>浮点数占多少 bit / byte。<strong>正确答案：32 bits = 4 bytes</strong>。</p>
+
+  <h3>为什么是 32 bit：IEEE 754 binary32 格式</h3>
+  <p>"single precision" 指的是 IEEE 754 标准里的 <code>binary32</code> 格式，把 32 个 bit 切成三段：</p>
+
+  <table>
+    <tr><th>段</th><th>位数</th><th>作用</th></tr>
+    <tr><td>sign（符号位）</td><td>1</td><td>0 = 正，1 = 负</td></tr>
+    <tr><td>exponent（阶码）</td><td>8</td><td>decode 后 -126 ~ +127，用 bias 127</td></tr>
+    <tr><td>mantissa / fraction（尾数）</td><td>23</td><td>规约形式下隐含一个前导 1，等效 24 bit 精度</td></tr>
+    <tr><td><strong>合计</strong></td><td><strong>32</strong></td><td><strong>= 4 bytes</strong></td></tr>
+  </table>
+
+  <p>对应 C/C++ 里就是 <code>float</code>（32 位），CUDA 里是 <code>float</code> 或 <code>__half</code>（half 是 16 位 binary16，不是单精度）。其它三个干扰项分别是：</p>
+  <ul>
+    <li><strong>16 bits</strong> = <em>half precision</em>（FP16），现在 ML 训练里很流行，但不是 "single"。</li>
+    <li><strong>64 bits</strong> = <em>double precision</em>（FP64，C 里的 <code>double</code>）。</li>
+    <li><strong>128 bits</strong> = <em>quad precision</em>（FP128，<code>__float128</code>），HPC 里偶尔见，硬件直接支持的很少。</li>
+  </ul>
+
+  <h3>为什么这个问题对 HPC 很关键</h3>
+  <p>带宽和缓存都是按 byte 算的，<strong>bit 宽度直接决定能不能装进 cache、能多快跑过 memory bus</strong>：</p>
+  <ul>
+    <li>同一个 vector，存成 <code>float</code> 比 <code>double</code> 少占一半内存 → 同一级 cache 能装更多元素 → cache miss 更少。</li>
+    <li>GPU 上 FP32 通常比 FP64 快 2× 甚至 16×（消费级卡 FP64 throughput 被故意阉割）。</li>
+    <li>选择 precision 是 HPC 的常规权衡：<strong>能用 float 就别用 double</strong>，除非数值稳定性要求 double。</li>
+  </ul>
+</div>
+
+<details class="qa">
+<summary>常见疑问 — 为什么不直接全用 FP64 永远不出错？</summary>
+<ul>
+  <li>FP64 占 8 字节，是 FP32 的 2 倍 → 内存带宽减半、cache 命中率减半，对 memory-bound 算法直接慢一倍。</li>
+  <li>消费级 GPU（如 RTX 系列）的 FP64 计算单元数量通常是 FP32 的 1/32 ~ 1/64，<em>peak FLOPS 差距巨大</em>。</li>
+  <li>但你是做物理仿真、长时间数值积分、刚性 ODE → FP32 的 ~7 位有效数字会爆，必须 FP64。<strong>在精度够用的前提下追求最低位宽</strong>。</li>
+</ul>
+</details>
+
+<div class="takeaway">
+  💡 <strong>single = 32 bit = 4 byte</strong>。记忆链：<em>half / single / double / quad = 16 / 32 / 64 / 128 bit</em>。HPC 的常识——位宽直接决定带宽和 cache 命中。
+</div>
+
+
+<!-- ==================== SLIDE 7 ==================== -->
+<h2 class="slide-title">Slide 7 — STRONG SCALING（Amdahl's Law）</h2>
+
+<img class="slide-img" src="images/slide-07.png" alt="Slide 7: Strong Scaling - Amdahl's Law, Sp = Ts/Tp = 1 / (f + (1-f)/p), 固定问题规模并增加处理器，串行分数主导上限">
+
+<div class="explanation">
+  <h3>定义：什么是 strong scaling</h3>
+  <p><strong>Strong scaling</strong> = 用 <strong>Amdahl's Law</strong> 表达的一种 speedup 分析。它的核心假设有两条：</p>
+  <ol>
+    <li><strong>问题规模固定</strong>（problem size is fixed）——由 sequential 版本定义；</li>
+    <li>不断<strong>加更多处理器</strong>，希望"更快地到达解"（arrive at the solution faster）。</li>
+  </ol>
+  <p>记 <code>T_s</code> = 串行运行时间，<code>T_p</code> = 用 <code>p</code> 个处理器并行运行时间，<code>f</code> = 程序中<em>无论如何无法并行</em>的串行部分占比（serial fraction，0 ≤ f ≤ 1）。Speedup 写作：</p>
+
+  <div class="formula">S<sub>p</sub> = T<sub>s</sub> / T<sub>p</sub> = 1 / ( f + (1 − f) / p )</div>
+
+  <p>直觉解读：把 <code>T_s</code> 拆成 <code>f·T_s</code>（怎么都得串行做完）+ <code>(1-f)·T_s</code>（可被 <code>p</code> 个 worker 平分）。后者并行后变成 <code>(1-f)·T_s / p</code>，<strong>无论 p 多大，前者那块串行时间不会缩</strong>。</p>
+
+  <h3>关键推论：上限就是 1/f</h3>
+  <p>令 <code>p → ∞</code>，<code>(1-f)/p → 0</code>，得：</p>
+  <div class="formula">S<sub>∞</sub> = 1 / f</div>
+
+  <p>Slide 右下角那张图就在画这件事——四条曲线对应不同 <code>f</code>：</p>
+  <ul>
+    <li><code>f = 0</code>（黑色虚线 ideal）：完全可并行，speedup = p，是 45° 直线。</li>
+    <li><code>f = 0.001</code>（绿）：上限 1000×，但要拿到一半需要约 1000 核。</li>
+    <li><code>f = 0.01</code>（橙）：上限 100×。</li>
+    <li><code>f = 0.10</code>（红）：上限只有 10×，<em>哪怕给你一万核，也飞不过 10×</em>。</li>
+  </ul>
+  <p>图上的注释 "<em>50% serial fraction → no speedup with 24 threads, 2× speedup at infinite number of threads</em>" 说明<strong>哪怕只有 50% 串行，再多核也只能 2×</strong>——惊人地悲观。</p>
+
+  <h3>"serial fraction is hard to determine in general"</h3>
+  <p>Slide 第三个 bullet 警告：<strong>serial fraction 是这模型的支配因子，但实际程序里它很难量出来</strong>。原因：</p>
+  <ul>
+    <li>"串行"不只是字面上的单线程代码，还包括同步原语（barriers, locks, reductions）、I/O、显存拷贝、串行分配器、关键路径上无法重叠的步骤。</li>
+    <li><code>f</code> 通常依赖问题规模、输入分布、硬件——没有静态的常数。</li>
+    <li>Profiling 工具（VTune / Nsight Systems）的价值正是<em>反推</em>实际的 <code>f</code>——这就是后两页 Example 的动机。</li>
+  </ul>
+
+  <h3>什么时候用 strong scaling</h3>
+  <p>Slide 最后一个 bullet：<em>"Strong scaling analysis makes sense for systems with few processors and negligible communication overhead → shared memory"</em>。</p>
+  <ul>
+    <li>"few processors" + "negligible communication overhead" 描述的就是 <strong>共享内存（shared-memory）多线程</strong>，比如 OpenMP 在单机几十核上跑。</li>
+    <li>核数一上千、跨机通信开销不可忽略时（典型 MPI 场景），strong scaling 的曲线会更早撞墙；这时换 weak scaling 视角更公平（下页）。</li>
+  </ul>
+</div>
+
+<details class="qa">
+<summary>常见疑问 — 例题：f = 0.05，给我 100 核，speedup 多少？</summary>
+<p>代入公式：</p>
+<div class="formula">S<sub>100</sub> = 1 / ( 0.05 + 0.95/100 ) = 1 / ( 0.05 + 0.0095 ) = 1 / 0.0595 ≈ <strong>16.8×</strong></div>
+<p>而上限 <code>1/f = 1/0.05 = 20×</code>。100 核已经把可并行那 95% 压得很扁，剩下的 5% 串行就是天花板。</p>
+</details>
+
+<details class="qa">
+<summary>常见疑问 — 现实里我观察到的 speedup 总比 Amdahl 预测低，多了什么？</summary>
+<ul>
+  <li><strong>通信/同步开销</strong>：barrier、reduce、all-to-all 在核多时 superlinear 增长。</li>
+  <li><strong>负载不均</strong>：partition 不平均，最慢线程拖整体。</li>
+  <li><strong>缓存竞争 / false sharing</strong>：多核访问同 cacheline。</li>
+  <li><strong>内存带宽饱和</strong>：核数虽多但共享一个 memory controller。</li>
+  <li>Amdahl 是<em>理想下界</em>——它假设并行那部分完美 1/p，没算 overhead。所以现实 ≤ Amdahl 预测。</li>
+</ul>
+</details>
+
+<div class="takeaway">
+  💡 <strong>Strong scaling = 问题规模固定、加核求加速</strong>。Amdahl 公式 <code>S_p = 1/(f + (1-f)/p)</code>，上限 <code>1/f</code>。串行部分是天花板；适用场景：共享内存、核数不太大、通信开销可忽略。
+</div>
+
+
+<!-- ==================== SLIDE 8 ==================== -->
+<h2 class="slide-title">Slide 8 — WEAK SCALING（Gustafson's Law）</h2>
+
+<img class="slide-img" src="images/slide-08.png" alt="Slide 8: Weak Scaling - Gustafson's Law, 固定每核执行时间, 增大问题规模, S_p = pT_s/(T_s+T_o)">
+
+<div class="explanation">
+  <h3>定义：什么是 weak scaling</h3>
+  <p><strong>Weak scaling</strong> 换了一个根本不同的问题：</p>
+  <ol>
+    <li><strong>每核的 work 固定</strong>（execution time per processor is fixed）——加更多处理器就<strong>同时把问题规模放大</strong>；</li>
+    <li>目标不是"更快解一个固定问题"，而是<em>"在同一时间里解一个更大的问题"</em>（arrive at a larger solution in the same time）。</li>
+  </ol>
+  <p>这正好是 HPC 用户实际的工作方式：拿到 1024 核不是为了把昨天的问题缩短到 1/1024，而是<em>把昨天 1024 个 cell 的网格扩成 100 万个 cell</em>。</p>
+
+  <h3>Gustafson 的推导</h3>
+  <p>设原本 1 核处理 work <code>W_s</code> 用时 <code>T_s</code>。weak scaling 下，<code>p</code> 核处理的总 work 是 <code>W_p = p · W_s</code>（每核仍然分到 <code>W_s</code> 那么多）。把可并行那部分写成 <code>(1-f)</code>，串行部分 <code>f</code> 不随 p 变。Speedup 定义：</p>
+
+  <div class="formula">S<sub>p</sub> = (W<sub>p</sub>/T<sub>p</sub>) / (W<sub>s</sub>/T<sub>s</sub>) = p · T<sub>s</sub> / T<sub>p</sub> = p · T<sub>s</sub> / ( T<sub>s</sub> + T<sub>o</sub> )</div>
+
+  <p>其中 <code>T_o = T_o(n; p)</code> 是<strong>非零的串行/通信 overhead</strong>，依赖问题规模 <code>n</code> 和处理器数 <code>p</code>。当 <code>n → ∞</code>、<code>T_o</code> 增长慢于 <code>p · T_s</code> 时，<code>S_p → p</code>——也就是<strong>线性加速</strong>。</p>
+
+  <h3>右图：Amdahl vs Gustafson 同图对比</h3>
+  <p>Slide 右边那张图同时画了两条 speedup 曲线，<strong>横轴是 serial fraction <code>1-f</code></strong>（注意是 <code>1-f</code>，不是 p）：</p>
+  <ul>
+    <li><strong>Amdahl（红）</strong>：strong scaling，串行越多 speedup 掉得越狠，靠近 1。</li>
+    <li><strong>Gustafson（蓝）</strong>：weak scaling，speedup 几乎线性下降，斜率温和——同样的串行比例下 weak scaling 给的数字总是更乐观。</li>
+  </ul>
+  <p>结论：<em>"observable speedup for 32 processors as a function of the parallel fraction in a code, expressed in term of Amdahl's Law and Gustafson's Law."</em> ——同一份代码，<strong>用哪种 scaling 模型衡量，结果可能差一个数量级</strong>。这就是为什么 paper 报告 speedup 时必须说清是 strong 还是 weak。</p>
+
+  <h3>什么时候用 weak scaling</h3>
+  <ul>
+    <li>大型 cluster / 跨机 MPI：strong scaling 早就撞墙了，Amdahl 数字难看。</li>
+    <li>问题本身可以"放大"——网格更细、粒子更多、时间步更长。</li>
+    <li>"<strong>这台超算能让我做以前做不了的更大问题吗？</strong>" → weak scaling。</li>
+    <li>"<strong>我能不能让今天的问题更快出结果？</strong>" → strong scaling。</li>
+  </ul>
+</div>
+
+<details class="qa">
+<summary>常见疑问 — Strong 和 Weak 到底谁更"诚实"？</summary>
+<ul>
+  <li>都不"假"，但回答的是不同问题。混淆它们最容易被骗——"我们获得了 800× speedup！"如果是 weak scaling 在 1024 核上得到 800，那只是说 overhead 还能接受；如果是 strong scaling 拿到 800，则非常厉害。</li>
+  <li>看 paper 时永远先问：<strong>问题规模随 p 变没变？</strong>不变 = strong；按比例放大 = weak。</li>
+</ul>
+</details>
+
+<details class="qa">
+<summary>常见疑问 — Gustafson 公式里 T_o 跟 Amdahl 的 f 是什么关系？</summary>
+<ul>
+  <li>Amdahl 的 <code>f</code> 是<em>原本 T_s 中</em>的串行分数；Gustafson 的 <code>T_o</code> 是<em>新加进来</em>的、随 p 变化的总 overhead（barrier, reduce, MPI 通信）。</li>
+  <li>两者本质都说同一件事：<em>有一部分时间不会因加核而缩短</em>。Amdahl 把它写成乘性常数，Gustafson 把它写成加性、规模相关项 <code>T_o(n;p)</code>。</li>
+  <li>当 <code>T_o</code> 不随 <code>p</code> 增加（理想情况）：<code>S_p ≈ p·T_s/(T_s + const) → p</code>，weak scaling 完美。</li>
+  <li>当 <code>T_o ∝ p</code>（例如 all-to-all 通信）：<code>S_p</code> 反而趋向常数，weak scaling 也会饱和。</li>
+</ul>
+</details>
+
+<div class="takeaway">
+  💡 <strong>Weak scaling = 每核 work 固定、加核同时放大问题</strong>。Gustafson 公式 <code>S_p = p·T_s/(T_s+T_o)</code>，理想下趋近 <code>p</code>（线性加速）。<strong>Strong 问"算得多快"，Weak 问"算得多大"</strong>——选错模型，speedup 数字会差一个数量级。
+</div>
+
+
+<!-- ==================== SLIDE 9 ==================== -->
+<h2 class="slide-title">Slide 9 — Example 1：NVIDIA Nsight Systems</h2>
+
+<img class="slide-img" src="images/slide-09.png" alt="Slide 9: EXAMPLE 1 - NSIGHT SYSTEMS, NVIDIA 官方介绍 'system-wide performance analysis tool'">
+
+<div class="explanation">
+  <h3>这页讲什么</h3>
+  <p>本讲第一个 Example 工具：<strong>NVIDIA Nsight Systems</strong>。Slide 直接贴了 NVIDIA 官网的产品定义——</p>
+  <blockquote>
+    NVIDIA Nsight™ Systems is a <strong>system-wide</strong> performance analysis tool designed to <strong>visualize an application's algorithms</strong>, <strong>identify the largest opportunities to optimize</strong>, and <strong>tune to scale efficiently across any quantity or size of CPUs and GPUs</strong>, from large servers to our smallest systems-on-a-chip (SoCs).
+  </blockquote>
+
+  <h3>关键词解码</h3>
+  <ul>
+    <li><strong>System-wide</strong>：不是只看 GPU kernel，而是把<em>整台机器</em>的活动绘成一条时间线——CPU 线程、GPU streams、CUDA API 调用、cudaMemcpy、OS 调度、NVLink/PCIe 流量、甚至磁盘 I/O，全部按时间对齐。这跟 Lecture 11 的 VTune（CPU-only）正好互补。</li>
+    <li><strong>Visualize an application's algorithms</strong>：你能直观看出"GPU 在等 CPU"还是"CPU 在等 GPU"——并行重叠率、kernel 串行化、PCIe 拷贝是否遮盖等问题在时间线上一目了然。</li>
+    <li><strong>Identify the largest opportunities to optimize</strong>：定位"最大的那块时间"——可能不是某个 kernel 慢，而是 <code>cudaMemcpy</code> 占了 60%，或者 host 同步阻塞了 GPU。</li>
+    <li><strong>Tune to scale across CPUs and GPUs</strong>：多 GPU、多节点也能用——直接对应本讲前两页讲的 strong/weak scaling，找出 scaling 的瓶颈在哪一步。</li>
+    <li><strong>From servers to SoCs</strong>：从 DGX/超算节点到 Jetson 嵌入式板，同一个工具。</li>
+  </ul>
+
+  <h3>定位：在 NVIDIA profiling 工具栈中的位置</h3>
+  <p>NVIDIA 把 GPU profiling 拆成两层：</p>
+  <table>
+    <tr><th>工具</th><th>层次</th><th>看什么</th><th>典型问题</th></tr>
+    <tr><td><strong>Nsight Systems</strong></td><td>系统级 / 时间线</td><td>CPU↔GPU 协作、kernel launch 顺序、内存拷贝、stream 重叠</td><td>"GPU 利用率为什么只有 30%？"</td></tr>
+    <tr><td><strong>Nsight Compute</strong>（下页）</td><td>kernel 级 / 单 kernel</td><td>warp occupancy、memory throughput、SM 利用、寄存器压力</td><td>"这个 kernel 为什么 memory-bound？"</td></tr>
+  </table>
+  <p>典型 workflow：<strong>先 Nsight Systems</strong> 找到全局瓶颈（哪个 kernel / 哪段拷贝最贵），<strong>再 Nsight Compute</strong> 钻进那个 kernel 看微观指标。顺序反过来就是"优化了次要 kernel，整体没变化"的常见误区。</p>
+</div>
+
+<details class="qa">
+<summary>常见疑问 — Nsight Systems 跟 Lecture 11 讲的 VTune 是什么关系？</summary>
+<ul>
+  <li>VTune = Intel 的 CPU profiler，看 CPU 端 hotspot、cache miss、向量化、线程同步——只看 CPU 侧。</li>
+  <li>Nsight Systems = NVIDIA 的<em>跨 CPU+GPU</em> 系统级 profiler——它能看 CPU 线程行为，但强项是把 GPU 时间线纳进来。</li>
+  <li>真实大型应用（比如 LAMMPS GPU 版）通常<strong>两个都要用</strong>：VTune 找 CPU 端预处理瓶颈，Nsight Systems 找 GPU 调用瓶颈。</li>
+</ul>
+</details>
+
+<div class="takeaway">
+  💡 <strong>Nsight Systems = 系统级时间线 profiler</strong>。看的是"应用整体在 CPU 和 GPU 之间怎么跑"，找最大的优化机会。<strong>先用它，再用 Nsight Compute</strong>——优先定位<em>哪一步</em>慢，再追究<em>为什么</em>慢。
+</div>
+
+
+<!-- ==================== SLIDE 10 ==================== -->
+<h2 class="slide-title">Slide 10 — Example 2：NVIDIA Nsight Compute</h2>
+
+<img class="slide-img" src="images/slide-10.png" alt="Slide 10: EXAMPLE 2 - NSIGHT COMPUTE, NVIDIA 官方介绍 'interactive profiler for CUDA and OptiX'">
+
+<div class="explanation">
+  <h3>这页讲什么</h3>
+  <p>第二个 Example 工具：<strong>NVIDIA Nsight Compute</strong>。Slide 同样直接贴官网定义——</p>
+  <blockquote>
+    NVIDIA Nsight™ Compute is an <strong>interactive profiler</strong> for <strong>CUDA® and NVIDIA OptiX™</strong> that provides <strong>detailed performance metrics and API debugging</strong> via a <strong>user interface and command-line tool</strong>. Users can run <strong>guided analysis</strong> and compare results with a customizable and data-driven user interface, as well as post-process and analyze results in their own workflows.
+  </blockquote>
+  <p>底部还提到 <em>"NVIDIA Nsight Compute is also available as part of the CUDA Toolkit"</em>——只要安装了 CUDA Toolkit，<code>ncu</code> 命令就在 PATH 里，不需要额外装。</p>
+
+  <h3>关键词解码</h3>
+  <ul>
+    <li><strong>Interactive profiler for CUDA and OptiX</strong>：专门看<em>单个 GPU kernel</em> 的微观行为。OptiX 是 NVIDIA 的光线追踪 API，原理上也是 CUDA kernel。</li>
+    <li><strong>Detailed performance metrics</strong>：包括 SM 占用率（occupancy）、warp 执行效率、L1/L2/DRAM 各级带宽利用率、stall reason（warp 卡在 memory dependency / sync / pipe busy 等）、register/shared memory 使用、roofline 分析。</li>
+    <li><strong>API debugging</strong>：能看到每次 kernel launch 的参数（grid/block size、shared memory 大小、stream 等），出错时也能定位到调用栈。</li>
+    <li><strong>UI + CLI</strong>：GUI 是 <code>ncu-ui</code>（界面分析），CLI 是 <code>ncu</code>（远程 cluster 上常用——先 <code>ncu --set full -o report ./my_app</code> 收集，再把 <code>.ncu-rep</code> 文件 scp 回本地用 GUI 打开）。</li>
+    <li><strong>Guided analysis</strong>：工具会主动告诉你这个 kernel 是 memory-bound 还是 compute-bound，建议下一步看哪个指标——对新手非常友好，<em>不用自己去背 30+ 个 metric</em>。</li>
+    <li><strong>Customizable, data-driven UI</strong>：可以自己定义 metric set、规则；结果是结构化数据（CSV / Python API），能 post-process 进自己的 workflow。</li>
+  </ul>
+
+  <h3>什么时候用 Nsight Compute</h3>
+  <p>当 Nsight Systems 已经告诉你"<em>kernel X 占了 70% 的 GPU 时间</em>"之后——下一步就是用 Nsight Compute 钻进 kernel X，问：</p>
+  <ul>
+    <li>它是 memory-bound 还是 compute-bound？（看 roofline）</li>
+    <li>warp 在哪里 stall？（stall reason 直方图）</li>
+    <li>occupancy 够不够？是不是 register 用太多压住了线程数？</li>
+    <li>shared memory bank conflict？global memory coalescing 有没有？</li>
+  </ul>
+
+  <h3>跟 Slide 7-8 的连贯性</h3>
+  <p>本讲前半讲 Amdahl/Gustafson 给出了 speedup 的<em>理论上限</em>，但实际中一个 GPU kernel 离上限多远？答案靠 <strong>Nsight Compute 给出的 metric</strong>——比如 <em>"DRAM throughput 已经 95%"</em>说明你已经撞 memory roofline，再优化算法没用，得换数据布局；<em>"occupancy 25%"</em>说明你还有 4× 空间。<strong>profiling 给 scaling 模型里的那个 <code>f</code> 一个具体的、可量的来源。</strong></p>
+</div>
+
+<details class="qa">
+<summary>常见疑问 — 命令行版用法长啥样？</summary>
+<pre><code># 收集 full metric set，输出到 report.ncu-rep
+ncu --set full -o report ./my_cuda_app
+
+# 只针对某个 kernel
+ncu -k regex:my_kernel_name --set full -o report ./my_cuda_app
+
+# 一段 source-line 级 profiling（需要编译时加 -lineinfo）
+ncu --import report.ncu-rep --page details --section SourceCounters
+
+# 之后把 report.ncu-rep 拉到本地用 ncu-ui 图形界面打开</code></pre>
+</details>
+
+<details class="qa">
+<summary>常见疑问 — Nsight Systems / Nsight Compute / nvprof 三者关系</summary>
+<ul>
+  <li><code>nvprof</code> 是<strong>老的</strong>命令行 profiler（CUDA 10 之前主流）。它的两个角色被拆成了 Nsight Systems（系统时间线）+ Nsight Compute（kernel 微观）。</li>
+  <li>新的硬件（Volta 之后）<strong>已经不支持 nvprof</strong>，必须用 Nsight 系列。</li>
+  <li>所以现在的标准工作流：Nsight Systems 找全局瓶颈 → Nsight Compute 攻单个 kernel。<code>nvprof</code> 见到老脚本里的就替换掉。</li>
+</ul>
+</details>
+
+<div class="takeaway">
+  💡 <strong>Nsight Compute = 单 kernel 的微观 profiler</strong>，看 occupancy / stall reason / memory bandwidth / roofline。和 Nsight Systems 配对使用：<strong>Systems 定位"哪一步"，Compute 解释"为什么"</strong>。CUDA Toolkit 自带，命令行是 <code>ncu</code>。
+</div>
+
+
+<!-- ==================== SLIDE 11 ==================== -->
+<h2 class="slide-title">Slide 11 — 课程网站：Challenges 与 Leaderboards</h2>
+
+<img class="slide-img" src="images/slide-11.png" alt="Slide 11: 课程网站 Challenges 标签页截图，CS 2050 Challenges 页面含 Leaderboards 区块和 challenge_0">
+
+<div class="explanation">
+  <p>课程网站新增的 <strong>Challenges</strong> 标签页（导航栏从 Syllabus / Lectures / Deadlines 多了一个 Challenges）。这是一个<em>非必修的、有排行榜的</em>性能挑战板块：</p>
+  <ul>
+    <li>页面提示 "<em>Reminder: Your pseudonym can be found with `challenge_pseudonym` on the course cluster.</em>" ——提交是用<strong>匿名笔名</strong>，不是真名，去 cluster 上跑命令 <code>challenge_pseudonym</code> 拿到自己的 pseudonym。</li>
+    <li>"Last Update: Thursday, Mar 05, 1:51:27 PM" ——刚刚（讲课当天下午）才更新过。</li>
+    <li>当前只有 <code>challenge_0</code>（占位），<em>"0 ranked submissions, No results yet."</em> 还没人提交，意味着大家可以"抢沙发"。</li>
+  </ul>
+  <p>跟本讲的连贯性：Strong/Weak scaling 给评判标准，Nsight 系列给优化工具，<strong>Challenges 给"实战靶场"</strong>——把课上的理论用到一个公开比 speedup 的题目上。</p>
+</div>
+
+
+<div class="takeaway" style="background:#fff3e0;border-left-color:#ef6c00;margin-top:48px">
+  <h3 style="margin-top:0;color:#ef6c00">📌 Lecture 12 一图总结</h3>
+  <ul>
+    <li><strong>Strong scaling（Amdahl）</strong>：固定问题规模，加核求快。<code>S_p = 1/(f + (1-f)/p)</code>，上限 <code>1/f</code>。适合<em>shared-memory、少核、低通信</em>。</li>
+    <li><strong>Weak scaling（Gustafson）</strong>：每核 work 固定，加核同时放大问题。<code>S_p = p·T_s/(T_s+T_o)</code>，理想下 ≈ p。适合<em>大集群、MPI、可放大问题</em>。</li>
+    <li>报告 speedup 永远要说清是 strong 还是 weak——同代码可差一个数量级。</li>
+    <li><strong>Nsight Systems</strong> = 系统级时间线 profiler，定位"哪一步"慢。</li>
+    <li><strong>Nsight Compute</strong> = 单 kernel 微观 profiler，解释"为什么"慢。两者配对，先 Systems 后 Compute。</li>
+    <li>单精度浮点 = <strong>32 bit / 4 byte</strong>（IEEE 754 binary32：1+8+23）。</li>
+    <li>HW3 deadline：<strong>Thursday March 12 11:59pm</strong>；Final Project spec 已发草稿，<em>OpenMP/MPI/CUDA 三件套 + scaling + profiling</em>。</li>
+  </ul>
+</div>
+
+
+<script>
+(function() {
+  const STORAGE_KEY = 'cs2050-lec12-highlights';
+  const state = {
+    highlightMode: false,
+    eraserMode: false,
+    currentColor: 'yellow',
+    highlights: []
+  };
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      state.highlights = raw ? JSON.parse(raw) : [];
+    } catch (e) { state.highlights = []; }
+  }
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.highlights));
+  }
+  function genId() {
+    return 'hl_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  }
+
+  // ---------- Toolbar ----------
+  function buildToolbar() {
+    const tb = document.createElement('div');
+    tb.id = 'hl-toolbar';
+    tb.innerHTML =
+      '<button id="hl-mode-btn" class="hl-btn">高亮模式: 关</button>' +
+      '<span class="hl-color-picker">' +
+        '<span class="hl-color" data-color="yellow" title="黄"></span>' +
+        '<span class="hl-color" data-color="green"  title="绿"></span>' +
+        '<span class="hl-color" data-color="pink"   title="粉"></span>' +
+        '<span class="hl-color" data-color="blue"   title="蓝"></span>' +
+      '</span>' +
+      '<button id="hl-eraser-btn" class="hl-btn">🧽 橡皮擦: 关</button>' +
+      '<button id="hl-toggle-btn" class="hl-btn">隐藏标记</button>' +
+      '<button id="hl-clear-btn" class="hl-btn">清除全部</button>';
+    document.body.appendChild(tb);
+
+    const modeBtn = document.getElementById('hl-mode-btn');
+    const eraserBtn = document.getElementById('hl-eraser-btn');
+
+    function refreshModeUI() {
+      modeBtn.textContent = '高亮模式: ' + (state.highlightMode ? '开' : '关');
+      modeBtn.classList.toggle('active', state.highlightMode);
+      eraserBtn.textContent = '🧽 橡皮擦: ' + (state.eraserMode ? '开' : '关');
+      eraserBtn.classList.toggle('active', state.eraserMode);
+      document.body.classList.toggle('hl-active', state.highlightMode);
+      document.body.classList.toggle('hl-eraser', state.eraserMode);
+    }
+
+    modeBtn.addEventListener('click', () => {
+      state.highlightMode = !state.highlightMode;
+      if (state.highlightMode) state.eraserMode = false;
+      refreshModeUI();
+    });
+    eraserBtn.addEventListener('click', () => {
+      state.eraserMode = !state.eraserMode;
+      if (state.eraserMode) state.highlightMode = false;
+      refreshModeUI();
+    });
+
+    tb.querySelectorAll('.hl-color').forEach(el => {
+      el.addEventListener('click', () => {
+        state.currentColor = el.dataset.color;
+        tb.querySelectorAll('.hl-color').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+      });
+    });
+    tb.querySelector('.hl-color[data-color="yellow"]').classList.add('selected');
+
+    const toggleBtn = document.getElementById('hl-toggle-btn');
+    toggleBtn.addEventListener('click', () => {
+      const hidden = document.body.classList.toggle('hl-hidden');
+      toggleBtn.textContent = hidden ? '显示标记' : '隐藏标记';
+    });
+
+    document.getElementById('hl-clear-btn').addEventListener('click', () => {
+      if (!confirm('清除全部高亮?')) return;
+      state.highlights = [];
+      save();
+      clearAllVisuals();
+    });
+  }
+
+  // ---------- Image highlights ----------
+  function setupImages() {
+    document.querySelectorAll('.slide-img').forEach(img => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'hl-img-wrapper';
+      img.parentNode.insertBefore(wrapper, img);
+      wrapper.appendChild(img);
+      attachImageDrag(img, wrapper);
+    });
+  }
+
+  function attachImageDrag(img, wrapper) {
+    let dragging = false;
+    let startX = 0, lockedY = 0;
+    let preview = null;
+    let rect = null;
+
+    img.addEventListener('mousedown', (e) => {
+      if (!state.highlightMode) return;
+      e.preventDefault();
+      rect = img.getBoundingClientRect();
+      startX = e.clientX - rect.left;
+      lockedY = e.clientY - rect.top;
+      dragging = true;
+
+      preview = document.createElement('div');
+      preview.className = 'hl-img-mark';
+      preview.dataset.color = state.currentColor;
+      preview.style.left = (startX / rect.width * 100) + '%';
+      preview.style.top  = (lockedY / rect.height * 100) + '%';
+      preview.style.width = '0';
+      preview.style.pointerEvents = 'none';
+      wrapper.appendChild(preview);
+    });
+
+    function onMove(e) {
+      if (!dragging) return;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      preview.style.left  = (xs / rect.width * 100) + '%';
+      preview.style.width = ((xe - xs) / rect.width * 100) + '%';
+    }
+    function onUp(e) {
+      if (!dragging) return;
+      dragging = false;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      const widthPx = xe - xs;
+      if (widthPx < 8) {
+        if (preview) preview.remove();
+        preview = null;
+        return;
+      }
+      const data = {
+        type: 'image',
+        img_src: img.getAttribute('src'),
+        y_pct: lockedY / rect.height * 100,
+        x_start_pct: xs / rect.width * 100,
+        x_end_pct: xe / rect.width * 100,
+        color: state.currentColor,
+        id: genId()
+      };
+      state.highlights.push(data);
+      save();
+      preview.dataset.hlId = data.id;
+      preview.style.pointerEvents = 'auto';
+      preview.title = '橡皮擦模式下点击删除';
+      preview.addEventListener('click', (ev) => {
+        if (!state.eraserMode) return;
+        ev.stopPropagation();
+        removeHighlight(data.id);
+      });
+      preview = null;
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  function applyImageHighlight(data) {
+    const img = document.querySelector('.slide-img[src="' + cssEscape(data.img_src) + '"]');
+    if (!img) return;
+    const wrapper = img.parentElement;
+    if (!wrapper.classList.contains('hl-img-wrapper')) return;
+    const m = document.createElement('div');
+    m.className = 'hl-img-mark';
+    m.dataset.color = data.color;
+    m.dataset.hlId = data.id;
+    m.style.left = data.x_start_pct + '%';
+    m.style.width = (data.x_end_pct - data.x_start_pct) + '%';
+    m.style.top = data.y_pct + '%';
+    m.title = '橡皮擦模式下点击删除';
+    m.addEventListener('click', (ev) => {
+      if (!state.eraserMode) return;
+      ev.stopPropagation();
+      removeHighlight(data.id);
+    });
+    wrapper.appendChild(m);
+  }
+
+  function cssEscape(s) {
+    return s.replace(/(["\\])/g, '\\$1');
+  }
+
+  // ---------- Text highlights ----------
+  function setupTextSelection() {
+    document.addEventListener('mouseup', () => {
+      if (!state.highlightMode) return;
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed) return;
+      const text = sel.toString();
+      if (!text || text.trim().length === 0) return;
+      const range = sel.getRangeAt(0);
+      if (range.startContainer.parentElement &&
+          range.startContainer.parentElement.closest('#hl-toolbar')) return;
+      if (isInsideImage(range)) return;
+
+      const before = getContext(range, 'before', 30);
+      const after  = getContext(range, 'after', 30);
+      const data = {
+        type: 'text',
+        text: text,
+        contextBefore: before,
+        contextAfter: after,
+        color: state.currentColor,
+        id: genId()
+      };
+      try {
+        wrapRange(range, data);
+        state.highlights.push(data);
+        save();
+        sel.removeAllRanges();
+      } catch (e) {}
+    });
+  }
+  function isInsideImage(range) {
+    let n = range.commonAncestorContainer;
+    while (n) {
+      if (n.nodeType === 1 && n.classList && n.classList.contains('hl-img-wrapper')) return true;
+      n = n.parentNode;
+    }
+    return false;
+  }
+  function getContext(range, side, len) {
+    const root = document.body;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => {
+        if (n.parentElement && n.parentElement.closest('script, style, #hl-toolbar')) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }, false);
+    let nodes = [];
+    let nd;
+    while ((nd = walker.nextNode())) nodes.push(nd);
+    const fullText = nodes.map(n => n.textContent).join('');
+
+    let pos = 0, found = -1;
+    for (const n of nodes) {
+      if (n === range.startContainer) { found = pos + range.startOffset; break; }
+      pos += n.textContent.length;
+    }
+    if (found < 0) return '';
+    let endPos = 0, foundEnd = -1;
+    pos = 0;
+    for (const n of nodes) {
+      if (n === range.endContainer) { foundEnd = pos + range.endOffset; break; }
+      pos += n.textContent.length;
+    }
+    if (foundEnd < 0) return '';
+    if (side === 'before') return fullText.slice(Math.max(0, found - len), found);
+    return fullText.slice(foundEnd, foundEnd + len);
+  }
+  function wrapRange(range, data) {
+    const frags = [];
+    const iter = document.createNodeIterator(range.commonAncestorContainer, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => range.intersectsNode(n) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+    });
+    let n;
+    while ((n = iter.nextNode())) {
+      const r = document.createRange();
+      r.selectNodeContents(n);
+      if (n === range.startContainer) r.setStart(n, range.startOffset);
+      if (n === range.endContainer) r.setEnd(n, range.endOffset);
+      if (!r.collapsed) frags.push(r);
+    }
+    frags.forEach(r => {
+      try {
+        const m = document.createElement('mark');
+        m.className = 'hl-text-mark';
+        m.dataset.color = data.color;
+        m.dataset.hlId = data.id;
+        m.title = '橡皮擦模式下点击删除';
+        m.addEventListener('click', (ev) => {
+          if (!state.eraserMode) return;
+          ev.stopPropagation();
+          removeHighlight(data.id);
+        });
+        r.surroundContents(m);
+      } catch (e) { /* skip fragment */ }
+    });
+  }
+
+  function applyTextHighlight(data) {
+    const target = data.contextBefore + data.text + data.contextAfter;
+    const root = document.body;
+    const nodes = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => {
+        if (n.parentElement && n.parentElement.closest('script, style, #hl-toolbar')) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }, false);
+    let nd;
+    while ((nd = walker.nextNode())) nodes.push(nd);
+    const fullText = nodes.map(n => n.textContent).join('');
+    const idx = fullText.indexOf(target);
+    if (idx === -1) return;
+
+    const startPos = idx + data.contextBefore.length;
+    const endPos = startPos + data.text.length;
+    let cum = 0, startNode = null, startOff = 0, endNode = null, endOff = 0;
+    for (const n of nodes) {
+      const len = n.textContent.length;
+      if (!startNode && startPos >= cum && startPos < cum + len) {
+        startNode = n; startOff = startPos - cum;
+      }
+      if (startNode && endPos > cum && endPos <= cum + len) {
+        endNode = n; endOff = endPos - cum; break;
+      }
+      cum += len;
+    }
+    if (!startNode || !endNode) return;
+    const range = document.createRange();
+    try {
+      range.setStart(startNode, startOff);
+      range.setEnd(endNode, endOff);
+      wrapRange(range, data);
+    } catch (e) {}
+  }
+
+  // ---------- Remove / clear ----------
+  function removeHighlight(id) {
+    state.highlights = state.highlights.filter(h => h.id !== id);
+    save();
+    document.querySelectorAll('[data-hl-id="' + id + '"]').forEach(el => {
+      if (el.tagName === 'MARK') {
+        const p = el.parentNode;
+        while (el.firstChild) p.insertBefore(el.firstChild, el);
+        p.removeChild(el);
+        p.normalize();
+      } else {
+        el.remove();
+      }
+    });
+  }
+  function clearAllVisuals() {
+    document.querySelectorAll('.hl-img-mark').forEach(el => el.remove());
+    document.querySelectorAll('mark.hl-text-mark').forEach(el => {
+      const p = el.parentNode;
+      while (el.firstChild) p.insertBefore(el.firstChild, el);
+      p.removeChild(el);
+      p.normalize();
+    });
+  }
+
+  // ---------- Init ----------
+  function init() {
+    load();
+    buildToolbar();
+    setupImages();
+    setupTextSelection();
+    window.addEventListener('load', () => {
+      state.highlights.forEach(h => {
+        if (h.type === 'image') applyImageHighlight(h);
+        else if (h.type === 'text') applyTextHighlight(h);
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,2221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>CS 2050 Lecture 8 - 复习笔记</title>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    max-width: 980px;
+    margin: 40px auto;
+    padding: 0 24px;
+    line-height: 1.7;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 {
+    border-bottom: 3px solid #1f6feb;
+    padding-bottom: 10px;
+  }
+  h2.slide-title {
+    color: #1f6feb;
+    margin-top: 50px;
+    border-left: 5px solid #1f6feb;
+    padding-left: 12px;
+  }
+  h3 {
+    color: #333;
+    margin-top: 28px;
+  }
+  .slide-img {
+    display: block;
+    max-width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin: 16px 0 24px 0;
+  }
+  .explanation {
+    background: #fff;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
+  }
+  .qa {
+    background: #fff8e1;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border-left: 4px solid #f0a500;
+    margin-top: 20px;
+  }
+  .qa h3 { margin-top: 0; color: #b8730e; }
+  .qa ul li { margin-bottom: 8px; }
+  details.qa > summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #b8730e;
+    font-size: 1.08em;
+    padding: 6px 0;
+    user-select: none;
+    list-style: none;
+  }
+  details.qa > summary::before {
+    content: "▶ ";
+    display: inline-block;
+    transition: transform 0.15s;
+  }
+  details.qa[open] > summary::before {
+    content: "▼ ";
+  }
+  details.qa > summary:hover { color: #f0a500; }
+  details.qa[open] > summary { margin-bottom: 14px; }
+  code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.92em;
+  }
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th { background: #1f6feb; color: white; }
+  blockquote {
+    border-left: 4px solid #1f6feb;
+    margin: 16px 0;
+    padding: 4px 16px;
+    color: #555;
+    background: #eef4ff;
+  }
+  .takeaway {
+    background: #e8f5e9;
+    border-left: 4px solid #2e7d32;
+    padding: 14px 20px;
+    margin-top: 20px;
+    border-radius: 4px;
+  }
+
+  /* ============================================
+     Highlight feature (image + text)
+     ============================================ */
+  #hl-toolbar {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .hl-btn {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    user-select: none;
+  }
+  .hl-btn:hover { background: #e8e8e8; }
+  .hl-btn.active { background: #1f6feb; color: white; border-color: #1f6feb; }
+  .hl-color-picker {
+    display: inline-flex;
+    gap: 6px;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    padding: 0 10px;
+  }
+  .hl-color {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    display: inline-block;
+    box-sizing: border-box;
+  }
+  .hl-color.selected { border-color: #333; }
+  .hl-color[data-color="yellow"] { background: rgba(255, 235, 59, 0.85); }
+  .hl-color[data-color="green"]  { background: rgba(102, 187, 106, 0.85); }
+  .hl-color[data-color="pink"]   { background: rgba(236, 64, 122, 0.75); }
+  .hl-color[data-color="blue"]   { background: rgba(79, 195, 247, 0.85); }
+
+  body.hl-active { cursor: crosshair; }
+  body.hl-active .slide-img { cursor: crosshair; }
+  body.hl-eraser { cursor: not-allowed; }
+  body.hl-eraser .slide-img { cursor: not-allowed; }
+  body.hl-eraser .hl-img-mark,
+  body.hl-eraser mark.hl-text-mark {
+    outline: 2px dashed #d32f2f;
+    outline-offset: 1px;
+    cursor: pointer !important;
+  }
+
+  .hl-img-wrapper {
+    position: relative;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin: 16px 0 24px 0;
+  }
+  .hl-img-wrapper > .slide-img { margin: 0; }
+
+  .hl-img-mark {
+    position: absolute;
+    height: 14px;
+    transform: translateY(-50%);
+    border-radius: 2px;
+    mix-blend-mode: multiply;
+    pointer-events: auto;
+  }
+  .hl-img-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.65); }
+  .hl-img-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.55); }
+  .hl-img-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.50); }
+  .hl-img-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.55); }
+
+  mark.hl-text-mark {
+    padding: 1px 1px;
+    border-radius: 2px;
+    color: inherit;
+  }
+  mark.hl-text-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.55); }
+  mark.hl-text-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.40); }
+  mark.hl-text-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.30); }
+  mark.hl-text-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.40); }
+
+  body.hl-hidden .hl-img-mark { background: transparent !important; }
+  body.hl-hidden mark.hl-text-mark {
+    background: transparent !important;
+    padding: 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>CS 2050 Lecture 8 - 复习笔记</h1>
+<p><em>主题：MPI 进阶 —— 消息构成、阻塞通信、Hardware vs SLURM</em></p>
+
+<blockquote>
+  Lecture 8 的 slide 1–4 是行政内容（课程封面、HW2 仓库结构、集群最近变慢的公告、lecture-examples 仓库说明），这里跳过。技术内容从 slide 5 开始。Slide 6–7 是对 Lecture 7 的简短回顾（distributed parallelism、processes vs threads），如果之前的笔记已经掌握，可以快速过；新内容（MPI 程序结构 + 阻塞通信细节）从 slide 8 起逐步展开。
+</blockquote>
+
+
+<!-- ==================== SLIDE 5 ==================== -->
+<h2 class="slide-title">Slide 5 — Hardware vs SLURM（硬件视角 vs 调度器视角）</h2>
+
+<img class="slide-img" src="images/slide-05.png" alt="Slide 5: Hardware vs SLURM, hwloc tree of a compute node">
+
+<div class="explanation">
+  <p>这一页是 example-1，把 Lecture 7 学的两类知识对上：<strong>硬件物理拓扑</strong>（hwloc / lstopo 的视角）和 <strong>SLURM 看到的资源</strong>（调度器视角）。两者描述的是同一台节点，但<em>切入角度不同</em>。</p>
+
+  <h3>右边方框 = hwloc / lstopo 输出（硬件视角）</h3>
+  <p>这种树形方框图是 <code>lstopo</code> 命令的标准输出，从外往内是 Machine → Package → NUMANode → Caches → Cores → PU。右边那台节点的内层结构：</p>
+  <ul>
+    <li><strong>Machine (92GB total)</strong> —— 整台节点 92GB 内存。</li>
+    <li><strong>Package L#0</strong> —— 一个 CPU socket（这台机器只插了一颗 CPU）。</li>
+    <li><strong>NUMANode L#0 P#0 (92GB)</strong> —— 一个 NUMA 节点。本机只有一个 socket，所以也只有一个 NUMANode。</li>
+    <li><strong>L3 (36MB)</strong> —— 全核共享的 last-level cache。</li>
+    <li><strong>L2 (1024KB) × 24</strong> —— 24 个独立的 L2，每个核一个。</li>
+    <li><strong>L1d (32KB) + L1i (32KB)</strong> —— 数据 / 指令 L1 各 32KB，每核独占。</li>
+    <li><strong>Core L#0 ... Core L#23</strong> —— 24 个物理核。</li>
+    <li><strong>每个 Core 内部 2 个 PU</strong> —— 这是 <strong>SMT / hyperthreading</strong>。Core L#0 里有 PU L#0 (P#0) 和 PU L#1 (P#24)，是同一个核共用执行单元的两个逻辑处理器。</li>
+  </ul>
+
+  <p>所以这台节点：<strong>1 socket × 1 NUMANode × 24 cores × 2 PU = 48 个 logical CPU</strong>。Linux <code>nproc</code> 看到的就是 48。</p>
+
+  <h3>关于 PU 编号 P#0 和 P#24</h3>
+  <p>Linux 给逻辑 CPU 编号的惯例：<strong>先把所有物理核排完，再轮 SMT 兄弟</strong>。所以 24 核机器上：</p>
+  <pre>Core 0 → PU 编号 0  和 24
+Core 1 → PU 编号 1  和 25
+...
+Core 23 → PU 编号 23 和 47</pre>
+  <p>知道这个编号规则，<code>taskset -c 0,1,2,3</code> 锁定的是 4 个不同的物理核（不会两个挤在一个核上）；如果写 <code>0,24</code> 就是同核的 2 个 SMT 兄弟（性能可能反而差）。</p>
+
+  <h3>底下命令 = SLURM 视角</h3>
+  <pre><code>scontrol show node general-dy-general-cr-1</code></pre>
+  <p>这个命令问 SLURM 调度器："你眼里这台节点有多少 CPU、多少内存、当前哪些资源被占用、节点是不是 idle"。SLURM 不直接看硬件，它读的是自己的配置文件 + 节点上 slurmd 守护进程上报的信息。<strong>典型输出会包含：</strong></p>
+  <ul>
+    <li><code>CPUTot=48</code> —— SLURM 认为这台节点有 48 个 CPU（注意：默认它把 PU 当 CPU 算）</li>
+    <li><code>RealMemory=92160</code> —— 内存（MB）</li>
+    <li><code>State=IDLE</code> 或 <code>ALLOCATED</code> —— 现在有没有被占</li>
+    <li><code>CfgTRES=cpu=48,mem=92G,...</code> —— 节点的 trackable resources</li>
+  </ul>
+
+  <h3>为什么要同时知道这两个视角</h3>
+  <p>写 SLURM 作业脚本时你写 <code>--cpus-per-task=4</code>，SLURM 给你 4 个 "CPU"，但<em>具体是哪 4 个</em>取决于硬件。如果你想避免性能踩坑（比如 4 个任务被分到同一个物理核的 SMT 兄弟，或跨 NUMA 节点造成内存远程访问），就得：</p>
+  <ol>
+    <li>用 <code>lstopo</code> 看物理拓扑</li>
+    <li>用 <code>scontrol show node</code> 确认 SLURM 是否暴露了所有硬件</li>
+    <li>用 <code>--cpu-bind</code> / <code>--hint=nomultithread</code> 等参数把 task 绑到合理位置</li>
+  </ol>
+
+  <div class="takeaway">
+    💡 <strong>记忆点</strong>：lstopo 给你的是"硬件长什么样"，<code>scontrol show node</code> 给你的是"SLURM 让你看到什么、能用多少"。两者不一定一致 —— 集群管理员可能在 SLURM 配置里只暴露物理核（不开 SMT）、或预留一部分给系统进程。要诊断分配问题，必须同时看两边。
+  </div>
+
+  <details class="qa">
+    <summary>SMT 是什么？"SMT 兄弟"是什么？<code>taskset -c 0,1</code> 写的是 PU 还是物理核？</summary>
+    <p><strong>SMT = Simultaneous Multi-Threading</strong>（同时多线程，Intel 商品名 Hyper-Threading）。一个物理核在 OS 眼里"伪装"成两个逻辑处理器（PU），共享 ALU/FPU/L1/L2，各自只有独立的寄存器和 PC。目的：当一个线程因 cache miss 等内存而停下时，另一个线程趁机用空闲的执行单元，提高利用率。</p>
+    <p><strong>"SMT 兄弟"</strong>就是同一个物理核里那两个 PU。它们是兄弟是因为物理上挤在同一个核里、抢同一套真实执行单元。如果两个 CPU 密集型任务被绑到一对 SMT 兄弟上，4 个线程要抢 2 套执行单元，可能比绑到 4 个独立物理核慢 30~50%。</p>
+    <p><strong><code>taskset -c</code> 接的永远是 PU 编号（OS-visible CPU 号），不是物理核号。</strong>Linux 没有直接指定物理核的方式。但因为编号惯例是"先排完所有物理核的第一个 PU、再排兄弟 PU"，所以 24 物理核机器上：</p>
+    <pre>PU 0..23  → 24 个核各自的第一个 PU（不同核）
+PU 24..47 → 24 个核各自的第二个 PU（兄弟）
+PU 0 与 PU 24 同核；PU 0 与 PU 1 不同核</pre>
+    <p>所以 <code>taskset -c 0,1</code> = PU 0 和 PU 1，恰好落在 Core 0 和 Core 1 两个不同物理核 ✅；<code>taskset -c 0,24</code> = 同核两兄弟 ❌。能不能避开 SMT 兄弟，靠的是记住编号惯例。验证用 <code>lstopo --no-io</code> 或 <code>cat /proc/cpuinfo | grep -E "processor|core id"</code>。</p>
+  </details>
+
+  <details class="qa">
+    <summary><code>scontrol show node general-dy-general-cr-1</code> 各部分是什么意思？lstopo / scontrol 全称是什么？</summary>
+    <p><strong>命令拆解</strong>：</p>
+    <ul>
+      <li><code>scontrol</code> —— SLURM 控制台工具</li>
+      <li><code>show</code> —— 子命令，只读查询</li>
+      <li><code>node</code> —— 要查的对象类型是节点</li>
+      <li><code>general-dy-general-cr-1</code> —— 节点名（管理员命名）</li>
+    </ul>
+    <p><strong>缩写全称对照</strong>：</p>
+    <table>
+      <tr><th>缩写</th><th>全称</th><th>来源</th></tr>
+      <tr><td><code>lstopo</code></td><td><strong>l</strong>i<strong>s</strong>t <strong>topo</strong>logy</td><td>hwloc (Hardware Locality) 项目</td></tr>
+      <tr><td><code>scontrol</code></td><td><strong>S</strong>LURM <strong>control</strong></td><td>SLURM</td></tr>
+      <tr><td><code>srun</code> / <code>sbatch</code> / <code>squeue</code></td><td>SLURM run / batch / queue</td><td>SLURM 命令族都以 <code>s</code> 开头</td></tr>
+      <tr><td><code>SLURM</code></td><td><strong>S</strong>imple <strong>L</strong>inux <strong>U</strong>tility for <strong>R</strong>esource <strong>M</strong>anagement</td><td>—</td></tr>
+      <tr><td><code>PU</code></td><td><strong>P</strong>rocessing <strong>U</strong>nit</td><td>hwloc 术语</td></tr>
+      <tr><td><code>MPI</code></td><td><strong>M</strong>essage <strong>P</strong>assing <strong>I</strong>nterface</td><td>—</td></tr>
+    </table>
+  </details>
+
+  <details class="qa">
+    <summary>SLURM 是不是和 OpenMP / MPI 一样有专门维护团队？</summary>
+    <p>都有专门维护，但<strong>SLURM 是一个具体软件，OpenMP / MPI 是规范</strong>，结构不同。</p>
+    <table>
+      <tr><th></th><th>是什么</th><th>主要维护者</th><th>实现</th></tr>
+      <tr><td><strong>SLURM</strong></td><td>一个具体的软件（一份开源代码）</td><td>SchedMD 公司 + 社区贡献</td><td>全世界集群装的就是这一份</td></tr>
+      <tr><td><strong>OpenMP</strong></td><td>规范文档</td><td>OpenMP ARB（Intel/AMD/NVIDIA/IBM/HPE 等行业联盟）</td><td>各编译器自己实现：GCC、Clang、Intel ICX、NVIDIA HPC SDK</td></tr>
+      <tr><td><strong>MPI</strong></td><td>规范文档</td><td>MPI Forum（学术 + 工业联盟）</td><td>多个并存：Open MPI、MPICH、MVAPICH、Intel MPI、Cray MPI</td></tr>
+    </table>
+    <p><strong>实际影响</strong>：你换集群从 Open MPI 切到 Intel MPI，<code>MPI_Send</code> 那行代码不用改（同一个标准的不同实现）；但你几乎不会从 SLURM 换到"另一个 SLURM 实现"，要换就是直接换成完全不同的调度器（PBS / LSF / Kubernetes）。</p>
+  </details>
+</div>
+
+
+<!-- ==================== SLIDE 6 ==================== -->
+<h2 class="slide-title">Slide 6 — Why Distributed Parallelism?（回顾）</h2>
+
+<img class="slide-img" src="images/slide-06.png" alt="Slide 6: Why distributed parallelism (recap from Lecture 7)">
+
+<div class="explanation">
+  <p>这页和 <strong>Lecture 7 Slide 8</strong> 内容一致 —— 单节点内存有上限（fluid dynamics / molecular dynamics / ML / large-scale data 这四类典型工作负载装不下），所以要把计算分布到多节点上，节点之间通过高速网络发消息通信。</p>
+  <p>详细解释见 Lecture 7 笔记的对应章节，这里不重复展开。</p>
+</div>
+
+
+<!-- ==================== SLIDE 7 ==================== -->
+<h2 class="slide-title">Slide 7 — Recall: Processes and Threads（回顾）</h2>
+
+<img class="slide-img" src="images/slide-07.png" alt="Slide 7: Recall processes and threads (recap from Lecture 7)">
+
+<div class="explanation">
+  <p>这页和 <strong>Lecture 7 Slide 11</strong> 内容一致 —— 进程有独立的虚拟地址空间（创建贵），线程共享所属进程的资源（创建便宜）。MPI 的并行单位是<strong>进程</strong>，不是线程；进程"独立地址空间"<em>不</em>意味着必须在不同物理机上 —— 多个 MPI 进程可以全部跑在一台笔记本上。</p>
+  <p>右边两图分别是 shared memory（OpenMP 模型）和 distributed memory（MPI 模型），详细解释见 Lecture 7 笔记。</p>
+</div>
+
+
+<!-- ==================== SLIDE 8 ==================== -->
+<h2 class="slide-title">Slide 8 — Hello MPI（第一个 MPI 程序的完整生命周期）</h2>
+
+<img class="slide-img" src="images/slide-08.png" alt="Slide 8: Hello MPI program, mpicxx wrapper, mpirun, SLURM srun">
+
+<div class="explanation">
+  <p>这一页把一个 MPI 程序从源码到运行的<strong>完整流程</strong>过一遍：写代码 → 编译 → 用 mpirun 启动 → 用 SLURM srun 启动。每一步都对应一个工具。</p>
+
+  <h3>1. 最小 Hello MPI 源码</h3>
+  <pre><code>#include &lt;iostream&gt;
+#include &lt;mpi.h&gt;
+
+int main(int argc, char *argv[]) {
+    MPI_Init(&amp;argc, &amp;argv);          // ← 进入 MPI 世界，必须第一行调用
+    std::cout &lt;&lt; "Hello MPI\n";
+    MPI_Finalize();                  // ← 退出 MPI 世界，必须在结束前调用
+    return 0;
+}</code></pre>
+  <p><strong>注意</strong>：每个 MPI 程序必须用 <code>MPI_Init</code> 开头、<code>MPI_Finalize</code> 收尾。两者之间才能调用其他 MPI 函数。<code>MPI_Init</code> 接收 <code>argc</code>、<code>argv</code> 的指针 —— 因为 MPI 启动器（<code>mpirun</code>）会往参数里塞自己的参数，<code>MPI_Init</code> 要把它们抽走再交给你。</p>
+
+  <h3>2. <code>mpicxx</code> —— C++ 编译器包装器</h3>
+  <pre><code>mpicxx -o hello_mpi hello_mpi.cpp</code></pre>
+  <p><code>mpicxx</code> 不是新的编译器 —— 它<strong>包装</strong>系统里的 g++（或 clang++），自动加上 MPI 需要的头文件路径和库。用 <code>-show</code> 看包装器实际跑了什么：</p>
+  <pre><code>$ mpicxx -show
+g++ -pthread -L/usr/lib/openmpi -lmpi   # 大致这样</code></pre>
+  <p>所以 <code>mpicxx</code> 等于 <code>g++ + 一堆 -I/-L/-l 标志</code>，省得你手写。Lecture 7 slide 12 讲过：你的源码不依赖具体 MPI 实现，但<strong>编译时要链接到具体实现的 libmpi.so</strong>，<code>mpicxx</code> 就负责选对那个。</p>
+
+  <h3>3. <code>mpirun</code> —— 启动器</h3>
+  <pre><code>mpirun -n 2 ./hello_mpi</code></pre>
+  <p><strong><code>-n 2</code> 表示启动 2 份程序拷贝。</strong>这两份是<em>独立的 OS 进程</em>，不是线程。可以另开终端验证：</p>
+  <pre><code>$ ps -aux | grep hello_mpi
+user  5641 ... ./hello_mpi
+user  5642 ... ./hello_mpi   ← 真的是两个进程，PID 不同</code></pre>
+  <p>每个进程独立运行 main()，所以输出会看到两次 "Hello MPI"。这是 MPI 的核心模型 —— <strong>SPMD（Single Program, Multiple Data）</strong>：同一份代码、多个进程实例、靠 rank 区分行为。</p>
+
+  <h3>4. <code>srun</code> —— SLURM 上的启动器</h3>
+  <pre><code>srun ./hello_mpi</code></pre>
+  <p>在集群上你不直接 <code>mpirun</code>，要用 SLURM 的 <code>srun</code>。它会读你 sbatch 脚本里的资源声明：</p>
+  <pre><code>#SBATCH --nodes=2
+#SBATCH --ntasks-per-node=4
+#SBATCH --cpus-per-task=1
+srun ./hello_mpi   # → 启动 2×4 = 8 个 MPI 进程</code></pre>
+  <p><code>srun</code> 知道你被分到了哪几台节点、各自有多少核，自动把进程分布到正确位置。<code>mpirun</code> 在 SLURM 环境下也能用，但 <code>srun</code> 跟调度器集成更紧，是推荐做法。</p>
+
+  <div class="takeaway">
+    💡 <strong>三层工具的角色</strong>：<code>mpicxx</code> 管编译（产生可执行文件），<code>mpirun</code>/<code>srun</code> 管启动（同时拉起 N 份进程），代码里的 <code>MPI_Init</code>/<code>MPI_Finalize</code> 管程序内的 MPI 上下文初始化/清理。这三层各自独立，理解它们的边界对调试很关键。
+  </div>
+
+  <details class="qa">
+    <summary><code>ps -aux | grep hello_mpi</code> 这条命令在做什么？</summary>
+    <p>整体目的：<strong>列出系统所有进程，过滤出名字含 <code>hello_mpi</code> 的几行</strong>，眼见为实地确认 mpirun 真的拉起了 N 个独立的 OS 进程。</p>
+    <p><strong><code>ps</code></strong> = process status。三个字母选项：</p>
+    <ul>
+      <li><code>a</code> —— all users，显示所有用户的进程</li>
+      <li><code>u</code> —— user-oriented format，输出 USER / PID / %CPU / %MEM / VSZ / RSS / STAT / TIME / COMMAND 这套人类友好列</li>
+      <li><code>x</code> —— 包含没有控制终端的进程（daemon、后台任务）</li>
+    </ul>
+    <p>纯 BSD 写法是 <code>ps aux</code>（无连字符），GNU 写法是 <code>ps -ef</code>，<code>ps -aux</code> 是混写但 Linux 兼容（会出 warning 后当 <code>ps aux</code> 处理，效果一样）。</p>
+    <p><strong>管道 <code>|</code></strong>：把 <code>ps</code> 的标准输出喂给后面 <code>grep</code> 的标准输入。</p>
+    <p><strong><code>grep hello_mpi</code></strong> = globally search regex and print，从输入里挑出含 <code>hello_mpi</code> 字符串的行，过滤掉其他几百个无关进程。</p>
+    <p><strong>常见小坑</strong>：<code>grep hello_mpi</code> 自己也是一个进程，命令行里有这串字符，<em>会把自己匹配出来</em>。规避：写成 <code>grep [h]ello_mpi</code>（中括号让正则不匹配字面 <code>[h]ello_mpi</code> 这串），或直接用 <code>pgrep hello_mpi</code>（pgrep 不会匹配到自己）。</p>
+  </details>
+</div>
+
+
+<!-- ==================== SLIDE 9 ==================== -->
+<h2 class="slide-title">Slide 9 — Anatomy of an MPI Message（一条 MPI 消息长什么样）</h2>
+
+<img class="slide-img" src="images/slide-09.png" alt="Slide 9: Anatomy of an MPI message (envelope + body)">
+
+<div class="explanation">
+  <p>这一页拆开一条 MPI 消息的内部结构。每条消息分两块：<strong>Envelope（信封，元数据，定长）</strong> 和 <strong>Body（消息体，实际数据，变长）</strong>。这种"信封 + 内容"的设计是 MPI 整套 API 的根基。</p>
+
+  <h3>Envelope（信封）—— 4 个字段</h3>
+  <ul>
+    <li><strong>source</strong> —— 发送方 rank</li>
+    <li><strong>destination</strong> —— 接收方 rank</li>
+    <li><strong>communicator</strong> —— 这条消息属于哪个 communicator（实际放进去的是 context_id，见 Lecture 7 slide 17）</li>
+    <li><strong>tag</strong> —— 用户自定义的整数标签，让接收方能挑选感兴趣的消息</li>
+  </ul>
+
+  <h3>Body（消息体）—— 3 个字段</h3>
+  <ul>
+    <li><strong>count</strong> —— 元素个数（注意：<em>不是字节数</em>）</li>
+    <li><strong>datatype</strong> —— 每个元素的类型，例如 <code>MPI_INT</code> / <code>MPI_DOUBLE</code></li>
+    <li><strong>buffer</strong> —— 第一个元素的内存地址</li>
+  </ul>
+
+  <h3>为什么是 "count + datatype" 而不是 "bytes"？</h3>
+  <p>因为 MPI 要支持<strong>异构集群</strong> —— 不同节点可能字节序（big-endian vs little-endian）、字长不同。MPI 知道你发的是 100 个 <code>MPI_INT</code>，就能在两端做必要的字节序转换；如果只告诉它 "400 字节"，它就不知道怎么解释这堆字节。</p>
+  <p>这也是为什么 MPI 自定义类型（derived datatypes，例如发送一个 struct）比手撸序列化优雅：你只需声明结构布局，MPI 库自动处理跨平台细节。</p>
+
+  <h3>典型 Send / Recv 配对</h3>
+  <pre><code>if (Process_A) {
+    // destination = Process B
+    MPI_Send(send_buffer, count, datatype, destination, tag, MPI_COMM_WORLD);
+} else if (Process_B) {
+    // source = Process A
+    MPI_Recv(recv_buffer, count, datatype, source, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+}</code></pre>
+  <p>对照 envelope：<code>destination</code>（在 Send 里）/ <code>source</code>（在 Recv 里）/ <code>tag</code> / <code>MPI_COMM_WORLD</code> 这 4 个就是 envelope 字段；<code>buffer</code> / <code>count</code> / <code>datatype</code> 这 3 个是 body 字段。完全对应。</p>
+
+  <div class="takeaway">
+    💡 <strong>设计要点</strong>：envelope 定长，让接收方<em>不读 body 就能匹配</em>消息（看 source/tag/comm 是否合心意）—— 这样 MPI 实现可以做 "header 先到、data 后传" 的优化。Body 是变长 + 类型化，让 MPI 自己处理跨架构细节。
+  </div>
+</div>
+
+
+<!-- ==================== SLIDE 10 ==================== -->
+<h2 class="slide-title">Slide 10 — Blocking Point-to-Point Communication（阻塞式点对点通信）</h2>
+
+<img class="slide-img" src="images/slide-10.png" alt="Slide 10: Blocking MPI_Send and MPI_Recv signatures">
+
+<div class="explanation">
+  <p>这页是 example-2，把 <code>MPI_Send</code> 和 <code>MPI_Recv</code> 这两个最基础的 API 摊开看签名 + 各种细节参数。"Blocking"（阻塞式）是关键词，意思是函数返回前调用方会被卡住等待。</p>
+
+  <h3>函数签名</h3>
+  <pre><code>int MPI_Send(const void *buf, int count, MPI_Datatype datatype,
+             int dest, int tag, MPI_Comm comm);
+                  // ↑ body ↑                  ↑ envelope ↑
+
+int MPI_Recv(void *buf, int count, MPI_Datatype datatype,
+             int source, int tag, MPI_Comm comm,
+             MPI_Status *status);     // ← 比 Send 多一个 status</code></pre>
+
+  <h3>关键性质：non-local（非本地完成）</h3>
+  <p><strong>An MPI_Send requires a matching MPI_Recv to complete and vice versa.</strong> 一对配对的 Send/Recv 必须双方都到齐才算完成 —— 这是 standard <code>MPI_Send</code> 的 non-local 性质（和 "blocking" 是两个独立概念，详见下方 Q&A）。</p>
+  <p>"matching" 的判定条件：发送方的 <code>(dest, tag, comm)</code> 必须和接收方的 <code>(source, tag, comm)</code> 在同一对 envelope 上对齐。任何一项不一致，消息就投递不到。</p>
+
+  <h3>返回值</h3>
+  <p>返回的是 <strong>error code</strong>。成功时返回 <code>MPI_SUCCESS</code>；失败时返回的常量在 <code>man MPI_Send</code> 里有完整列表。生产代码应该检查返回值；快速例子里通常忽略。</p>
+
+  <h3>通配符：MPI_ANY_TAG 和 MPI_ANY_SOURCE</h3>
+  <p>有时你不知道下一条消息从谁发来、用什么 tag。这时把 <code>source</code> 写成 <code>MPI_ANY_SOURCE</code>、<code>tag</code> 写成 <code>MPI_ANY_TAG</code>，<code>MPI_Recv</code> 就会接受任何匹配的消息。</p>
+  <pre><code>MPI_Recv(buf, count, MPI_INT,
+         MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD,
+         &amp;status);</code></pre>
+
+  <h3>用 status 查"实际是谁发的、用了什么 tag"</h3>
+  <p>如果用了通配符，你常常需要事后知道实际的 source / tag。这时 <code>MPI_Status</code> 结构体派上用场：</p>
+  <pre><code>MPI_Status status;
+MPI_Recv(buf, ..., MPI_ANY_SOURCE, MPI_ANY_TAG, ..., &amp;status);
+int actual_source = status.MPI_SOURCE;
+int actual_tag    = status.MPI_TAG;
+int actual_count;
+MPI_Get_count(&amp;status, MPI_INT, &amp;actual_count);   // 实际收到多少个 INT</code></pre>
+  <p>如果你不在乎这些（确定的 source/tag 配对），传 <code>MPI_STATUS_IGNORE</code> 让 MPI 跳过填充 status，省一点开销：</p>
+  <pre><code>MPI_Recv(buf, ..., source, tag, comm, MPI_STATUS_IGNORE);</code></pre>
+
+  <div class="takeaway">
+    💡 <strong>阻塞的"代价"和"安全"</strong>：阻塞 = 返回时 buffer 可以安全复用（详见下面 Q&A），逻辑简单。代价是：如果 Send 早于 Recv 调用、或者两个进程同时只 Send 不 Recv，就会死锁。Lecture 后面会引入<em>非阻塞</em>版本（<code>MPI_Isend</code>/<code>MPI_Irecv</code>）来解决死锁和重叠通信/计算的问题。
+  </div>
+
+  <details class="qa">
+    <summary>Blocking vs Non-local 是同一回事吗？"双方到齐" 到底是什么时刻？默认 <code>MPI_Send</code> 算哪种？</summary>
+
+    <p><strong>这是两个独立的概念，正交的两个维度，不能等同。</strong></p>
+
+    <p><strong>Blocking 的定义</strong>：调用返回时，buffer 可以安全复用 / 读取。仅此而已，<em>不涉及对方进程</em>。<code>MPI_Send</code> 返回 → 我可以改写 <code>send_buf</code>；<code>MPI_Recv</code> 返回 → <code>recv_buf</code> 里是已收到的完整数据。</p>
+
+    <p><strong>Non-local 的定义</strong>：操作的完成时机依赖于另一个进程的状态。即"我什么时候返回，要看对方做没做某件事"。</p>
+
+    <p>两者组合出 4 种类型：</p>
+    <table>
+      <tr><th></th><th>Local（只看自己）</th><th>Non-local（要看对方）</th></tr>
+      <tr><td><strong>Blocking</strong></td><td><code>MPI_Bsend</code>（拷到用户提供的 buffer 立即返回）</td><td><code>MPI_Ssend</code>（必须等接收方 post 了 Recv 才返回）</td></tr>
+      <tr><td><strong>Non-blocking</strong></td><td><code>MPI_Isend</code>（小消息时立即返回）</td><td><code>MPI_Issend</code>（synchronous + immediate）</td></tr>
+    </table>
+
+    <p>记忆：<strong>Blocking 关心"自己 buffer 何时安全"；Non-local 关心"是否要等对方"</strong>。可以是 blocking + local（<code>MPI_Bsend</code>），也可以是 non-blocking + non-local（<code>MPI_Issend</code>）。</p>
+
+    <p><strong>"双方都到齐" 具体到哪一刻</strong>：这特指 synchronous send。MPI 标准定义 <code>MPI_Ssend</code> 完成的条件是"接收方已 post 了配对的 <code>MPI_Recv</code>，且接收操作已开始读"，<em>不要求</em> 数据已被全部读完。但因为 synchronous 不走 system buffer，等 <code>MPI_Ssend</code> 返回时实际上数据基本已经流到接收方那边了。</p>
+
+    <p><strong>默认 <code>MPI_Send</code>（无字母前缀）的归类</strong>：MPI 标准把它归为 <strong>blocking + non-local</strong>。但<em>具体怎么实现</em>由 MPI 库自己定，标准允许两种：</p>
+    <ul>
+      <li><strong>小消息</strong>（&lt; eager threshold，通常 ~16~64KB）：走 eager 协议，拷到内部 system buffer 立即返回。表现像 local —— 接收方还没 post Recv 也能立刻返回。</li>
+      <li><strong>大消息</strong>（≥ threshold）：走 rendezvous 协议，先发"我有大数据"通告，等接收方 ack，才传数据。真正 non-local。</li>
+    </ul>
+
+    <p><strong>实践教训</strong>：写代码必须按 non-local 防御性设计。否则会遇到经典 bug —— 测试时（小数据）跑得好好的，上 production（大数据）必死锁：</p>
+    <pre><code>// rank 0 和 rank 1 互相 Send/Recv
+if (rank == 0) {
+    MPI_Send(buf, N, MPI_INT, 1, 0, comm);  // N 大时卡在这里等 rank 1 收
+    MPI_Recv(buf, N, MPI_INT, 1, 0, comm, ...);
+} else if (rank == 1) {
+    MPI_Send(buf, N, MPI_INT, 0, 0, comm);  // N 大时卡在这里等 rank 0 收
+    MPI_Recv(buf, N, MPI_INT, 0, 0, comm, ...);
+}
+// N 小：两边 eager 都立刻返回 → 跑通
+// N 大：两边都在等对方 Recv → 死锁</code></pre>
+    <p>规避：用 <code>MPI_Sendrecv</code>（一个调用同时收发）、按 rank 奇偶错开收发顺序、或换成 <code>MPI_Isend</code>/<code>MPI_Irecv</code>。</p>
+
+    <p><strong>五种 send 速查</strong>：</p>
+    <table>
+      <tr><th>函数</th><th>字母</th><th>Blocking</th><th>Local</th><th>完成条件</th></tr>
+      <tr><td><code>MPI_Send</code></td><td>standard</td><td>✅</td><td>实现定（按 non-local 设计）</td><td>实现自己定</td></tr>
+      <tr><td><code>MPI_Bsend</code></td><td><strong>B</strong>uffered</td><td>✅</td><td>✅</td><td>拷到用户提供的 buffer</td></tr>
+      <tr><td><code>MPI_Ssend</code></td><td><strong>S</strong>ynchronous</td><td>✅</td><td>❌</td><td>接收方 post 了 Recv 且传输开始</td></tr>
+      <tr><td><code>MPI_Rsend</code></td><td><strong>R</strong>eady</td><td>✅</td><td>✅</td><td>程序员承诺接收方已 post Recv</td></tr>
+      <tr><td><code>MPI_Isend</code></td><td><strong>I</strong>mmediate</td><td>❌</td><td>通常 ✅</td><td>立即返回，complete 看 <code>MPI_Wait</code></td></tr>
+    </table>
+  </details>
+</div>
+
+
+<!-- ==================== SLIDE 11 ==================== -->
+<h2 class="slide-title">Slide 11 — MPI Barrier（屏障：所有进程一起停一下）</h2>
+
+<img class="slide-img" src="images/slide-11.png" alt="Slide 11: MPI_Barrier example with deadlock warning">
+
+<div class="explanation">
+  <p>这页是 example-3。<code>MPI_Barrier</code> 是 MPI 的<strong>同步原语</strong>（synchronization primitive），最简单的 collective 操作 —— 不传数据，只做"所有进程到齐再放行"。</p>
+
+  <h3>语义</h3>
+  <pre><code>MPI_Barrier(MPI_COMM_WORLD);</code></pre>
+  <p>三件事一起发生：</p>
+  <ul>
+    <li><strong>Synchronizes all processes in a communicator</strong> —— 同步通信器内所有进程</li>
+    <li><strong>Completes once all processes have executed the routine</strong> —— 所有进程都调用了之后，函数才返回</li>
+    <li><strong>Deadlock if not all ranks participate</strong> —— 如果某个 rank 没调用，其他 rank 永远等</li>
+  </ul>
+
+  <h3>常见的死锁陷阱</h3>
+  <p>slide 上的反例：</p>
+  <pre><code>if (0 == rank) {
+    // all ranks must call this procedure
+    MPI_Barrier(MPI_COMM_WORLD);
+}
+// Deadlock: other ranks do not call MPI_Barrier</code></pre>
+  <p>只让 rank 0 调 barrier、别的 rank 跳过 —— rank 0 会永远等其他 rank 到达，永远等不到。这是<strong>所有 collective 操作的通用规则</strong>：要么所有 rank 都调用、要么都不调用。</p>
+
+  <h3>什么时候真的需要 Barrier</h3>
+  <p>实际上 MPI 程序需要 explicit barrier 的场景<em>比想象少</em>。原因：所有 collective（<code>MPI_Bcast</code>、<code>MPI_Reduce</code>、<code>MPI_Gather</code> 等）本身就有同步语义；点对点 Send/Recv 也有"配对完成"语义。常见真正用到 Barrier 的场景：</p>
+  <ul>
+    <li><strong>性能测量</strong>：在计时前 / 后插 barrier，确保所有 rank 同时开始 / 结束。</li>
+    <li><strong>I/O 同步</strong>：所有 rank 写完文件后，barrier 一次再继续，防止后续步骤读到半成品。</li>
+    <li><strong>调试输出</strong>：让所有 rank 的 printf 按预期顺序出现。</li>
+  </ul>
+  <p>如果你的代码里到处是 <code>MPI_Barrier</code>，通常是<em>过度同步</em>，会损失并行度。</p>
+
+  <div class="takeaway">
+    💡 <strong>规则</strong>：所有 collective（包括 Barrier、Bcast、Reduce、Gather、Scatter…）都要求<strong>communicator 内每个 rank 都调用</strong>。漏调一个 = 死锁。这是写 MPI 代码最常见的 bug 之一。
+  </div>
+</div>
+
+
+<!-- ==================== SLIDE 12 ==================== -->
+<h2 class="slide-title">Slide 12 — Blocking Collective Communication（为什么 collective 比手写 Send/Recv 强）</h2>
+
+<img class="slide-img" src="images/slide-12.png" alt="Slide 12: Naive vs tree-based broadcast comparison">
+
+<div class="explanation">
+  <p>这一页回答一个根本问题：<strong>有了 <code>MPI_Send</code>/<code>MPI_Recv</code>，为什么 MPI 还要提供 <code>MPI_Bcast</code>、<code>MPI_Reduce</code> 这些"集合操作"？</strong>答案：性能。手写广播是 O(N)，库内置的树形广播是 O(log N)。</p>
+
+  <h3>例子：MPI_Bcast（广播）的两种实现</h3>
+  <p>场景：root rank 要把一份数据发给其他 7 个 rank（共 8 个 rank）。</p>
+
+  <p><strong>Naive 实现（左边橙色框）：</strong></p>
+  <ul>
+    <li>root 自己一个个调 <code>MPI_Send</code>，发给 P1、P2、…、P7。</li>
+    <li>共 7 次 <code>MPI_Send</code>，root 是<strong>瓶颈</strong>。</li>
+    <li>规模一大，root 累死，其他 rank 都在等它。</li>
+  </ul>
+
+  <p><strong>Tree-based 实现（右边绿色框）：</strong></p>
+  <ul>
+    <li>第 1 步：root 发给 P4 —— 1 次 send。</li>
+    <li>第 2 步：root 发给 P2，<em>同时</em> P4 发给 P6 —— 2 次 send 并行。</li>
+    <li>第 3 步：root → P1，P2 → P3，P4 → P5，P6 → P7 —— 4 次 send 并行。</li>
+    <li>总共 <strong>log₂(8) = 3</strong> 步，每步 root 只做 1 次 send。</li>
+  </ul>
+
+  <h3>为什么差距这么大</h3>
+  <p>关键不在"总 send 次数"，在<strong>关键路径长度</strong>。Naive 的 root 是串行 7 次，必须排队；Tree 让"已经收到的 rank 帮忙转发"，每一轮参与转发的 rank 翻倍，路径只有 log N。</p>
+
+  <p>slide 底部紫色框给出对比：</p>
+  <ul>
+    <li>8 ranks：3 vs 7（约 2.3 倍提升 —— 不算特别震撼）</li>
+    <li>1024 ranks：10 vs 1023（<strong>100 倍提升</strong> —— 量变到质变）</li>
+    <li>一般化：N ranks，naive O(N)，tree O(log₂ N)</li>
+  </ul>
+
+  <h3>所以 collective 的真正卖点</h3>
+  <p>当你调 <code>MPI_Bcast</code> 时，你<strong>不需要知道</strong> MPI 库里用的是 tree 还是 ring 还是别的算法 —— 库厂商已经针对当前网络拓扑挑了最优实现。你写一行 collective 调用，自动得到 log-step 的性能。如果你硬要手写 Send/Recv 模拟广播，几乎必然写出 O(N) 的 naive 版本。</p>
+
+  <div class="takeaway">
+    💡 <strong>规则</strong>：遇到"一对多 / 多对一 / 多对多"的通信模式，先去找有没有现成的 collective（<code>Bcast</code>、<code>Scatter</code>、<code>Gather</code>、<code>Reduce</code>、<code>Allreduce</code>、<code>Alltoall</code> 等）。手写 Send/Recv 几乎一定更慢。
+  </div>
+</div>
+
+
+<!-- ==================== SLIDE 13 ==================== -->
+<h2 class="slide-title">Slide 13 — MPI Broadcast（<code>MPI_Bcast</code> 的语义和 API）</h2>
+
+<img class="slide-img" src="images/slide-13.png" alt="Slide 13: MPI_Bcast signature, naive implementation, tree visualization">
+
+<div class="explanation">
+  <p>这页是 example-4，把上一页的 broadcast 概念落到具体 API。</p>
+
+  <h3>函数签名</h3>
+  <pre><code>int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype,
+              int root, MPI_Comm comm);</code></pre>
+  <p><strong>注意一个反直觉的点</strong>：参数列表里只有<em>一个</em> buffer，没有 sendbuf / recvbuf 之分。原因：</p>
+  <ul>
+    <li>在 root 上，<code>buffer</code> 是<strong>发送源</strong>（里面已经有数据）</li>
+    <li>在非 root 上，<code>buffer</code> 是<strong>接收目标</strong>（调用前内容无意义，调用后被填满）</li>
+  </ul>
+  <p>所以每个 rank 都要<em>提前分配同样大小</em>的 buffer，然后大家一起调 <code>MPI_Bcast</code>，调完后所有 rank 的 buffer 内容相同。</p>
+
+  <h3>关键点：root 不一定是 rank 0</h3>
+  <p>"<em>not necessarily rank 0</em>" —— root 是参数传进去的，可以是任意 rank。<strong>所有参与的 rank 都必须传同一个 root 值</strong>，否则未定义行为。</p>
+  <pre><code>MPI_Bcast(buf, 100, MPI_INT, /*root=*/3, MPI_COMM_WORLD);
+// 所有 rank 都这样写。rank 3 的 buf 是发送源，其他 rank 的 buf 被覆盖。</code></pre>
+
+  <h3>"naive 版本" 的样子（slide 左下示意）</h3>
+  <pre><code>void bcast(void *buffer, int count, MPI_Datatype datatype,
+           int root, MPI_Comm comm) {
+    int rank, size;
+    MPI_Comm_rank(comm, &amp;rank);
+    MPI_Comm_size(comm, &amp;size);
+    if (rank == root) {
+        for (int i = 0; i &lt; size; ++i) {
+            if (i == rank) continue;
+            MPI_Send(buffer, count, datatype, i, 123, comm);
+        }
+    } else {
+        MPI_Recv(buffer, count, datatype, root, 123, comm, MPI_STATUS_IGNORE);
+    }
+}</code></pre>
+  <p>能跑，但是上一页说过的 O(N) 瓶颈。slide 紧接着告诉你："don't do this"。MPI 库内部用 tree 算法，不写也能享受 log-step 性能。</p>
+
+  <h3>Tree 可视化（slide 右下）</h3>
+  <p>箭头从 root 出发，分两层扩散到 5 个 rank。每个箭头代表一次内部 Send。这是<strong>库帮你画的图</strong> —— 你的代码里看不到这些 Send。</p>
+
+  <div class="takeaway">
+    💡 <strong>使用模板</strong>：先在 root 准备好数据，所有 rank 同时调 <code>MPI_Bcast(buf, count, type, root, comm)</code>，调完后所有 rank 的 buf 内容一致。一次 collective 调用 = 一次同步点。
+  </div>
+</div>
+
+
+<!-- ==================== SLIDE 14 ==================== -->
+<h2 class="slide-title">Slide 14 — MPI Gather（多对一收集）</h2>
+
+<img class="slide-img" src="images/slide-14.png" alt="Slide 14: MPI_Gather signature and visualization">
+
+<div class="explanation">
+  <p><code>MPI_Gather</code> 是<strong>反向广播</strong>：每个 rank 把自己的一小块数据交给 root，root 按 rank 顺序拼接成一个大 buffer。</p>
+
+  <h3>函数签名</h3>
+  <pre><code>int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+               void *recvbuf, int recvcount, MPI_Datatype recvtype,
+               int root, MPI_Comm comm);</code></pre>
+
+  <h3>各参数的含义</h3>
+  <ul>
+    <li><strong>sendbuf / sendcount / sendtype</strong> —— <em>每个 rank（包括 root）</em>都要填，描述自己要交出去的小块数据。</li>
+    <li><strong>recvbuf / recvcount / recvtype</strong> —— 只有 root 用得上，非 root 可以传 <code>NULL</code> / 任意值都无所谓（"only significant for the root process"）。</li>
+    <li><strong><code>recvcount</code> 是"从每个 rank 收多少个"，不是"总共收多少个"。</strong>这是最容易踩的坑 —— 例如 8 个 rank 每个发 10 个 INT，<code>recvcount = 10</code>（不是 80），最终 recvbuf 总共 8×10=80 个 INT。</li>
+    <li><strong>recvbuf 总大小</strong> = N × recvcount（N 是 communicator size），按 rank 顺序拼接。</li>
+  </ul>
+
+  <h3>典型代码</h3>
+  <pre><code>int local = rank * 100;       // 每个 rank 自己的一小块（这里只有 1 个 int）
+int *gathered = NULL;
+if (rank == 0) {
+    gathered = malloc(size * sizeof(int));   // 只有 root 需要分配
+}
+MPI_Gather(&amp;local, 1, MPI_INT,
+           gathered, 1, MPI_INT,    // ← recvcount=1 是"每个 rank 收 1 个"
+           0, MPI_COMM_WORLD);
+// 在 root 上：gathered = [0, 100, 200, 300, ...] 按 rank 顺序</code></pre>
+
+  <h3>右图（slide）的可视化</h3>
+  <p>5 个 rank 各持一块带颜色的格子 → 流向 root 的 recvbuf，rank 0 的块在最上面、rank 4 在最下面，<strong>顺序严格按 rank</strong>。</p>
+
+  <h3>变长版：MPI_Gatherv</h3>
+  <p>如果每个 rank 发的<em>数量不同</em>（例如 rank 0 发 5 个、rank 1 发 8 个），<code>MPI_Gather</code> 不够用 —— 它要求每个 rank 都发等量。这时用 <code>MPI_Gatherv</code>：传一个 <code>recvcounts[]</code> 数组（每个 rank 发多少）和一个 <code>displs[]</code> 数组（每段在 recvbuf 里的偏移）。</p>
+
+  <div class="takeaway">
+    💡 <strong>记忆点</strong>：sendcount 和 recvcount 都是<em>按 rank 计</em>的"per-process 数量"。recvbuf 只在 root 端有意义。要变长就上 Gatherv。
+  </div>
+</div>
+
+
+<!-- ==================== SLIDE 15 ==================== -->
+<h2 class="slide-title">Slide 15 — MPI Scatter（一对多分发，Gather 的逆操作）</h2>
+
+<img class="slide-img" src="images/slide-15.png" alt="Slide 15: MPI_Scatter signature and visualization">
+
+<div class="explanation">
+  <p><code>MPI_Scatter</code> 是 <code>MPI_Gather</code> 的<strong>反向操作</strong>：root 持有一个大 buffer，按 rank 顺序切成等大块，分发给所有 rank（包括它自己）。</p>
+
+  <h3>函数签名</h3>
+  <pre><code>int MPI_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                int root, MPI_Comm comm);</code></pre>
+
+  <h3>对照 Gather 看差别</h3>
+  <ul>
+    <li><strong>sendbuf / sendcount / sendtype</strong> —— 现在反过来了，只有 root 用，描述要分出去的大数组。<code>sendcount</code> = "每个 rank 收多少"（不是总长度）。</li>
+    <li><strong>recvbuf / recvcount / recvtype</strong> —— 每个 rank 都要填，存放自己分到的那块。</li>
+  </ul>
+
+  <h3>分发规则</h3>
+  <p><strong>rank <code>i</code> 收到 sendbuf 中从 <code>i × sendcount</code> 开始、长度 <code>sendcount</code> 的那段。</strong></p>
+  <pre>sendbuf (在 root 上):
+  [█ █ █ █ | █ █ █ █ | █ █ █ █ | █ █ █ █]
+   ↑ rank 0  ↑ rank 1  ↑ rank 2  ↑ rank 3
+   每段 sendcount=4 个元素</pre>
+
+  <h3>典型代码</h3>
+  <pre><code>int *big = NULL;
+if (rank == 0) {
+    big = malloc(size * 4 * sizeof(int));
+    for (int i = 0; i &lt; size * 4; i++) big[i] = i;
+}
+int local[4];
+MPI_Scatter(big, 4, MPI_INT,           // ← sendcount=4，每个 rank 收 4 个
+            local, 4, MPI_INT,
+            0, MPI_COMM_WORLD);
+// rank 0 的 local = [0,1,2,3]
+// rank 1 的 local = [4,5,6,7]
+// rank 2 的 local = [8,9,10,11]
+// ...</code></pre>
+
+  <h3>变长版：MPI_Scatterv</h3>
+  <p>和 Gatherv 对应：每个 rank 收的数量不同时，用 <code>MPI_Scatterv</code>，传 <code>sendcounts[]</code> + <code>displs[]</code>。</p>
+
+  <div class="takeaway">
+    💡 <strong>Gather/Scatter 对偶</strong>：参数列表几乎一模一样，只是"数据流向"反转。<code>MPI_Gather</code> 把碎片拼成整体（每 rank → root），<code>MPI_Scatter</code> 把整体切成碎片（root → 每 rank）。两者都是 collective，要求 communicator 内所有 rank 调用。
+  </div>
+
+  <details class="qa">
+    <summary>Scatter 中文是什么意思？典型代码里的 <code>size</code> 是哪来的、什么含义？</summary>
+    <p><strong>Scatter</strong> 中文 = 散发 / 分散 / 撒。字面意思就像撒种子，从一处分散到多处。<code>MPI_Scatter</code> 的语义就是这样：root 把一个数组切成 N 段，每个 rank 拿一段。反义词是 <code>MPI_Gather</code>（聚拢）。和 <code>MPI_Bcast</code> 的区别在于"切不切片"—— Bcast 是每个 rank 拿完整副本，Scatter 是每人一段。</p>
+    <p>典型代码里的 <code>size</code> 是 <strong>communicator 内 rank 总数</strong>（= MPI 进程总数），按惯例通过 <code>MPI_Comm_size</code> 获取：</p>
+    <pre><code>int rank, size;
+MPI_Comm_rank(MPI_COMM_WORLD, &amp;rank);  // 我是几号
+MPI_Comm_size(MPI_COMM_WORLD, &amp;size);  // 总共几个 rank</code></pre>
+    <p>这两行几乎是每个 MPI 程序开头的固定开场，所以教学幻灯片经常省略不写、直接用 <code>rank</code> 和 <code>size</code>。在 <code>MPI_COMM_WORLD</code> 里，<code>size</code> = <code>mpirun -n</code> / SBATCH 总 task 数。如果用 <code>MPI_Comm_split</code> 划分子 communicator，那子 comm 的 <code>size</code> 就是子 comm 的 rank 数，不是全局。</p>
+  </details>
+</div>
+
+
+<!-- ==================== SLIDE 16 ==================== -->
+<h2 class="slide-title">Slide 16 — MPI Allgather（每个 rank 都拿到完整结果的 Gather）</h2>
+
+<img class="slide-img" src="images/slide-16.png" alt="Slide 16: MPI_Allgather signature and visualization">
+
+<div class="explanation">
+  <p><code>MPI_Allgather</code> = <code>MPI_Gather</code> + <code>MPI_Bcast</code> 的语义合并版。每个 rank 把自己的小块发出去，<strong>所有 rank（不只是 root）</strong>都拿到拼接后的完整数组。</p>
+
+  <h3>函数签名（注意：没有 root 参数）</h3>
+  <pre><code>int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                  MPI_Comm comm);</code></pre>
+  <p>对照 <code>MPI_Gather</code> —— 少了 <code>int root</code> 参数。因为不再有"特殊的接收方"，所有 rank 地位平等。</p>
+
+  <h3>语义</h3>
+  <ul>
+    <li><strong>recvcount</strong> 仍然是<em>从每个 rank 收多少</em>（per-process count），不是总长度。</li>
+    <li><strong>recvbuf 总大小</strong> = N × recvcount 字节（N = comm size），按 rank 顺序拼接。</li>
+    <li>每个 rank 都要分配 recvbuf —— 不像 Gather 只有 root 需要。</li>
+    <li>调用结束后，所有 rank 的 recvbuf 内容<strong>完全相同</strong>。</li>
+  </ul>
+
+  <h3>典型代码</h3>
+  <pre><code>int local = rank * 100;            // 每个 rank 自己的小块
+int *all = malloc(size * sizeof(int));   // 所有 rank 都要分配
+MPI_Allgather(&amp;local, 1, MPI_INT,
+              all, 1, MPI_INT,
+              MPI_COMM_WORLD);
+// 调用后：每个 rank 的 all[] = [0, 100, 200, ..., (size-1)*100]</code></pre>
+
+  <h3>什么时候用</h3>
+  <p>当<strong>所有 rank 都要看到全局信息</strong>时。例如：每个 rank 算出自己一块数据的统计值（最大值、长度等），后续计算每个 rank 都要参考别的 rank 的统计。手写 = Gather 到 root + Bcast 回来，两步；Allgather 一行搞定，库内部还能用更聪明的算法（不用所有数据先汇集到 root，可以直接环形 / butterfly 交换）。</p>
+
+  <div class="takeaway">
+    💡 <strong>Allgather = Gather + Bcast 一体化</strong>。没有 root 概念。当所有 rank 都需要完整结果时优先用，比手写 Gather+Bcast 性能更好。
+  </div>
+</div>
+
+
+<!-- ==================== SLIDE 17 ==================== -->
+<h2 class="slide-title">Slide 17 — MPI Alltoall（"分布式矩阵转置"）</h2>
+
+<img class="slide-img" src="images/slide-17.png" alt="Slide 17: MPI_Alltoall signature and visualization">
+
+<div class="explanation">
+  <p><code>MPI_Alltoall</code> 是 collective 里最复杂的常用模式。每个 rank 都把自己的 sendbuf 切成 N 块（N = comm size），<strong>把第 k 块发给 rank k</strong>。同时，每个 rank 收到来自所有其他 rank 的一块数据，按 rank 顺序拼成 recvbuf。结果相当于<strong>分布式矩阵转置</strong>。</p>
+
+  <h3>函数签名</h3>
+  <pre><code>int MPI_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                 void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                 MPI_Comm comm);</code></pre>
+
+  <h3>语义（slide 上的 4 条要点）</h3>
+  <ul>
+    <li><strong>每个 rank 执行 2N 次点对点通信</strong>（包括发给自己）—— N 次发 + N 次收。</li>
+    <li><strong>sendbuf 被切成 N 块</strong>，每块 sendcount 个 sendtype 元素。recvbuf 同理。</li>
+    <li><strong>rank j 的 sendbuf 第 k 块</strong> 会落到 <strong>rank k 的 recvbuf 第 j 块</strong>。</li>
+    <li>每个 rank 发出去的总元素数 = 收到的总元素数（对称）。</li>
+  </ul>
+
+  <h3>"分布式转置"的直觉</h3>
+  <p>把每个 rank 的 sendbuf 想成矩阵的一<em>行</em>，整个集群的数据组成一个 N×N 矩阵：</p>
+  <pre>调用前 (每行是一个 rank 持有的 sendbuf):
+  rank 0: [A0 A1 A2 A3]
+  rank 1: [B0 B1 B2 B3]
+  rank 2: [C0 C1 C2 C3]
+  rank 3: [D0 D1 D2 D3]
+
+调用后 (每行是一个 rank 持有的 recvbuf):
+  rank 0: [A0 B0 C0 D0]   ← 原矩阵的第 0 列
+  rank 1: [A1 B1 C1 D1]   ← 原矩阵的第 1 列
+  rank 2: [A2 B2 C2 D2]
+  rank 3: [A3 B3 C3 D3]</pre>
+  <p>就是把"每行存一行"重排成"每行存一列"。</p>
+
+  <h3>典型用途：并行 FFT</h3>
+  <p>slide 提到 "<em>The MPI_Alltoall is heavily used in the parallel implementation of the Fast-Fourier-Transform (FFTW library).</em>"</p>
+  <p>FFT 需要先对每行做 1D FFT、再对每列做 1D FFT。在分布式存储下，第二步前需要把"按行分布"重排成"按列分布"——这正是 Alltoall。FFTW 的并行版几乎瓶颈就在 Alltoall 上，所以这个原语在 HPC 里非常重要。</p>
+
+  <h3>注意：MPI_IN_PLACE</h3>
+  <p>slide 提到 "<em>This operation supports the MPI_IN_PLACE handle for same-memory operations.</em>" —— 如果你不在乎 sendbuf 被覆盖，可以传 <code>MPI_IN_PLACE</code> 作为 sendbuf，省一份 buffer。</p>
+
+  <div class="takeaway">
+    💡 <strong>开销很重</strong>：Alltoall 的总通信量是 O(N² × sendcount)，是 collective 里最贵的。能避免就避免；非用不可时，库会做最优算法（butterfly、bruck、scatter-gather 等）。
+  </div>
+</div>
+
+
+<!-- ==================== SLIDE 18 ==================== -->
+<h2 class="slide-title">Slide 18 — MPI Allreduce（每个 rank 都得到归约结果）</h2>
+
+<img class="slide-img" src="images/slide-18.png" alt="Slide 18: MPI_Allreduce naive vs optimized implementations">
+
+<div class="explanation">
+  <p><code>MPI_Allreduce</code> 是 <code>MPI_Reduce</code> + <code>MPI_Bcast</code> 的合并：每个 rank 提供一个值（或一段数组），用某个二元操作（求和、求最大值等）归约出一个全局结果，然后把结果发给所有 rank。</p>
+
+  <h3>先补一下背景：MPI_Reduce</h3>
+  <p>课件这里直接说 "Same as MPI_Reduce but result is broadcast to all"，假设你已经知道 Reduce。简单复习一下 <code>MPI_Reduce</code>：</p>
+  <pre><code>int MPI_Reduce(const void *sendbuf, void *recvbuf, int count,
+               MPI_Datatype datatype, MPI_Op op,
+               int root, MPI_Comm comm);</code></pre>
+  <p>每个 rank 提供 sendbuf，库用 <code>op</code>（如 <code>MPI_SUM</code> / <code>MPI_MAX</code> / <code>MPI_MIN</code> / <code>MPI_PROD</code> / 自定义）按元素归约，结果<strong>只放在 root 的 recvbuf</strong>。</p>
+
+  <h3>Allreduce 的函数签名</h3>
+  <pre><code>int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
+                  MPI_Datatype datatype, MPI_Op op, MPI_Comm comm);</code></pre>
+  <p>对照 Reduce 少了 <code>int root</code>。每个 rank 的 recvbuf 都被填上同样的归约结果。</p>
+
+  <h3>两种实现：Naive Tree vs Butterfly</h3>
+  <p>slide 用 8 个数 [5, 2, -1, -3, 6, 5, -7, 2] 求和（结果 = 9）演示两种算法。</p>
+
+  <p><strong>Naive tree（左图）</strong>：先 reduce 到根（log N 步：相邻两两相加），再从根 broadcast 回去（又一个 log N 步）。<strong>总共 ~2 log N 步</strong>。前半部分非根节点闲置，效率低。</p>
+
+  <p><strong>Butterfly / Recursive doubling（右图）</strong>：每一步<strong>所有 rank 都参与</strong>，互相交换部分和。第 k 步，rank i 和 rank i⊕2^k 交换当前累加值并相加。log N 步之后，每个 rank 都拿到完整结果。<strong>总共 log N 步，且全程无空闲 rank</strong>。</p>
+
+  <p>看右图的演化（每行的方框代表当前每个 rank 持有的"部分和"）：</p>
+  <pre>初始    : 5  2  -1 -3  6  5  -7 2          ← 每个 rank 持有自己的输入
+第 1 步 : 7  7  -4 -4  11 11 -5 -5         ← 相邻两两交换并相加
+第 2 步 : 3  3   3  3   6  6  6  6         ← 距离 2 的两两交换并相加
+第 3 步 : 9  9   9  9   9  9  9  9         ← 距离 4 的两两交换并相加（结果！）</pre>
+
+  <p>每步 rank i 和 rank i⊕2^k 是 XOR 关系 ——"butterfly" 名字由来：在二进制 ID 上看，第 k 步翻转第 k 位，连线像蝴蝶翅膀。</p>
+
+  <h3>为什么 Allreduce 是 HPC 的命脉</h3>
+  <p>很多并行算法每步迭代都要做一次全局归约（如：每步检查"全局残差是否够小"、"全局最大误差是多少"）。如果用 naive 的 Reduce + Bcast，2 log N 步意味着扩展到 1024 ranks 需要 ~20 步通信；butterfly 只需 ~10 步。在每秒做几十次迭代的求解器里，差别巨大。</p>
+
+  <div class="takeaway">
+    💡 <strong>核心点</strong>：用 <code>MPI_Allreduce</code>，不要手写 <code>MPI_Reduce</code> + <code>MPI_Bcast</code>。库内部会用 butterfly 或更先进的算法，免费拿到 2× 性能。
+  </div>
+</div>
+
+
+<!-- ==================== SLIDE 19 ==================== -->
+<h2 class="slide-title">Slide 19 — MPI Inclusive Scan（前缀归约：MPI_Scan）</h2>
+
+<img class="slide-img" src="images/slide-19.png" alt="Slide 19: MPI_Scan signature and example">
+
+<div class="explanation">
+  <p><code>MPI_Scan</code> 是<strong>前缀归约（prefix reduction）</strong>。Allreduce 是"所有 rank 都拿到全局结果"；Scan 是"rank i 拿到 rank 0..i 的部分归约"，类似数组求前缀和。</p>
+
+  <h3>函数签名</h3>
+  <pre><code>int MPI_Scan(const void *sendbuf, void *recvbuf, int count,
+             MPI_Datatype datatype, MPI_Op op, MPI_Comm comm);</code></pre>
+  <p>签名和 <code>MPI_Allreduce</code> 几乎一样 —— 区别只在<em>语义</em>。</p>
+
+  <h3>Inclusive 的含义</h3>
+  <p>对 rank <em>i</em>：</p>
+  <p style="text-align:center;"><em>y<sub>i</sub></em> = <em>x<sub>0</sub></em> ⊕ <em>x<sub>1</sub></em> ⊕ ... ⊕ <em>x<sub>i</sub></em>（包含<em>自己</em>，"inclusive"由此得名）</p>
+
+  <p>slide 上的具体例子（用 op = SUM）：</p>
+  <pre>Rank   : 0  1  2  3   4   5
+Input  : 2  1  4  5   3   1
+Output : 2  3  7  12  15  16
+         ↑  ↑  ↑  ↑   ↑   ↑
+         2 +1 +4 +5  +3  +1</pre>
+
+  <p>Rank 0 的输出 = Rank 0 的输入；Rank i 的输出 = Rank 0..i 的累加。</p>
+
+  <h3>底层算法（recursive doubling）</h3>
+  <p>slide 右下展示了演化过程：</p>
+  <pre>Input : 2  1  4  5   3   1
+Step 1: 2  3  5  9   8   4         ← 每个 rank 加上 rank-1 的值
+Step 2: 2  3  7  12  13  13        ← 每个 rank 加上 rank-2 的值
+Step 3: 2  3  7  12  15  16        ← 每个 rank 加上 rank-4 的值
+                                     (最终结果)</pre>
+  <p>每一步 k，rank <em>i</em> 加上 rank <em>i − 2<sup>k</sup></em> 的当前值（如果 <em>i − 2<sup>k</sup></em> ≥ 0）。log N 步后所有前缀和算完。</p>
+
+  <h3><code>MPI_IN_PLACE</code> 选项</h3>
+  <p>slide 注：<em>"You can use the <code>MPI_IN_PLACE</code> handle for the sendbuf argument. In this case the input is taken from the recvbuf argument and output replaces this value."</em> —— 不想再分配 sendbuf 时，把 <code>MPI_IN_PLACE</code> 当 sendbuf，让 recvbuf 同时承担输入和输出。</p>
+
+  <div class="takeaway">
+    💡 <strong>典型用途</strong>：(1) 给每个 rank 算"全局编号"（前面所有 rank 的元素总数 = 当前 rank 起始下标）；(2) 计算并行算法里的"截止索引"。
+  </div>
+</div>
+
+
+<!-- ==================== SLIDE 20 ==================== -->
+<h2 class="slide-title">Slide 20 — MPI Exclusive Scan（不含自己的前缀归约：MPI_Exscan）</h2>
+
+<img class="slide-img" src="images/slide-20.png" alt="Slide 20: MPI_Exscan signature and parallel I/O example">
+
+<div class="explanation">
+  <p><code>MPI_Exscan</code> 和 <code>MPI_Scan</code> 唯一的区别：<strong>不包含自己</strong>。对 rank <em>i</em>：</p>
+  <p style="text-align:center;"><em>y<sub>i</sub></em> = <em>x<sub>0</sub></em> ⊕ <em>x<sub>1</sub></em> ⊕ ... ⊕ <em>x<sub>i−1</sub></em>（"exclusive"：不含 <em>x<sub>i</sub></em> 自己）</p>
+
+  <p>同样的例子对照看：</p>
+  <pre>Rank        : 0   1  2  3   4    5
+Input       : 2   1  4  5   3    1
+Inclusive   : 2   3  7  12  15   16   ← MPI_Scan
+Exclusive   : -   2  3  7   12   15   ← MPI_Exscan (rank 0 的结果"未定义")</pre>
+
+  <h3>典型用途：并行 I/O 计算文件偏移</h3>
+  <p>slide 给的实战例子：<strong>每个 rank 把自己压缩后的数据写到一个共享文件，需要先算出"自己应该从文件第几个字节开始写"</strong>。</p>
+
+  <p>过程：</p>
+  <ol>
+    <li>每个 rank 知道自己的压缩 buffer 大小 <code>my_size</code>。</li>
+    <li>调 <code>MPI_Exscan(&amp;my_size, &amp;my_offset, 1, MPI_INT, MPI_SUM, comm)</code>。</li>
+    <li>得到的 <code>my_offset</code> = 前面所有 rank 的 size 之和 = 我应该从文件的第几个字节开始写。</li>
+    <li>调 <code>MPI_File_write_at(my_offset, my_data, my_size)</code>。</li>
+  </ol>
+
+  <p>这就是为什么是 <em>exclusive</em>：你想要的是"<em>前面那些 rank</em> 的总和"，不能把自己的算进去（否则 offset 会跳过自己要写的位置）。</p>
+
+  <h3>Inclusive 还是 Exclusive？</h3>
+  <p>取决于你想要"包含自己"还是"在自己之前"。前缀求和编号、统计累计 → inclusive；起始偏移、起始索引 → exclusive。</p>
+
+  <div class="takeaway">
+    💡 <strong>记忆点</strong>：两者算法完全一致，差别只在最后是否减去自己的输入。Exscan 在 rank 0 处的输出是"undefined"，使用前先判断 rank。
+  </div>
+</div>
+
+
+<!-- ==================== SLIDE 21 ==================== -->
+<h2 class="slide-title">Slide 21 — Unknown Message Size（消息大小未知时怎么办）</h2>
+
+<img class="slide-img" src="images/slide-21.png" alt="Slide 21: Unknown message size, fixed buffer size assumption">
+
+<div class="explanation">
+  <p>这一页提出一个之前回避的问题：<strong>如果发送方动态决定消息长度，接收方提前不知道要分配多大 buffer 怎么办？</strong></p>
+
+  <h3>之前隐藏的假设</h3>
+  <p>slide 注："<em>We have assumed a fixed receive buffer size of 1024 characters.</em>" —— 之前所有例子都偷偷假设 receive buffer 够大。这显然不通用 —— 真实场景里，消息长度可能是动态算出来的（压缩后的字节数、可变长度的字符串等）。</p>
+
+  <h3>方案 A（不推荐）：先发一条"长度通知"消息</h3>
+  <p>最朴素的想法：</p>
+  <pre><code>// 发送方
+MPI_Send(&amp;msg_len, 1, MPI_INT, dest, 0, comm);     // 先发长度
+MPI_Send(msg, msg_len, MPI_CHAR, dest, 1, comm);   // 再发数据
+
+// 接收方
+int msg_len;
+MPI_Recv(&amp;msg_len, 1, MPI_INT, src, 0, comm, MPI_STATUS_IGNORE);
+char *buf = malloc(msg_len);
+MPI_Recv(buf, msg_len, MPI_CHAR, src, 1, comm, MPI_STATUS_IGNORE);</code></pre>
+
+  <h3>为什么这样不好</h3>
+  <p>slide 紫色框给出原因：<em>"Sending two messages is not a good solution because of the additional overhead especially since the first message is very small latency dominated."</em></p>
+  <p>翻译："发两条消息" 看起来等成本，但实际不是 —— <strong>每条 MPI 消息都有固定的延迟开销</strong>（startup cost：建立连接、握手、协议头）。延迟大概是 1–10 微秒级别，不论消息内容是 1 字节还是 1MB。所以"先发一个 4 字节长度"几乎和"发一条完整消息"一样贵。结果：你为了告诉对方长度，付了一整次大消息的延迟。</p>
+
+  <h3>更好的方案：让接收方主动"探查"消息</h3>
+  <p>下一页（Slide 22）给出的答案：用 <code>MPI_Probe</code>。它能在不真正接收消息的情况下，先看一眼这条消息的 envelope 和大小，然后再 malloc 正确大小的 buffer 去 Recv。</p>
+
+  <div class="takeaway">
+    💡 <strong>核心认知</strong>：MPI 通信的成本 = 延迟（latency）+ 带宽（bandwidth × size）。小消息几乎全是延迟。所以"凑成一条大消息"通常比"拆成两条小消息"快得多。
+  </div>
+</div>
+
+
+<!-- ==================== SLIDE 22 ==================== -->
+<h2 class="slide-title">Slide 22 — Probing an Incoming Message（先探查再接收：<code>MPI_Probe</code>）</h2>
+
+<img class="slide-img" src="images/slide-22.png" alt="Slide 22: MPI_Probe + MPI_Get_count usage">
+
+<div class="explanation">
+  <p>解决上一页问题的"正解"：<code>MPI_Probe</code> 让接收方<strong>不消费消息</strong>就能拿到 envelope 信息（包括大小），分配好 buffer 之后再 Recv。</p>
+
+  <h3>函数签名</h3>
+  <pre><code>int MPI_Probe(int source, int tag, MPI_Comm comm,
+              MPI_Status *status);</code></pre>
+  <p>它阻塞直到匹配的消息<em>到达接收方</em>，但<strong>不读取消息体</strong>。返回时 <code>status</code> 已被填上消息的元数据。</p>
+
+  <h3>用法模板</h3>
+  <pre><code>MPI_Status status;
+MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &amp;status);
+
+int count;
+MPI_Get_count(&amp;status, MPI_DOUBLE, &amp;count);   // 从 status 拿出 element 数
+
+double *buf = malloc(count * sizeof(double));
+MPI_Recv(buf, count, MPI_DOUBLE,
+         status.MPI_SOURCE, status.MPI_TAG,    // 用 probe 拿到的 source/tag 精确匹配
+         MPI_COMM_WORLD, MPI_STATUS_IGNORE);</code></pre>
+
+  <h3>关键 API：<code>MPI_Get_count</code></h3>
+  <p>从 <code>MPI_Status</code> 抽取消息长度的辅助函数：</p>
+  <pre><code>int MPI_Get_count(const MPI_Status *status, MPI_Datatype dtype, int *count);</code></pre>
+  <p>注意：MPI 内部记录的是字节数，<code>MPI_Get_count</code> 帮你按 <code>dtype</code> 算出元素个数。</p>
+
+  <h3>为什么 Probe 比"先发长度"快</h3>
+  <p>关键：<strong>Probe 不引入新的网络消息</strong>。MPI 实现里，发送方发起 <code>MPI_Send</code> 时，通常是 envelope（小、定长）先到接收方的 MPI 库内部，data 还在路上 / 缓冲区里。<code>MPI_Probe</code> 读的就是已经到达的 envelope，<em>不需要</em>额外网络往返。</p>
+  <p>所以 Probe + Get_count + Recv 这套组合，网络层面只走一条消息，比"长度消息 + 数据消息"省掉一整次延迟。</p>
+
+  <h3>注意：和 status 通配的配合</h3>
+  <p>用 <code>MPI_ANY_SOURCE</code> / <code>MPI_ANY_TAG</code> probe 之后，<strong>务必</strong>用 <code>status.MPI_SOURCE</code> 和 <code>status.MPI_TAG</code> 精确匹配 Recv，不要再用通配符 —— 否则可能匹配到"另一条同时到达的消息"，buffer 大小就对不上了。</p>
+
+  <div class="takeaway">
+    💡 <strong>用法套路</strong>：<code>Probe → Get_count → malloc → Recv（用 status.MPI_SOURCE/MPI_TAG 精确匹配）</code>。这是处理"动态长度消息"的标准模式。
+  </div>
+</div>
+
+
+<!-- ==================== SLIDE 23 ==================== -->
+<h2 class="slide-title">Slide 23 — Shift Operations Across Chain of Processes（链式 shift：当心死锁）</h2>
+
+<img class="slide-img" src="images/slide-23.png" alt="Slide 23: Shift across chain, even-then-odd ordering to avoid deadlock">
+
+<div class="explanation">
+  <p>这一页讨论一种<strong>常见但容易踩坑</strong>的通信模式：每个 rank 同时是发送方又是接收方，向链上的下一位发，从上一位收。一不小心就会死锁。</p>
+
+  <h3>"shift" 是什么模式</h3>
+  <p>在网格 / 数组的<em>邻居通信</em>里很常见 —— stencil（如 5-point Laplacian）每步都要把自己的 boundary 发给邻居、从邻居收 boundary。slide 上的链式例子：</p>
+  <pre>Rank 0 → Rank 1 → Rank 2 → Rank 3
+   (每个 rank 把数据发给右边的邻居，从左边的邻居收)</pre>
+  <p>注意 source 和 destination 不是同一个 rank（source = 我左边的，destination = 我右边的）。</p>
+
+  <h3>为什么会死锁</h3>
+  <p>如果所有 rank 都先 <code>MPI_Send</code> 再 <code>MPI_Recv</code>：</p>
+  <pre>Rank 0: Send(→1)  → 等 1 来 Recv
+Rank 1: Send(→2)  → 等 2 来 Recv
+Rank 2: Send(→3)  → 等 3 来 Recv
+Rank 3: Send(→0?) → 等 0 来 Recv
+           ↑↑↑↑↑
+           所有 rank 都卡在 Send，没人 Recv 任何东西 → 死锁</pre>
+
+  <p><code>MPI_Send</code> 是阻塞 + non-local 完成 ——它要等接收方调 Recv 才能返回。所以这种"全员先 Send" 的模式必然死锁（<strong>除非</strong> MPI 实现内部有 buffer 偷偷把 Send 异步化，但这是<em>实现行为</em>，不能依赖）。</p>
+
+  <h3>解决方案 A：手动错峰（slide 右上）</h3>
+  <p><strong>偶数 rank 先 Send，奇数 rank 先 Recv；之后角色互换。</strong></p>
+  <pre>第 1 阶段:
+  偶数 rank (0, 2): Send(→ 1, 3)
+  奇数 rank (1, 3): Recv(← 0, 2)
+第 2 阶段:
+  奇数 rank (1, 3): Send(→ 2, ...)
+  偶数 rank (0, 2): Recv(← ..., 1)</pre>
+  <p>每一阶段，发送方和接收方都不冲突 —— 不会死锁。但代码冗长且容易写错。</p>
+
+  <h3>解决方案 B（更优）：<code>MPI_Sendrecv</code></h3>
+  <p>slide 提到 "<em>If blocking semantics are used, the send and receive operations must be ordered correctly to prevent cyclic dependencies that may lead to deadlock.</em>" 然后引出下一页讲的 <code>MPI_Sendrecv</code> —— 一个 API 同时做 Send 和 Recv，MPI 内部保证不死锁。</p>
+
+  <h3>什么时候用</h3>
+  <ul>
+    <li><strong>Stencil 通信</strong>（PDE 求解、CFD）—— 每个 rank 和邻居交换 boundary。</li>
+    <li><strong>Cartesian 拓扑</strong>下的 shift 操作 —— 例如 2D 网格里"全体向右移一格"。slide 提到 "<em>Such shift patterns are often needed on a lattice. Examples are propagating messages on a Cartesian topology of MPI processes.</em>"</li>
+    <li><strong>循环 / pipeline 模式</strong>。</li>
+  </ul>
+
+  <div class="takeaway">
+    💡 <strong>规则</strong>：链式 shift 永远不要用"全员先 Send"。要么手动错峰（偶 / 奇分组）、要么直接上 <code>MPI_Sendrecv</code>。后者更安全也更常见。
+  </div>
+</div>
+
+
+<!-- ==================== SLIDE 24 ==================== -->
+<h2 class="slide-title">Slide 24 — Shift Operations 续：<code>MPI_Sendrecv</code> 一招解死锁</h2>
+
+<img class="slide-img" src="images/slide-24.png" alt="Slide 24: MPI_Sendrecv combined operation">
+
+<div class="explanation">
+  <p>上一页提的 shift 死锁问题，MPI 给的标准答案：<code>MPI_Sendrecv</code> —— <strong>一个调用同时发起 send 和 receive</strong>，MPI 实现内部保证不会因 ordering 问题死锁。</p>
+
+  <h3>函数签名</h3>
+  <pre><code>int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                 int dest, int sendtag,
+                 void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                 int source, int recvtag,
+                 MPI_Comm comm, MPI_Status *status);</code></pre>
+  <p>参数列表挺长，但其实就是 <code>MPI_Send</code> 和 <code>MPI_Recv</code> 的参数<em>各一份</em>合起来 —— sendbuf/sendcount/sendtype/dest/sendtag 是发送侧；recvbuf/recvcount/recvtype/source/recvtag 是接收侧。</p>
+
+  <h3>性质</h3>
+  <ul>
+    <li><strong>"两个进程可以是同一个"</strong> —— slide 注："<em>where these two processes may be the same.</em>" 你甚至可以让 <code>dest == source == 自己 rank</code>，相当于 send 给自己再 recv 回来（罕见但合法）。</li>
+    <li><strong>send 和 recv 用<em>不同的 buffer</em></strong> —— sendbuf 和 recvbuf 必须是两块独立内存，不能重叠。</li>
+    <li><strong>MPI 自动处理 ordering</strong> —— 库内部知道这是"对称的 send + recv"模式，会用合适算法避免死锁。</li>
+    <li><strong>结果和"手写 send + recv"等价</strong> —— 函数返回时，sendbuf 已发出去、recvbuf 已收到。</li>
+  </ul>
+
+  <h3>典型用法（链式 shift）</h3>
+  <pre><code>int left  = (rank - 1 + size) % size;   // 左邻居（环形）
+int right = (rank + 1) % size;          // 右邻居
+
+MPI_Sendrecv(send_data, count, MPI_DOUBLE,
+             right, /*sendtag=*/0,
+             recv_data, count, MPI_DOUBLE,
+             left,  /*recvtag=*/0,
+             MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+// 同时：把 send_data 发给右边、从左边收 recv_data —— 不会死锁</code></pre>
+
+  <h3>配合 <code>MPI_Cart_shift</code> 找邻居</h3>
+  <p>slide 提到 "<em>This operation is often used on a Cartesian topology together with <code>MPI_Cart_shift</code> to determine the source and destination ranks.</em>"</p>
+  <p><code>MPI_Cart_shift</code> 是 Cartesian 拓扑下的辅助函数：你说"在第 X 维向正方向 shift 1 格"，它返回 source 和 destination rank。然后把这两个 rank 直接喂给 <code>MPI_Sendrecv</code>，不用自己算。这套组合在 stencil 计算里非常常见。</p>
+
+  <h3>变种：<code>MPI_Sendrecv_replace</code></h3>
+  <p>slide 注："<em>There is also an <code>MPI_Sendrecv_replace</code> for which the send and receive buffer is the same.</em>"</p>
+  <p><code>MPI_Sendrecv_replace</code> 用<strong>同一个 buffer</strong>同时做 send 和 recv —— send 后立即被 recv 内容覆盖。MPI 库内部自动分配临时 buffer 处理这个。优点：buffer 复用、API 更短；缺点：内部多一次内存拷贝，性能稍差。</p>
+
+  <div class="takeaway">
+    💡 <strong>规则</strong>：链式 / 环形 / 邻居通信优先 <code>MPI_Sendrecv</code>。结合 <code>MPI_Cart_shift</code> 自动算邻居 rank。需要省一份 buffer 再考虑 <code>MPI_Sendrecv_replace</code>。
+  </div>
+</div>
+
+
+<!-- ==================== SLIDE 25 ==================== -->
+<h2 class="slide-title">Slide 25 — Non-blocking Point-to-Point Communication（非阻塞通信概览）</h2>
+
+<img class="slide-img" src="images/slide-25.png" alt="Slide 25: Non-blocking MPI_Isend / MPI_Irecv overview">
+
+<div class="explanation">
+  <p>这一页正式引入 <strong>非阻塞通信</strong>：<code>MPI_Isend</code> 和 <code>MPI_Irecv</code>。Slide 10 学过的 <code>MPI_Send</code> / <code>MPI_Recv</code> 是阻塞版（要等到对面响应才返回）；非阻塞版立即返回一个"句柄"，让你可以<strong>边通信边干别的事</strong>。</p>
+
+  <h3>"I" 是什么意思</h3>
+  <p>slide 紫色框：<em>"The 'I' in the procedure name stands for incomplete and immediate."</em></p>
+  <ul>
+    <li><strong>Immediate（立即返回）</strong>—— 函数调用立刻返回，不等通信完成。</li>
+    <li><strong>Incomplete（尚未完成）</strong>—— 函数返回时通信只是<em>启动</em>了，<strong>还没真的传完</strong>。你不能立刻用 sendbuf / recvbuf —— 数据可能还在飞。</li>
+  </ul>
+
+  <h3>函数签名（slide 没写出来，但要心里有数）</h3>
+  <pre><code>int MPI_Isend(const void *buf, int count, MPI_Datatype dtype,
+              int dest, int tag, MPI_Comm comm,
+              MPI_Request *request);   // ← 多返回一个 request 句柄
+
+int MPI_Irecv(void *buf, int count, MPI_Datatype dtype,
+              int source, int tag, MPI_Comm comm,
+              MPI_Request *request);</code></pre>
+  <p>多了 <code>MPI_Request</code> —— 这是 MPI 给你的"通信句柄"，后面用 <code>MPI_Wait</code> / <code>MPI_Test</code> 来检查通信是否完成。</p>
+
+  <h3>3 条关键性质（slide 要点）</h3>
+  <ul>
+    <li><strong>local（本地完成）</strong>—— 不像阻塞版那样需要对面响应，<code>MPI_Isend</code>/<code>MPI_Irecv</code> 调用在本地立即返回。<em>语义上的"完成"</em>仍然需要对面配对，但 API 调用本身不再卡住。</li>
+    <li><strong>非阻塞 send 仍然需要 matching recv</strong>—— "<em>A send operation requires a matching receive operation and vice versa.</em>" 通信本身的逻辑不变，只是检查"是否完成"被推迟到 <code>MPI_Wait</code>。</li>
+    <li><strong>可以混用</strong>—— "<em>You can match non-blocking send and receive operations with blocking receive and send operations, respectively.</em>" 一端用 <code>MPI_Isend</code>，另一端用 <code>MPI_Recv</code> 完全合法。MPI 协议层不区分双方是否阻塞。</li>
+  </ul>
+
+  <h3>使用流程（典型骨架）</h3>
+  <pre><code>MPI_Request req;
+MPI_Isend(buf, count, MPI_INT, dest, tag, comm, &amp;req);
+//        ↑ 立刻返回，buf 不能改！
+
+// ----- 这里可以做其他工作（计算、I/O、其他 MPI 调用）-----
+do_some_independent_computation();
+
+// 等通信真的完成
+MPI_Wait(&amp;req, MPI_STATUS_IGNORE);
+// 现在 buf 可以重用了</code></pre>
+
+  <h3>非阻塞最大的卖点：通信 / 计算重叠</h3>
+  <p>HPC 里最重要的优化模式之一：<strong>把通信"藏"到计算里</strong>。例：</p>
+  <pre>开始 Isend / Irecv 邻居 boundary
+↓
+计算内部点（不依赖 boundary）   ← 这部分和上面通信并发进行
+↓
+Wait 等 boundary 收完
+↓
+计算依赖 boundary 的点</pre>
+  <p>如果通信耗时和"内部点计算"耗时差不多，理想情况下通信被完全隐藏，加速接近 2 倍。这是阻塞通信永远做不到的。</p>
+
+  <h3>陷阱</h3>
+  <ul>
+    <li><strong>不能在 Wait 之前修改 sendbuf / 读 recvbuf</strong> —— 数据可能还没传完。常见 bug：在循环里用同一个 buffer 反复 Isend，没等上一次 Wait 就改 buffer。</li>
+    <li><strong>必须配对 Wait</strong>（或 Test 直到完成）—— 漏 Wait 会泄漏 request 句柄，最终耗尽资源。</li>
+    <li><strong>检查方式</strong>：<code>MPI_Wait</code>（阻塞直到完成）vs <code>MPI_Test</code>（轮询检查）vs <code>MPI_Waitall</code> / <code>MPI_Testall</code>（一次等多个）。后续课会展开。</li>
+  </ul>
+
+  <div class="takeaway">
+    💡 <strong>核心转变</strong>：阻塞版 = "调用 = 完成"；非阻塞版 = "调用 = 启动，<code>MPI_Wait</code> = 完成"。这种分离是计算 / 通信重叠的基础，也是高性能 MPI 代码的核心模式。
+  </div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 26 — Non-blocking 的 API 签名（<code>MPI_Isend</code> / <code>MPI_Irecv</code>）</h2>
+
+<img class="slide-img" src="images/slide-26.png" alt="Slide 26: MPI_Isend and MPI_Irecv side-by-side signatures">
+
+<div class="explanation">
+  <p>这页把上一页的概念落到具体函数签名上。两个非阻塞 P2P 函数的参数和阻塞版几乎一一对应，区别只在最后多了一个 <code>MPI_Request *request</code> 出参。</p>
+
+  <pre><code>int MPI_Isend(const void *buf, int count, MPI_Datatype datatype,
+              int dest, int tag, MPI_Comm comm,
+              MPI_Request *request);
+
+int MPI_Irecv(void *buf, int count, MPI_Datatype datatype,
+              int source, int tag, MPI_Comm comm,
+              MPI_Request *request);</code></pre>
+
+  <h3>记忆点</h3>
+  <p>"<strong>I</strong>" 前缀同时表达两层意思：<strong>i</strong>mmediate（调用立刻返回）和 <strong>i</strong>ncomplete（操作还没完成）。返回的 <code>MPI_Request</code> 就是后续 <code>MPI_Wait</code>/<code>MPI_Test</code> 用来追踪这次操作的句柄。</p>
+
+  <p>注意签名里没有 <code>MPI_Status</code> 出参 —— 函数返回时操作还没完成，状态根本没意义。状态要在 Wait/Test 时才能拿到。</p>
+</div>
+
+<div class="takeaway">
+  💡 阻塞版的所有参数都保留，<strong>多一个 <code>MPI_Request *</code> 出参</strong>，这就是非阻塞 P2P 的全部 API 形式差异。
+</div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 27 — Communication Completion（<code>MPI_Request</code> 的生命周期）</h2>
+
+<img class="slide-img" src="images/slide-27.png" alt="Slide 27: Communication subsystem lifecycle - Start, Active, End">
+
+<div class="explanation">
+  <p>所有非阻塞通信都需要一个 <code>MPI_Request</code> 对象。<strong>调用 <code>MPI_Isend</code>/<code>MPI_Irecv</code> 等于把任务交给"通信子系统"，request 就是这次任务的收据。</strong></p>
+
+  <h3>三阶段生命周期</h3>
+  <p><strong>Start</strong>（启动）→ <strong>Active</strong>（通信子系统正在搬运数据）→ <strong>End</strong>（完成并释放）。完成的语义是：<em>communication buffer 可以再次安全读 / 写</em>。这才是真正可以复用 buffer 的时机，不是 <code>Isend</code> 返回那一刻。</p>
+
+  <h3><code>MPI_REQUEST_NULL</code></h3>
+  <p>这是一个特殊的"空句柄"常量。当 <code>MPI_Wait</code>/<code>MPI_Test</code> 检测到操作完成后，会自动把 request 设回 <code>MPI_REQUEST_NULL</code>，表示"这个句柄已经没活了，不要再用"。</p>
+
+  <p>类比：<code>MPI_Request</code> 像 C++ 的 <code>std::future</code>，<code>MPI_REQUEST_NULL</code> 像默认构造的 future（无关联状态）。</p>
+</div>
+
+<div class="takeaway">
+  💡 Request 是非阻塞操作的句柄；完成 = buffer 可安全再用；完成后 request 自动归还为 <code>MPI_REQUEST_NULL</code>。
+</div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 28 — <code>MPI_Wait</code> vs <code>MPI_Test</code>（阻塞等 vs 非阻塞查）</h2>
+
+<img class="slide-img" src="images/slide-28.png" alt="Slide 28: MPI_Wait vs MPI_Test signatures and local/non-local distinction">
+
+<div class="explanation">
+  <p>两种"问操作完成了没"的方式：<code>MPI_Wait</code> 阻塞直到完成；<code>MPI_Test</code> 立即返回一个 <code>flag</code>，true 表示完成、false 表示还在跑。</p>
+
+  <pre><code>int MPI_Wait(MPI_Request *request, MPI_Status *status);
+int MPI_Test(MPI_Request *request, int *flag, MPI_Status *status);</code></pre>
+
+  <p>两者完成时都会把 <code>request</code> 设为 <code>MPI_REQUEST_NULL</code>，并把对应消息的 <code>MPI_Status</code> 填回（来源、tag、字节数等）。</p>
+
+  <h3>local 和 non-local 的关键区别</h3>
+  <p>这是这一页的核心术语。</p>
+  <ul>
+    <li><strong><code>MPI_Wait</code> = non-local</strong>：是否能返回，<em>取决于其它 rank</em>（对方真的把数据送过来了吗）。本地无法独立决定。</li>
+    <li><strong><code>MPI_Test</code> = local</strong>：函数能否立刻返回 <em>不依赖远端</em>。它只是查一下本地状态，无论操作是否完成都立即返回（用 <code>flag</code> 报告结果）。</li>
+  </ul>
+
+  <h3>什么时候用 Test 而不是 Wait</h3>
+  <p>典型场景：<strong>计算 / 通信重叠的轮询循环</strong>。做一段计算，间或调一次 <code>MPI_Test</code>，完成了就处理收到的数据，没完成就继续算下一段，避免 Wait 把进程卡住浪费 CPU。也可以用 <code>MPI_Testall</code>/<code>MPI_Waitall</code> 一次处理多个 request。</p>
+</div>
+
+<div class="takeaway">
+  💡 Wait = 阻塞、non-local；Test = 立即返回 + flag、local。语义都是"等到 / 查到完成"，差别只在调用方愿不愿意被卡住。
+</div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 29 — Non-blocking Collectives（动机与硬约束）</h2>
+
+<img class="slide-img" src="images/slide-29.png" alt="Slide 29: Why non-blocking collectives, mismatch rule">
+
+<div class="explanation">
+  <p>有了非阻塞 P2P，自然会问：collective（<code>Bcast</code>/<code>Reduce</code>/<code>Allreduce</code>...）有没有非阻塞版本？答案是有，叫 <strong>non-blocking collectives</strong>，每个 collective 都对应一个 <code>I</code> 前缀版本。</p>
+
+  <h3>动机</h3>
+  <p>同样是"启动操作 → 立即返回 → 后续 Wait"。collective 内部往往要好几轮通信（树形 broadcast、butterfly allreduce），让这些轮次跟本地计算重叠收益更大。MPI 库还可以为非阻塞 collective 选用更激进的、避免同步的优化算法。</p>
+
+  <h3>用法和 P2P 一致</h3>
+  <p>同样需要 <code>MPI_Request</code>，同样用 <code>MPI_Wait</code>/<code>MPI_Test</code>/<code>MPI_Waitall</code>/<code>MPI_Testall</code> 这一组完成函数 —— 不区分 P2P 还是 collective。</p>
+
+  <h3>必须配对的硬规则</h3>
+  <p><strong>非阻塞 collective 不能和阻塞 collective 混搭。</strong>所有参与该 communicator 的 rank，要么全用 <code>MPI_Ireduce</code>，要么全用 <code>MPI_Reduce</code>。下面是错误示例：</p>
+
+  <pre><code>if (0 == rank) {
+    MPI_Ireduce(sendbuf, recvbuf, count,
+                datatype, op, root, comm, &amp;req);
+} else {
+    // illegal code
+    MPI_Reduce(sendbuf, recvbuf, count,
+               datatype, op, root, comm);
+}</code></pre>
+
+  <p>原因：MPI 把同一个 collective 在 communicator 上的"次数"当作隐含 tag。混用让两边对算法序列的理解错位，会死锁或拿到错误结果。</p>
+</div>
+
+<div class="takeaway">
+  💡 Non-blocking collective = collective 操作的"启动 / 完成"分离版；所有 rank 必须步调一致（要么全 <code>I*</code>、要么全阻塞），不能混搭。
+</div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 30 — Non-blocking Collectives 的函数原型</h2>
+
+<img class="slide-img" src="images/slide-30.png" alt="Slide 30: Non-blocking collective prototypes - Iallreduce, Ibarrier, Ibcast, Igather, etc.">
+
+<div class="explanation">
+  <p>这页把所有常用 collective 的 <code>I</code> 前缀版列出来。规律统一：<strong>函数名加 <code>I</code> 前缀，参数列表末尾加一个 <code>MPI_Request *request</code></strong>，其余全部和阻塞版一样。</p>
+
+  <pre><code>int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
+                   MPI_Datatype datatype, MPI_Op op,
+                   MPI_Comm comm, MPI_Request *request);
+
+int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request);
+
+int MPI_Ibcast(void *buffer, int count, MPI_Datatype datatype,
+               int root, MPI_Comm comm, MPI_Request *request);
+
+int MPI_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                int root, MPI_Comm comm, MPI_Request *request);
+
+int MPI_Iscatter(...);   int MPI_Iallgather(...);
+int MPI_Ialltoall(...);  int MPI_Iscan(...);    int MPI_Iexscan(...);</code></pre>
+
+  <h3>命名记忆</h3>
+  <p>讲师给的助记词：<strong>"I" = immediate（立即返回） + incomplete（未完成）</strong>。看到 <code>I</code> 前缀就知道：调用立刻回来、需要 request、必须配对 Wait/Test。</p>
+</div>
+
+<div class="takeaway">
+  💡 所有 collective 都有对应的 <code>I*</code> 版本，签名规则统一：原参数 + <code>MPI_Request *</code> 出参。
+</div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 31 — Non-blocking <code>MPI_Ialltoall</code> 实战：3D FFT 流水线</h2>
+
+<img class="slide-img" src="images/slide-31.png" alt="Slide 31: 3D FFT with overlapping Ialltoall and computation">
+
+<div class="explanation">
+  <p>这页是一个具体的"重叠通信和计算"案例。3D FFT（<em>三维快速傅里叶变换</em>）的标准并行做法是：把数据按一个维度切片分布到各 rank，做一次 1D 变换，<strong>转置数据让另一个维度变成"本地连续"</strong>，再做下一次 1D 变换。三次 1D + 两次转置 = 一次 3D FFT。</p>
+
+  <h3>为什么转置是 Alltoall</h3>
+  <p>每个 rank 持有的"切片"在转置后要分散到所有别的 rank，每个 rank 也要从所有别的 rank 收一片 —— 这正是 <code>MPI_Alltoall</code> 的形状。</p>
+
+  <h3>这页的初始假设</h3>
+  <p>已经做完了沿 <em>y</em> 方向的变换。剩下两步：<em>z</em>-变换 → 转置 → <em>x</em>-变换。slide 把数据立方体按 <em>x</em> 方向切成 3 个 slice，每 slice 对应一种颜色。</p>
+
+  <h3>流水线思路</h3>
+  <p>串行版本：<em>z</em>-transform 整个立方体 → <code>Alltoall</code> 转置 → <em>x</em>-transform。<code>Alltoall</code> 期间 CPU 闲置。</p>
+
+  <p>非阻塞版本（slide 上半 + 下半的核心）：</p>
+  <ul>
+    <li>对 <strong>第 1 个 slice</strong> 做 <em>z</em>-transform 计算。</li>
+    <li>计算完，立刻发起 <code>MPI_Ialltoall</code> 转置 <strong>第 1 个 slice</strong>。</li>
+    <li>同时 CPU 不闲：继续算 <strong>第 2 个 slice</strong> 的 <em>z</em>-transform。</li>
+    <li>第 2 个 slice 算完，发起它的 <code>Ialltoall</code>；接着开始算第 3 个；中间用 <code>MPI_Wait</code> 等第 1 个的 Alltoall 结束、就立刻开始第 1 个的 <em>x</em>-transform。</li>
+  </ul>
+
+  <p>结果：<strong>z-transform 计算、Alltoall 通信、x-transform 计算三件事在不同 slice 上并行进行</strong>，整体时间 ≈ max(计算时间, 通信时间)，而不是它们的和。</p>
+
+  <h3>对应到 slide 的两行图</h3>
+  <ul>
+    <li>上行 <em>Z-transform in the XZ-plane</em>：从 <em>Initial state</em> 起逐 slice 做 <code>Compute z-transform</code>，每完成一个就 <code>MPI_Ialltoall</code>。</li>
+    <li>下行 <em>X-transform in the XZ-plane</em>：每个 slice 先 <code>MPI_Wait</code> 等它的 Alltoall 完成（<em>Wait for first slice</em>），然后做 <code>Compute x-transform</code>。</li>
+  </ul>
+
+  <p>这是 <code>I*</code>-collective 在科学计算里最经典的用法：把"必须做的通信"藏在"必须做的计算"背后。</p>
+</div>
+
+<div class="takeaway">
+  💡 3D FFT 的重叠流水线 = 把整个立方体按 slice 切分，让 <em>计算 slice k</em> 和 <em>通信 slice k-1</em> 同时跑。<code>MPI_Ialltoall</code> 是这种重叠的关键工具。
+</div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 32 — 为什么需要并行 I/O</h2>
+
+<img class="slide-img" src="images/slide-32.png" alt="Slide 32: I/O motivation, restart and analysis">
+
+<div class="explanation">
+  <p>真实科学计算除了"算"还要"读 / 写"。常见 I/O 需求有三种：</p>
+
+  <ul>
+    <li><strong>Input</strong>：从文件读初始条件，或 <em>从 checkpoint 恢复</em>（长时间作业被中断后从存档继续，不用从头算）。</li>
+    <li><strong>Output</strong>：把模拟结果写到文件，让第三方工具（ParaView、Python notebook）做后处理 / 可视化 / 统计。</li>
+    <li><strong>定期采样</strong>：长时间运行的模拟每隔一段时间 dump 一次状态，既可作 checkpoint 也作中间结果。</li>
+  </ul>
+
+  <h3>为什么是瓶颈</h3>
+  <p>HPC 应用的输出动辄 TB 级 —— slide 给的例子是云空化模拟，<em>884 GB</em> 一次 dump、<em>12500 个气泡</em> 的体积分数场。计算节点本地盘根本放不下，得写到共享并行文件系统（Lustre / GPFS）上，I/O 带宽很快就成新瓶颈。</p>
+
+  <h3>In-situ 分析</h3>
+  <p>当数据量大到磁盘吞不下时，一种应对方式是 <strong>in-situ 分析</strong>：不写文件，直接在内存里同步做分析、提取关键统计量、或仅 dump 低分辨率结果。这避开了"先写文件再读回来分析"的双向 I/O 浪费。</p>
+</div>
+
+<div class="takeaway">
+  💡 I/O 在 HPC 里不是附加品而是头等公民：checkpoint / 后处理 / 大数据分析全靠它。当 I/O 比计算还慢，<em>efficient I/O 才是优化的关键</em>。
+</div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 33 — I/O 方案 1：Send to Root（gather + 串行写）</h2>
+
+<img class="slide-img" src="images/slide-33.png" alt="Slide 33: Gather to root and write sequentially">
+
+<div class="explanation">
+  <p>最朴素的并行 I/O 方案：所有 rank 把自己那块数据 <code>MPI_Gather</code> 到 root，<strong>只让 root rank 打开文件做串行写入</strong>。</p>
+
+  <pre><code>void dump_posix(const std::vector&lt;double&gt; &amp;v) {
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &amp;rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &amp;size);
+    const int N = static_cast&lt;int&gt;(v.size()) - 2;
+    std::vector&lt;double&gt; u(size * N);
+    MPI_Gather(&amp;v[1], N, MPI_DOUBLE,
+               u.data(), N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    if (0 == rank) {
+        std::ofstream out("u.dat", std::ios::app);
+        out &lt;&lt; std::scientific;
+        for (size_t i = 0; i &lt; u.size(); ++i) {
+            out &lt;&lt; ' ' &lt;&lt; u[i];
+        }
+        out &lt;&lt; '\n';
+    }
+}</code></pre>
+
+  <h3>评分</h3>
+  <p><strong>Pros</strong>：实现简单，输出 <em>就是一个文件</em>，下游工具直接读。</p>
+  <p><strong>Cons</strong>：完全 <em>不可扩展</em>。所有数据要先汇集到 root（内存上限即 root 节点的 RAM），写文件又只有 root 一个进程在动。rank 数加倍 → 通信加倍、root 内存加倍、写时间不变。8 个 rank 还行，8000 个 rank 直接死。</p>
+</div>
+
+<div class="takeaway">
+  💡 Send-to-root 是"把并行问题变回串行 I/O"。简单、单文件友好，但 root 是硬瓶颈，<em>规模一上来就崩</em>。
+</div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 34 — I/O 方案 2：每个 rank 写自己的文件</h2>
+
+<img class="slide-img" src="images/slide-34.png" alt="Slide 34: Each rank writes its own file">
+
+<div class="explanation">
+  <p>另一极端：放弃合并，<strong>每个 rank 独立打开自己的文件</strong>（如 <code>u_rank0.dat</code>、<code>u_rank1.dat</code>...）。各写各的，互不干扰。</p>
+
+  <h3>评分</h3>
+  <p><strong>Pros</strong>：完全 <em>scalable</em>，没有单点瓶颈，写入时间 ≈ 单 rank 写自己的数据。</p>
+  <p><strong>Cons</strong>：</p>
+  <ul>
+    <li>产出的是 <em>很多 (可能很小的) 小文件</em>。HPC 并行文件系统（Lustre / GPFS）对元数据操作敏感，几千个小文件会拖垮 metadata server。</li>
+    <li>必须自己写 <em>后处理脚本</em> 把分散文件拼回逻辑结构，否则 ParaView 这种第三方工具读不了。</li>
+    <li>分布方式跟 rank 数耦合 —— 用 64 rank 跑出来的输出，下次用 128 rank 再做分析就要重新切。</li>
+  </ul>
+</div>
+
+<div class="takeaway">
+  💡 每 rank 一文件是另一种极端：写得快，但<em>留下一堆碎文件</em>给后处理和文件系统添麻烦。两端都不理想 → 引出真正的解决办法：MPI I/O。
+</div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 35 — MPI I/O（所有 rank 协同写同一个文件）</h2>
+
+<img class="slide-img" src="images/slide-35.png" alt="Slide 35: MPI I/O - all ranks write to one file in parallel">
+
+<div class="explanation">
+  <p>MPI 4.0 标准的 Chapter 14 提供了 <strong>并行 I/O</strong>，目标是同时拿到上面两种方案的优点：<em>一个文件 + 并行写入</em>。</p>
+
+  <h3>核心心智模型</h3>
+  <p>把文件看作"一条字节流"，每个 rank 负责其中的一段（slide 原话："a stream of bytes; bytes-offsets for different ranks are now important"）。各 rank <em>同时</em> 通过 <code>MPI_File_*</code> API 写到同一文件的不同 offset。</p>
+
+  <p>关键 API（slide 代码中出现）：</p>
+  <ul>
+    <li><code>MPI_File_open</code> / <code>MPI_File_close</code> —— 打开 / 关闭文件（注意是 collective）。</li>
+    <li><code>MPI_File_get_size</code> —— 查文件当前大小（用于决定 append offset）。</li>
+    <li><code>MPI_File_write_at</code> —— 在指定 byte offset 写入（每 rank 算自己的 offset）。</li>
+  </ul>
+
+  <h3>评分</h3>
+  <p><strong>Pros</strong>：<em>parallel and scalable</em> —— 一个文件、所有 rank 并行写。</p>
+  <p><strong>Cons</strong>：实现细节没做对会很慢。比如对齐到底层条带边界、collective vs independent 调用的选择，都会大幅影响性能。这就是 slide 上 "<em>can lead to bad performance if not carefully implemented</em>" 的意思。</p>
+</div>
+
+<div class="takeaway">
+  💡 MPI I/O 把文件当字节流，每 rank 通过 byte-offset 写自己的段；<em>一个文件、并行写</em>，对齐和 collective 调用方式决定性能上限。
+</div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 36 — Parallel I/O with HDF5 + MPI</h2>
+
+<img class="slide-img" src="images/slide-36.png" alt="Slide 36: HDF5 file format with parallel HDF5 over MPI">
+
+<div class="explanation">
+  <p>直接用裸 <code>MPI_File_*</code> API 太低级 —— 你得自己管理 offset、字节布局、版本兼容。<strong>HDF5（Hierarchical Data Format）</strong>是建立在并行 I/O 之上的高层文件格式，专为大数据科学计算设计。</p>
+
+  <h3>HDF5 提供什么</h3>
+  <ul>
+    <li><strong>结构化数据模型</strong>：文件像一个目录树（groups + datasets），每个 dataset 自带形状、类型、元数据。</li>
+    <li><strong>self-describing</strong>：读 HDF5 文件的程序不需要事先知道里面是什么 —— 文件自带 schema。</li>
+    <li><strong>Parallel HDF5</strong> 库底层用 MPI I/O 写文件，所以可以多 rank 同时往一个 HDF5 文件里 append 数据。</li>
+  </ul>
+
+  <h3>生态</h3>
+  <p>有 Python 绑定 <code>h5py</code>，写 HPC 后处理脚本几乎是事实标准。ParaView 这类可视化工具也直接打开 HDF5。</p>
+</div>
+
+<div class="takeaway">
+  💡 HDF5 = 在 MPI I/O 之上的"<em>带 schema 的并行二进制文件格式</em>"。一个文件 / 自描述 / 工具链丰富，是 HPC 默认输出格式。
+</div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 37 — Orthogonality（共享内存与分布式内存是两条独立的轴）</h2>
+
+<img class="slide-img" src="images/slide-37.png" alt="Slide 37: Orthogonality of shared memory and distributed memory">
+
+<div class="explanation">
+  <p>这页是承上启下的概念页。前几次课讲的 OpenMP / 多线程、cache、NUMA 全部是 <strong>node level（节点内 / 共享内存）</strong>：一个进程多线程共享一片地址空间。从 Lecture 7 开始讲的 MPI 是 <strong>cluster level（节点间 / 分布式内存）</strong>：不同节点的进程通过显式消息通信。</p>
+
+  <h3>正交的含义</h3>
+  <p>两个层面 <em>互不依赖、可以自由组合</em>。组合方式有四种：</p>
+
+  <ul>
+    <li><strong>纯线程</strong>（一台机器多线程，无 MPI）—— 单节点 OpenMP / pthread。</li>
+    <li><strong>纯 MPI</strong>（每个 rank 一线程，可能跨节点）—— 把多核也当独立 rank。</li>
+    <li><strong>Hybrid（MPI + OpenMP）</strong>—— 节点间用 MPI rank，节点内一个 rank 派多个线程。最常见的高性能配置。</li>
+    <li><strong>都不用</strong>—— 单线程串行程序。</li>
+  </ul>
+
+  <h3>为什么 Hybrid 流行</h3>
+  <p>纯 MPI 在大节点上每核一 rank，会造成大量跨核 MPI 通信和重复内存（每 rank 一份缓冲区）。Hybrid 让节点内用快得多的共享内存通信，节点间才走 MPI，<em>同时利用了 NUMA 的局部性和 MPI 的扩展性</em>。</p>
+</div>
+
+<div class="takeaway">
+  💡 共享内存 (节点内) 和分布式内存 (节点间) 是两条互不干扰的轴。MPI 不替代 OpenMP，它们一起组成 hybrid 模型。
+</div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 38 — example-6 Setup（申请节点 + 加载环境）</h2>
+
+<img class="slide-img" src="images/slide-38.png" alt="Slide 38: srun and spack environment setup commands">
+
+<div class="explanation">
+  <p>这页是后续上机示例（example-6）的环境准备步骤。两条命令分别解决"在哪运行"和"用什么编译器 / 库"。</p>
+
+  <pre><code>srun --nodes=1 --exclusive --time=00:20:00 --pty bash</code></pre>
+  <p><code>srun</code> 是 SLURM 的交互作业命令。<code>--nodes=1</code> 申请 1 个节点，<code>--exclusive</code> 独占整节点（不和别人共用 CPU），<code>--time=00:20:00</code> 限时 20 分钟，<code>--pty bash</code> 拿到一个交互 shell。</p>
+
+  <pre><code>. ~/161588/spack/share/spack/setup-env.sh
+spack env activate -p CS-2050</code></pre>
+  <p>第一行 source <em>Spack 包管理器</em> 的环境脚本（让 <code>spack</code> 命令可用），第二行激活课程预配的环境（带 <em>-p</em> 时把环境名拼到 prompt 里方便认）。激活后 <code>mpicxx</code>、<code>mpirun</code> 这些工具就指向课程统一的 MPI 实现。</p>
+</div>
+
+<div class="takeaway">
+  💡 上机两步走：<code>srun</code> 抢节点拿交互 shell；<code>spack env activate</code> 加载课程的 MPI 工具链。
+</div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 39 — example-6 题目：用 MPI 算 Euler's number</h2>
+
+<img class="slide-img" src="images/slide-39.png" alt="Slide 39: Euler's number formula and parallelization challenge question">
+
+<div class="explanation">
+  <p>例子要并行计算 <em>e</em> 的级数近似：</p>
+
+  <p style="text-align:center"><em>e</em> ≈ Σ<sub>n=0..N-1</sub> 1 / n!</p>
+
+  <h3>难点（slide 上的提问 "what makes this challenging?"）</h3>
+  <p>这个级数的麻烦在于 <strong>n! 之间有递推依赖</strong>：n! = (n-1)! × n。如果按"算 n!，再算 1/n!，再加进 sum"的串行逻辑，每一项都依赖上一项，<em>先天串行</em>。</p>
+
+  <h3>并行化思路</h3>
+  <p>把求和按 <em>n</em> 区间切给 p 个 rank，每个 rank 独立累加自己那段：</p>
+  <ul>
+    <li>每 rank 在自己的区间 [start, end) 内 <em>从头</em> 算 1/n!（不依赖别的 rank）。可以用对数累加或乘法递推稳定数值。</li>
+    <li>最后用 <code>MPI_Allreduce(&amp;local, &amp;global, 1, MPI_DOUBLE, MPI_SUM, ...)</code> 把所有 rank 的局部和加起来。</li>
+  </ul>
+
+  <p>这正是上一节学的 collective 应用：每 rank 独立计算 → Allreduce 合并。挑战在于 <em>避免每 rank 重复算 (start)! 的代价</em>，方法是从局部 base 起递推。</p>
+</div>
+
+<div class="takeaway">
+  💡 串行依赖（递推）的级数也能并行化：让每 rank 从自己的起点重新递推，最后 <code>MPI_Allreduce</code> 求和。
+</div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 40 — example-7：mpi4py（MPI for Python）</h2>
+
+<img class="slide-img" src="images/slide-40.png" alt="Slide 40: MPI for Python documentation page">
+
+<div class="explanation">
+  <p><strong>mpi4py</strong> 是 MPI 的 Python 绑定，让 Python 代码也能用 MPI 跑分布式并行。两种通信风格：</p>
+
+  <ul>
+    <li><strong>Pickle 方式</strong>（小写 <code>send</code>/<code>recv</code>）：发送任意可 pickle 的 Python 对象（dict、list、自定义类...）。方便但有序列化开销。</li>
+    <li><strong>Buffer 方式</strong>（大写 <code>Send</code>/<code>Recv</code>）：直接用 NumPy 数组的 buffer，<em>零拷贝</em>，性能接近原生 C 的 MPI。这是科学计算应该用的形式。</li>
+  </ul>
+
+  <h3>典型用法</h3>
+  <pre><code>from mpi4py import MPI
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+data = np.arange(N, dtype='d')        # NumPy buffer
+local = data[rank * chunk:(rank+1) * chunk]
+total = np.zeros(1, dtype='d')
+comm.Allreduce(local.sum(keepdims=True), total, op=MPI.SUM)</code></pre>
+
+  <p>实际跑法和 C 一样：<code>mpirun -n 4 python script.py</code>。</p>
+</div>
+
+<div class="takeaway">
+  💡 mpi4py 把 MPI 全套搬到 Python；<em>大写 API + NumPy buffer</em> 是高性能写法，<em>小写 API + pickle</em> 是便利写法。
+</div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 41 — Looking Ahead（章节分隔：转入性能模型）</h2>
+
+<img class="slide-img" src="images/slide-41.png" alt="Slide 41: Looking Ahead section divider">
+
+<div class="explanation">
+  <p>章节过渡页。前面讲完了"<em>怎么写并行代码</em>"（OpenMP、MPI、I/O），接下来转入"<em>怎么衡量并行代码的性能</em>"：speedup、Amdahl's law、strong / weak scaling。这些是判断"加并行划不划算"的理论工具。</p>
+</div>
+
+<div class="takeaway">
+  💡 章节切换 —— 从"怎么写"过渡到"怎么衡量"。
+</div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 42 — Parallel Speedup（加速比的定义）</h2>
+
+<img class="slide-img" src="images/slide-42.png" alt="Slide 42: Parallel speedup formula and super-linear definition">
+
+<div class="explanation">
+  <p>核心定义先记住：</p>
+
+  <p style="text-align:center"><em>S<sub>p</sub></em> = <em>T<sub>s</sub></em> / <em>T<sub>p</sub></em></p>
+
+  <p>其中 <em>T<sub>s</sub></em> = T(<em>n</em>; 1) 是 <em>串行</em> 执行时间（用 1 个 processor 跑完整问题），<em>T<sub>p</sub></em> = T(<em>n</em>; <em>p</em>) 是 <em>并行</em> 跑同一个问题（在 <em>p</em> 个 processor 上）的时间。</p>
+
+  <h3>更一般的形式（slide 后半）</h3>
+  <p>当并行版和串行版做的"工作量"相同时（<em>W<sub>p</sub></em> = <em>W<sub>s</sub></em>），speedup 就是执行时间之比。如果两版工作量不同（比如并行版多做了通信开销算入工作量），定义会改成：</p>
+
+  <p style="text-align:center"><em>S</em> = (<em>W<sub>p</sub></em> / <em>T<sub>p</sub></em>) / (<em>W<sub>s</sub></em> / <em>T<sub>s</sub></em>)</p>
+
+  <p>本质是"<em>有效工作率之比</em>"。</p>
+
+  <h3>三个关键阈值</h3>
+  <ul>
+    <li><em>S</em> = <em>p</em>：<em>perfect / linear speedup</em>，理想情况，加 <em>p</em> 倍处理器拿 <em>p</em> 倍速度。</li>
+    <li><em>S</em> &lt; <em>p</em>：<em>performance degradation</em> 相对于完美。绝大多数现实程序在这里。</li>
+    <li><em>S</em> &gt; <em>p</em>：<em>super-linear speedup</em>，加速大于处理器数。罕见但真存在 —— 多处理器版每核分到的数据更小、能塞进 cache，命中率猛增带来的红利可能超过线性。</li>
+  </ul>
+</div>
+
+<div class="takeaway">
+  💡 Speedup = T<sub>串</sub>/T<sub>并</sub>。理想 S=p，现实 S&lt;p，偶尔 S&gt;p（cache 红利的 super-linear）。
+</div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 43 — Amdahl's Law（受 serial fraction 钳制的硬上限）</h2>
+
+<img class="slide-img" src="images/slide-43.png" alt="Slide 43: Amdahl's law derivation and formula">
+
+<div class="explanation">
+  <p>Amdahl's law 描述一个简单事实：<strong>程序里那部分天然不能并行的代码，决定了最大加速比的上限</strong>。把不可并行的比例记作 <em>f</em>（serial fraction），剩下 (1−<em>f</em>) 是可并行的。</p>
+
+  <h3>推导（"问题规模固定 + 无并行开销"假设下）</h3>
+  <p>串行总时间是 <em>T<sub>s</sub></em>。其中 <em>f T<sub>s</sub></em> 必须串行跑、(1−<em>f</em>) <em>T<sub>s</sub></em> 可以由 <em>p</em> 个处理器分摊：</p>
+
+  <p style="text-align:center"><em>T<sub>p</sub></em> = <em>f T<sub>s</sub></em> + (1 − <em>f</em>) <em>T<sub>s</sub></em> / <em>p</em></p>
+
+  <p>所以：</p>
+
+  <p style="text-align:center"><em>S<sub>p</sub></em> = <em>T<sub>s</sub></em> / <em>T<sub>p</sub></em> = 1 / ( <em>f</em> + (1−<em>f</em>) / <em>p</em> )</p>
+
+  <h3>关键推论：上限</h3>
+  <p>当 <em>p</em> → ∞，(1−<em>f</em>)/<em>p</em> → 0，于是：</p>
+
+  <p style="text-align:center">lim<sub><em>p</em>→∞</sub> <em>S<sub>p</sub></em> = 1 / <em>f</em></p>
+
+  <p>即使无限多 CPU，加速也封顶在 <em>1/f</em>。<em>f</em> = 5% → 最快也就 20 倍。这就是为什么"先去掉串行瓶颈"比"加更多核"重要 —— 你不能用并行把零变大。</p>
+
+  <p>这是 <em>strong scaling</em> 的理论支柱，下页展开。</p>
+</div>
+
+<div class="takeaway">
+  💡 Amdahl: <em>S<sub>p</sub></em> = 1 / (<em>f</em> + (1−<em>f</em>)/<em>p</em>)，<em>p</em>→∞ 时趋于 <em>1/f</em>。串行比例 <em>f</em> 是绝对天花板。
+</div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 44 — Strong Scaling（问题大小不变，加更多核）</h2>
+
+<img class="slide-img" src="images/slide-44.png" alt="Slide 44: Strong scaling - fixed problem size, vary number of processors">
+
+<div class="explanation">
+  <p>把 Amdahl's law 用在"<em>问题规模 n 固定、改变处理器数 p</em>"的实验里，叫 <strong>strong scaling</strong>。这是判断已有问题能不能"用更多机器跑得更快"的方法。</p>
+
+  <h3>预期形态</h3>
+  <p>同 slide 43：随着 p 增大，<em>S<sub>p</sub></em> 一开始接近线性，然后渐渐弯曲、最终封顶在 <em>1/f</em>。曲线弯下来的拐点位置由 <em>f</em> 决定 —— <em>f</em> 越大、拐得越早、越快平台。</p>
+
+  <p>slide 右下的图就是这个：横轴 # of Threads / Procs，纵轴 speedup，几条不同 f 的曲线（f=0.5%、0.05%、0.005%）展示了"<em>越小的 f 才能撑到越多核</em>"。</p>
+
+  <h3>实践问题</h3>
+  <ul>
+    <li><strong><em>f</em> 一般测不准</strong>：现实代码里"哪部分串行"经常隐式（锁竞争、I/O 串行段、跨节点同步），实测 speedup 反推 f 比静态分析靠谱。</li>
+    <li>到一定 p 之后增加并行开销（通信、同步）<em>会反过来吃掉收益</em>，speedup 甚至下降。</li>
+    <li>strong scaling 在<em>处理器少 + 通信开销可忽略</em>的场景（节点内共享内存）最适用。</li>
+  </ul>
+</div>
+
+<div class="takeaway">
+  💡 Strong scaling = "n 固定、p 变大"。终极上限是 1/f；现实曲线先线性、再弯、最后平台甚至下降。
+</div>
+</div>
+
+
+<div class="slide">
+<h2 class="slide-title">Slide 45 — Weak Scaling（每核工作量不变，问题随 p 变大）</h2>
+
+<img class="slide-img" src="images/slide-45.png" alt="Slide 45: Weak scaling - fixed work-per-processor, growing problem size">
+
+<div class="explanation">
+  <p>另一种实验设计：<strong>固定每个处理器的工作量</strong>，处理器越多、问题就越大。比如 1 核处理 100 万格点；100 核就处理 1 亿格点。这叫 <strong>weak scaling</strong>，对应 <em>Gustafson's law</em>。</p>
+
+  <h3>动机</h3>
+  <p>HPC 真实需求往往不是"把同一个问题算更快"，而是"<em>用更多机器算更大的问题</em>"。strong scaling 受 Amdahl 钳制，weak scaling 才反映"超算实际能力"。</p>
+
+  <h3>形式化</h3>
+  <p>设 1 核问题串行时间 <em>T<sub>s</sub></em>，<em>p</em> 核问题工作量是它的 <em>p</em> 倍 —— 即 <em>W<sub>p</sub></em> = <em>p W<sub>s</sub></em>。理想下并行执行时间 <em>T<sub>p</sub></em> 维持常数（每核还是只做 <em>W<sub>s</sub></em> 那么多活）。speedup 定义变成：</p>
+
+  <p style="text-align:center"><em>S<sub>p</sub></em> = (<em>W<sub>p</sub></em> / <em>T<sub>p</sub></em>) / (<em>W<sub>s</sub></em> / <em>T<sub>s</sub></em>) = (<em>p T<sub>s</sub></em>) / <em>T<sub>p</sub></em></p>
+
+  <p>带上并行开销 <em>T<sub>o</sub></em>(<em>n</em>; <em>p</em>)：</p>
+
+  <p style="text-align:center"><em>T<sub>p</sub></em> = <em>T<sub>s</sub></em> + <em>T<sub>o</sub></em>(<em>n</em>; <em>p</em>)</p>
+
+  <p>关键观察：随着 <em>p</em> → ∞，<em>串行小数 (serial fraction)</em> 在 <em>总工作量</em> 中的占比趋近于 0（分母变大）。所以即使有 <em>f</em>，weak scaling 不像 strong scaling 那样硬封顶 —— 只要 <em>T<sub>o</sub></em>(<em>n</em>; <em>p</em>) 增长不超过 <em>T<sub>s</sub></em>，speedup 可以一直爬。</p>
+
+  <h3>什么时候用哪个</h3>
+  <ul>
+    <li>问"<em>能不能在更多核上跑同一问题更快</em>" → strong scaling（Amdahl）。</li>
+    <li>问"<em>能不能在更多核上跑更大问题</em>" → weak scaling（Gustafson）。</li>
+  </ul>
+
+  <p>大型超算的 benchmark（HPL、HPCG）几乎全是 weak scaling 视角的成绩。</p>
+</div>
+
+<div class="takeaway">
+  💡 Weak scaling = "每核工作量固定、p 和 n 同步变大"。对应 Gustafson's law；不受 1/f 上限钳制，是 HPC 现实关心的规模化指标。
+</div>
+</div>
+
+
+<script>
+(function() {
+  const STORAGE_KEY = 'cs2050-lec8-highlights';
+  const state = {
+    highlightMode: false,
+    eraserMode: false,
+    currentColor: 'yellow',
+    highlights: []
+  };
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      state.highlights = raw ? JSON.parse(raw) : [];
+    } catch (e) { state.highlights = []; }
+  }
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.highlights));
+  }
+  function genId() {
+    return 'hl_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  }
+
+  // ---------- Toolbar ----------
+  function buildToolbar() {
+    const tb = document.createElement('div');
+    tb.id = 'hl-toolbar';
+    tb.innerHTML =
+      '<button id="hl-mode-btn" class="hl-btn">高亮模式: 关</button>' +
+      '<span class="hl-color-picker">' +
+        '<span class="hl-color" data-color="yellow" title="黄"></span>' +
+        '<span class="hl-color" data-color="green"  title="绿"></span>' +
+        '<span class="hl-color" data-color="pink"   title="粉"></span>' +
+        '<span class="hl-color" data-color="blue"   title="蓝"></span>' +
+      '</span>' +
+      '<button id="hl-eraser-btn" class="hl-btn">🧽 橡皮擦: 关</button>' +
+      '<button id="hl-toggle-btn" class="hl-btn">隐藏标记</button>' +
+      '<button id="hl-clear-btn" class="hl-btn">清除全部</button>';
+    document.body.appendChild(tb);
+
+    const modeBtn = document.getElementById('hl-mode-btn');
+    const eraserBtn = document.getElementById('hl-eraser-btn');
+
+    function refreshModeUI() {
+      modeBtn.textContent = '高亮模式: ' + (state.highlightMode ? '开' : '关');
+      modeBtn.classList.toggle('active', state.highlightMode);
+      eraserBtn.textContent = '🧽 橡皮擦: ' + (state.eraserMode ? '开' : '关');
+      eraserBtn.classList.toggle('active', state.eraserMode);
+      document.body.classList.toggle('hl-active', state.highlightMode);
+      document.body.classList.toggle('hl-eraser', state.eraserMode);
+    }
+
+    modeBtn.addEventListener('click', () => {
+      state.highlightMode = !state.highlightMode;
+      if (state.highlightMode) state.eraserMode = false;
+      refreshModeUI();
+    });
+    eraserBtn.addEventListener('click', () => {
+      state.eraserMode = !state.eraserMode;
+      if (state.eraserMode) state.highlightMode = false;
+      refreshModeUI();
+    });
+
+    tb.querySelectorAll('.hl-color').forEach(el => {
+      el.addEventListener('click', () => {
+        state.currentColor = el.dataset.color;
+        tb.querySelectorAll('.hl-color').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+      });
+    });
+    tb.querySelector('.hl-color[data-color="yellow"]').classList.add('selected');
+
+    const toggleBtn = document.getElementById('hl-toggle-btn');
+    toggleBtn.addEventListener('click', () => {
+      const hidden = document.body.classList.toggle('hl-hidden');
+      toggleBtn.textContent = hidden ? '显示标记' : '隐藏标记';
+    });
+
+    document.getElementById('hl-clear-btn').addEventListener('click', () => {
+      if (!confirm('清除全部高亮?')) return;
+      state.highlights = [];
+      save();
+      clearAllVisuals();
+    });
+  }
+
+  // ---------- Image highlights ----------
+  function setupImages() {
+    document.querySelectorAll('.slide-img').forEach(img => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'hl-img-wrapper';
+      img.parentNode.insertBefore(wrapper, img);
+      wrapper.appendChild(img);
+      attachImageDrag(img, wrapper);
+    });
+  }
+
+  function attachImageDrag(img, wrapper) {
+    let dragging = false;
+    let startX = 0, lockedY = 0;
+    let preview = null;
+    let rect = null;
+
+    img.addEventListener('mousedown', (e) => {
+      if (!state.highlightMode) return;
+      e.preventDefault();
+      rect = img.getBoundingClientRect();
+      startX = e.clientX - rect.left;
+      lockedY = e.clientY - rect.top;
+      dragging = true;
+
+      preview = document.createElement('div');
+      preview.className = 'hl-img-mark';
+      preview.dataset.color = state.currentColor;
+      preview.style.left = (startX / rect.width * 100) + '%';
+      preview.style.top  = (lockedY / rect.height * 100) + '%';
+      preview.style.width = '0';
+      preview.style.pointerEvents = 'none';
+      wrapper.appendChild(preview);
+    });
+
+    function onMove(e) {
+      if (!dragging) return;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      preview.style.left  = (xs / rect.width * 100) + '%';
+      preview.style.width = ((xe - xs) / rect.width * 100) + '%';
+    }
+    function onUp(e) {
+      if (!dragging) return;
+      dragging = false;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      const widthPx = xe - xs;
+      if (widthPx < 8) {
+        if (preview) preview.remove();
+        preview = null;
+        return;
+      }
+      const data = {
+        type: 'image',
+        img_src: img.getAttribute('src'),
+        y_pct: lockedY / rect.height * 100,
+        x_start_pct: xs / rect.width * 100,
+        x_end_pct: xe / rect.width * 100,
+        color: state.currentColor,
+        id: genId()
+      };
+      state.highlights.push(data);
+      save();
+      preview.dataset.hlId = data.id;
+      preview.style.pointerEvents = 'auto';
+      preview.title = '橡皮擦模式下点击删除';
+      preview.addEventListener('click', (ev) => {
+        if (!state.eraserMode) return;
+        ev.stopPropagation();
+        removeHighlight(data.id);
+      });
+      preview = null;
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  function applyImageHighlight(data) {
+    const img = document.querySelector('.slide-img[src="' + cssEscape(data.img_src) + '"]');
+    if (!img) return;
+    const wrapper = img.parentElement;
+    if (!wrapper.classList.contains('hl-img-wrapper')) return;
+    const m = document.createElement('div');
+    m.className = 'hl-img-mark';
+    m.dataset.color = data.color;
+    m.dataset.hlId = data.id;
+    m.style.left = data.x_start_pct + '%';
+    m.style.width = (data.x_end_pct - data.x_start_pct) + '%';
+    m.style.top = data.y_pct + '%';
+    m.title = '橡皮擦模式下点击删除';
+    m.addEventListener('click', (ev) => {
+      if (!state.eraserMode) return;
+      ev.stopPropagation();
+      removeHighlight(data.id);
+    });
+    wrapper.appendChild(m);
+  }
+
+  function cssEscape(s) {
+    return s.replace(/"/g, '\\"');
+  }
+
+  // ---------- Text highlights ----------
+  function setupTextSelection() {
+    document.addEventListener('mouseup', (e) => {
+      if (!state.highlightMode) return;
+      if (e.target.closest('#hl-toolbar')) return;
+      if (e.target.classList && e.target.classList.contains('slide-img')) return;
+      if (e.target.classList && e.target.classList.contains('hl-img-mark')) return;
+
+      setTimeout(() => {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        const text = sel.toString();
+        if (text.length === 0) return;
+
+        const range = sel.getRangeAt(0);
+        const ctx = computeContext(range);
+        if (!ctx) return;
+
+        const data = {
+          type: 'text',
+          text: text,
+          contextBefore: ctx.before,
+          contextAfter: ctx.after,
+          color: state.currentColor,
+          id: genId()
+        };
+        wrapRange(range, data);
+        state.highlights.push(data);
+        save();
+        sel.removeAllRanges();
+      }, 0);
+    });
+  }
+
+  function computeContext(range) {
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) root = root.parentElement;
+    while (root && root.tagName && !/^(P|LI|TD|H1|H2|H3|H4|DIV|BODY|PRE|BLOCKQUOTE|SUMMARY)$/.test(root.tagName)) {
+      root = root.parentElement;
+    }
+    if (!root) return null;
+    const fullText = root.textContent;
+    const startOffset = nodeOffset(root, range.startContainer, range.startOffset);
+    const endOffset = nodeOffset(root, range.endContainer, range.endOffset);
+    if (startOffset < 0 || endOffset < 0) return null;
+    const CTX = 25;
+    return {
+      before: fullText.slice(Math.max(0, startOffset - CTX), startOffset),
+      after: fullText.slice(endOffset, endOffset + CTX)
+    };
+  }
+
+  function nodeOffset(root, node, offsetInNode) {
+    let total = 0;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    let n;
+    while ((n = walker.nextNode())) {
+      if (n === node) return total + offsetInNode;
+      total += n.textContent.length;
+    }
+    return -1;
+  }
+
+  function wrapRange(range, data) {
+    const fragments = [];
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) {
+      fragments.push({ node: root, start: range.startOffset, end: range.endOffset });
+    } else {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+      let n;
+      while ((n = walker.nextNode())) {
+        if (!range.intersectsNode(n)) continue;
+        const start = (n === range.startContainer) ? range.startOffset : 0;
+        const end   = (n === range.endContainer)   ? range.endOffset   : n.textContent.length;
+        if (end > start) fragments.push({ node: n, start, end });
+      }
+    }
+    fragments.forEach(f => {
+      const r = document.createRange();
+      try {
+        r.setStart(f.node, f.start);
+        r.setEnd(f.node, f.end);
+        const m = document.createElement('mark');
+        m.className = 'hl-text-mark';
+        m.dataset.color = data.color;
+        m.dataset.hlId = data.id;
+        m.title = '橡皮擦模式下点击删除';
+        m.addEventListener('click', (ev) => {
+          if (!state.eraserMode) return;
+          ev.stopPropagation();
+          removeHighlight(data.id);
+        });
+        r.surroundContents(m);
+      } catch (e) { /* skip fragment */ }
+    });
+  }
+
+  function applyTextHighlight(data) {
+    const target = data.contextBefore + data.text + data.contextAfter;
+    const root = document.body;
+    const nodes = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => {
+        if (n.parentElement && n.parentElement.closest('script, style, #hl-toolbar')) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }, false);
+    let nd;
+    while ((nd = walker.nextNode())) nodes.push(nd);
+    const fullText = nodes.map(n => n.textContent).join('');
+    const idx = fullText.indexOf(target);
+    if (idx === -1) return;
+
+    const startPos = idx + data.contextBefore.length;
+    const endPos = startPos + data.text.length;
+    let cum = 0, startNode = null, startOff = 0, endNode = null, endOff = 0;
+    for (const n of nodes) {
+      const len = n.textContent.length;
+      if (!startNode && startPos >= cum && startPos < cum + len) {
+        startNode = n; startOff = startPos - cum;
+      }
+      if (startNode && endPos > cum && endPos <= cum + len) {
+        endNode = n; endOff = endPos - cum; break;
+      }
+      cum += len;
+    }
+    if (!startNode || !endNode) return;
+    const range = document.createRange();
+    try {
+      range.setStart(startNode, startOff);
+      range.setEnd(endNode, endOff);
+      wrapRange(range, data);
+    } catch (e) {}
+  }
+
+  // ---------- Remove / clear ----------
+  function removeHighlight(id) {
+    state.highlights = state.highlights.filter(h => h.id !== id);
+    save();
+    document.querySelectorAll('[data-hl-id="' + id + '"]').forEach(el => {
+      if (el.tagName === 'MARK') {
+        const p = el.parentNode;
+        while (el.firstChild) p.insertBefore(el.firstChild, el);
+        p.removeChild(el);
+        p.normalize();
+      } else {
+        el.remove();
+      }
+    });
+  }
+  function clearAllVisuals() {
+    document.querySelectorAll('.hl-img-mark').forEach(el => el.remove());
+    document.querySelectorAll('mark.hl-text-mark').forEach(el => {
+      const p = el.parentNode;
+      while (el.firstChild) p.insertBefore(el.firstChild, el);
+      p.removeChild(el);
+      p.normalize();
+    });
+  }
+
+  // ---------- Init ----------
+  function init() {
+    load();
+    buildToolbar();
+    setupImages();
+    setupTextSelection();
+    window.addEventListener('load', () => {
+      state.highlights.forEach(h => {
+        if (h.type === 'image') applyImageHighlight(h);
+        else if (h.type === 'text') applyTextHighlight(h);
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+</body>
+</html>

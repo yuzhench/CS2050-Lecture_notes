@@ -1,0 +1,2456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>CS 2050 Lecture 9 - 复习笔记</title>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    max-width: 980px;
+    margin: 40px auto;
+    padding: 0 24px;
+    line-height: 1.7;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 {
+    border-bottom: 3px solid #1f6feb;
+    padding-bottom: 10px;
+  }
+  h2.slide-title {
+    color: #1f6feb;
+    margin-top: 50px;
+    border-left: 5px solid #1f6feb;
+    padding-left: 12px;
+  }
+  h3 {
+    color: #333;
+    margin-top: 28px;
+  }
+  .slide-img {
+    display: block;
+    max-width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin: 16px 0 24px 0;
+  }
+  .explanation {
+    background: #fff;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
+  }
+  .qa {
+    background: #fff8e1;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border-left: 4px solid #f0a500;
+    margin-top: 20px;
+  }
+  .qa h3 { margin-top: 0; color: #b8730e; }
+  .qa ul li { margin-bottom: 8px; }
+  details.qa > summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #b8730e;
+    font-size: 1.08em;
+    padding: 6px 0;
+    user-select: none;
+    list-style: none;
+  }
+  details.qa > summary::before {
+    content: "▶ ";
+    display: inline-block;
+    transition: transform 0.15s;
+  }
+  details.qa[open] > summary::before {
+    content: "▼ ";
+  }
+  details.qa > summary:hover { color: #f0a500; }
+  details.qa[open] > summary { margin-bottom: 14px; }
+  code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.92em;
+  }
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th { background: #1f6feb; color: white; }
+  blockquote {
+    border-left: 4px solid #1f6feb;
+    margin: 16px 0;
+    padding: 4px 16px;
+    color: #555;
+    background: #eef4ff;
+  }
+  .takeaway {
+    background: #e8f5e9;
+    border-left: 4px solid #2e7d32;
+    padding: 14px 20px;
+    margin-top: 20px;
+    border-radius: 4px;
+  }
+
+  /* ============================================
+     Highlight feature (image + text)
+     ============================================ */
+  #hl-toolbar {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .hl-btn {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    user-select: none;
+  }
+  .hl-btn:hover { background: #e8e8e8; }
+  .hl-btn.active { background: #1f6feb; color: white; border-color: #1f6feb; }
+  .hl-color-picker {
+    display: inline-flex;
+    gap: 6px;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    padding: 0 10px;
+  }
+  .hl-color {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    display: inline-block;
+    box-sizing: border-box;
+  }
+  .hl-color.selected { border-color: #333; }
+  .hl-color[data-color="yellow"] { background: rgba(255, 235, 59, 0.85); }
+  .hl-color[data-color="green"]  { background: rgba(102, 187, 106, 0.85); }
+  .hl-color[data-color="pink"]   { background: rgba(236, 64, 122, 0.75); }
+  .hl-color[data-color="blue"]   { background: rgba(79, 195, 247, 0.85); }
+
+  body.hl-active { cursor: crosshair; }
+  body.hl-active .slide-img { cursor: crosshair; }
+  body.hl-eraser { cursor: not-allowed; }
+  body.hl-eraser .slide-img { cursor: not-allowed; }
+  body.hl-eraser .hl-img-mark,
+  body.hl-eraser mark.hl-text-mark {
+    outline: 2px dashed #d32f2f;
+    outline-offset: 1px;
+    cursor: pointer !important;
+  }
+
+  .hl-img-wrapper {
+    position: relative;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin: 16px 0 24px 0;
+  }
+  .hl-img-wrapper > .slide-img { margin: 0; }
+
+  .hl-img-mark {
+    position: absolute;
+    height: 14px;
+    transform: translateY(-50%);
+    border-radius: 2px;
+    mix-blend-mode: multiply;
+    pointer-events: auto;
+  }
+  .hl-img-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.65); }
+  .hl-img-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.55); }
+  .hl-img-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.50); }
+  .hl-img-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.55); }
+
+  mark.hl-text-mark {
+    padding: 1px 1px;
+    border-radius: 2px;
+    color: inherit;
+  }
+  mark.hl-text-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.55); }
+  mark.hl-text-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.40); }
+  mark.hl-text-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.30); }
+  mark.hl-text-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.40); }
+
+  body.hl-hidden .hl-img-mark { background: transparent !important; }
+  body.hl-hidden mark.hl-text-mark {
+    background: transparent !important;
+    padding: 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>CS 2050 Lecture 9 - 复习笔记</h1>
+<p><em>主题：CUDA C++ 入门 —— GPU 架构、Host/Device 模型、加速库全景、热传导例子</em></p>
+
+<blockquote>
+  Lecture 9 是 NVIDIA Bryce Adelstein Lelbach 的客座讲座《The CUDA C++ Developer's Toolbox》（共 164 页 slides，本笔记按主题合并）。Slide 1 是讲者封面（行政页），跳过。技术内容从 slide 2 起。前 25 页围绕一个核心问题展开：<em>为什么需要 GPU？怎样在 C++ 里写既能跑在 CPU 又能跑在 GPU 的代码？</em>笔记按主题把连续同主题的 slides 合并成一节，便于复习时按概念维度而不是 slide 维度回顾。
+</blockquote>
+
+<style>
+  /* 多 slide 合并后的图片网格，本 lecture 专用 */
+  .slide-grid {
+    display: grid;
+    gap: 12px;
+    margin: 16px 0 24px 0;
+  }
+  .slide-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .slide-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .slide-grid .slide-img { margin: 0; max-width: 100%; }
+</style>
+
+
+<!-- ==================== SLIDE 2–5 ==================== -->
+<h2 class="slide-title">Slide 2–5 — CPU vs GPU：核心结构 + 内存延迟带宽 + GPU 适用条件</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-002.png" alt="Slide 2: CPU vs GPU 芯片结构对比">
+  <img class="slide-img" src="images/slide-003.png" alt="Slide 3: CPU + 内存（100ns / 100 GB/s）">
+  <img class="slide-img" src="images/slide-004.png" alt="Slide 4: CPU + 内存 与 GPU + 内存 对比">
+  <img class="slide-img" src="images/slide-005.png" alt="Slide 5: 需要足够大的工作量才能受益于 GPU">
+</div>
+
+<div class="explanation">
+  <h3>核心对比：CPU 是少量"大核"，GPU 是大量"小核"</h3>
+  <p>Slide 2 用两张芯片俯视图说明结构差异。CPU 芯片画成 4 个大方块——代表少数几个复杂的强核（每核有大量 cache、乱序执行、分支预测、多发射等机制）。GPU 芯片画成密密麻麻的 64 个小方块——代表非常多的简单核心，每核功能弱、cache 小，但数量多。</p>
+  <p>这个对比定下了基调：<strong>CPU 优化"单线程做事快"，GPU 优化"同时做很多件相同的事"</strong>。所以同样的代码，串行/分支密集 → CPU 占优；大批量相同算术 → GPU 占优。</p>
+
+  <h3>内存：延迟和带宽是两个独立指标</h3>
+  <p>Slide 3 加上 CPU 的内存子系统：<em>访问延迟 ≈ 100 ns</em>，<em>带宽 ≈ 100 GB/s</em>（slide 强调"数字是举例用的，不是精确数值"）。延迟 = 一次取一个字节要等多久；带宽 = 单位时间最多搬多少字节。两者不是同一回事——延迟高但带宽大的系统可以靠"流水"撑住吞吐，但单次随机访问还是慢。</p>
+  <p>Slide 4 把 GPU 的内存子系统并排放上：<em>GPU 延迟 ≈ 500 ns（更高）</em>，<em>GPU 带宽 ≈ 1000 GB/s（更高）</em>。这是 GPU 的典型权衡：用 HBM/GDDR 做并行总线，单次访问比 CPU 慢，但总搬运速度大约 10×。GPU 通过让大量线程同时发射访存请求来"摊平"延迟——任一线程在等内存时其他线程接着算，硬件根本不在乎单线程的等待。</p>
+
+  <h3>GPU 不是万能加速器：要有"足够多的活"才划算</h3>
+  <p>Slide 5 把这层意思说出来——<em>"You need a sufficient workload to benefit from GPUs."</em> 意思是：如果只算一点点，把数据从 CPU 内存搬到 GPU 内存的开销 + GPU 的高启动延迟，可能比 CPU 直接算还慢。</p>
+  <p>下面两条 rule of thumb 给出了"多少才算够"的粗略标准：</p>
+  <ul>
+    <li><strong>O(N) compute ⇒ 需要 MB 级数据</strong>。如果计算量只是 N（每个元素做一次加法之类），那数据量必须大到 MB 才能让搬数据/启动开销被掩盖。</li>
+    <li><strong>计算量超过 O(N) ⇒ 数据可以更少</strong>。比如矩阵乘 O(N³) 这种重计算，每个数据被反复使用很多次，数据可以小一些 GPU 也划算（计算/通信比高）。</li>
+  </ul>
+  <p>这就是后面所有内容的前提：CUDA 的存在意义就是让你能高效地把"够大的活"喂给 GPU 这种宽吞吐设备。</p>
+</div>
+
+<div class="takeaway">
+  💡 CPU = 少量大核 + 低延迟内存；GPU = 大量小核 + 高带宽（高延迟）内存。GPU 通过并行掩盖延迟。要让 GPU 划算，要么数据量足够大，要么单位数据上的计算量足够多。
+</div>
+
+
+<!-- ==================== SLIDE 6–7 ==================== -->
+<h2 class="slide-title">Slide 6–7 — "怎么用 C++ 写 GPU 程序？" → CUDA C++ + 加速库</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-006.png" alt="Slide 6: 提问 How do we program a GPU in C++?">
+  <img class="slide-img" src="images/slide-007.png" alt="Slide 7: 答案 CUDA C++ and Accelerated Libraries">
+</div>
+
+<div class="explanation">
+  <h3>章节过渡：本节回答"GPU 编程的入口是什么？"</h3>
+  <p>这两页是讲座的 section divider——Slide 6 提出问题"如何用 C++ 编 GPU"，Slide 7 给出 NVIDIA 的官方答案：<strong>CUDA C++</strong> + <strong>Accelerated Libraries</strong>。两个并列入口意味着你不必从零写 kernel：</p>
+  <ul>
+    <li><strong>CUDA C++</strong>：底层语言层面的扩展，给你写自定义 kernel 的能力（slide 8 起开始展开）。</li>
+    <li><strong>Accelerated Libraries</strong>：上层一堆 NVIDIA 已经写好并优化的库（cuBLAS、cuDNN、Thrust 等），直接调用 API 就把 GPU 用起来了，不必自己写 kernel（slide 9 全景图）。</li>
+  </ul>
+  <p>两条路不是互斥的。实际项目里通常 <em>大部分计算用库（性能稳定、维护成本低），关键的几个热点 kernel 自己写 CUDA C++（针对自己的访存模式调优）</em>。</p>
+</div>
+
+<div class="takeaway">
+  💡 GPU 编程的入口有两个：自己写 CUDA C++ kernel，或者直接调 NVIDIA 提供的加速库。后续 slides 同时介绍这两条路。
+</div>
+
+
+<!-- ==================== SLIDE 8 ==================== -->
+<h2 class="slide-title">Slide 8 — CUDA C++ 是标准 C++ 的扩展，同时支持 Host 和 Device</h2>
+
+<img class="slide-img" src="images/slide-008.png" alt="Slide 8: CUDA C++ 同时跑 Host (CPU) 和 Device (GPU) 代码">
+
+<div class="explanation">
+  <h3>关键定义：Host = CPU，Device = GPU</h3>
+  <p>Slide 上一句话定义：<em>"CUDA C++ is an extension of Standard C++ for writing programs that simultaneously run on CPUs (hosts) &amp; GPUs (devices)."</em> 注意"<strong>simultaneously</strong>"——同一个源文件里同时包含 CPU 部分和 GPU 部分，编译产物同时跑在两边。这和 OpenCL"主机端 C++ + 设备端单独的字符串 kernel 源码"是不同的体验：CUDA 让你把两边的代码写在一起。</p>
+  <p>下面这两个术语贯穿后面所有 slides：</p>
+  <ul>
+    <li><strong>Host code</strong>：跑在 CPU 上的那部分。slide 写 <em>"All of Standard C++"</em>——任何标准 C++ 写法都能用，没有限制。</li>
+    <li><strong>Device code</strong>：跑在 GPU 上的那部分。slide 写 <em>"Almost all of Standard C++"</em>——绝大多数标准 C++ 都能用，但有少数特性受限（比如部分 RTTI、异常、动态多态在 device 上的限制；具体细节后面 slides 会展开）。<em>"Almost"</em> 这个字关键——以前 CUDA 设备端是个比较"残缺"的子集，现在已经接近完整 C++ 了。</li>
+  </ul>
+  <p>中间那条点状黄线表示"Host 与 Device 是两个独立执行域，但同属一个程序"——这层分界后面会反复出现（编译流程、函数注解、执行流转）。</p>
+</div>
+
+<div class="takeaway">
+  💡 CUDA C++ = 标准 C++ 的超集；Host = 跑 CPU 的代码（完整 C++），Device = 跑 GPU 的代码（几乎完整 C++）。两边在同一份源码里。
+</div>
+
+
+<!-- ==================== SLIDE 9 ==================== -->
+<h2 class="slide-title">Slide 9 — NVIDIA 的 CUDA 加速库全景</h2>
+
+<img class="slide-img" src="images/slide-009.png" alt="Slide 9: NVIDIA CUDA 加速库 logo 墙">
+
+<div class="explanation">
+  <h3>这页不是要你背下所有库，而是建立"先查库，再写 kernel"的直觉</h3>
+  <p>Slide 列出的 24 个组件按功能可以粗分成几类，复习时知道"这个领域有库"就够了，具体 API 用到再查：</p>
+  <ul>
+    <li><strong>线性代数 / 数值计算</strong>：cuBLAS（稠密 BLAS）、cuSPARSE（稀疏矩阵）、cuSOLVER（线性求解器）、cuDSS（直接稀疏求解）、cuFFT（FFT）、cuTENSOR（张量缩并）、cuRAND（随机数）、CUDA Math（基础数学函数）。</li>
+    <li><strong>深度学习 / 推理</strong>：cuDNN（深度神经网络原语）、TensorRT（推理优化器/运行时）。</li>
+    <li><strong>领域专用</strong>：CV CUDA（计算机视觉）、cuLitho（光刻仿真）、CUDA-Q（量子计算）、RAPIDS（GPU 上的 pandas/scikit-learn）。</li>
+    <li><strong>多 GPU / 通信</strong>：NCCL（多 GPU collectives，类比 GPU 上的 MPI）、NVSHMEM（GPU 上的 PGAS one-sided 通信）、Cooperative Groups（kernel 内部线程协作语法）。</li>
+    <li><strong>I/O</strong>：cuFile / GDS（GPU Direct Storage，让 GPU 直接读盘绕开 CPU）。</li>
+    <li><strong>测量 / 调优</strong>：NVBench（GPU benchmark 框架）。</li>
+    <li><strong>底层 / 通用工具</strong>：Thrust（GPU 上的 STL 风格算法）、libcu++（C++ 标准库的 GPU 版）、CUTLASS（高性能矩阵原语模板库）、CUB（块/warp 级别原语）、CUDA Runtime（运行时本身）。</li>
+  </ul>
+  <p>实际工程的次序通常是：先看有没有现成的库 → 用库；性能不够再考虑自己写 kernel。这页的目的是让你知道"该先去哪儿找"。</p>
+</div>
+
+<div class="takeaway">
+  💡 GPU 编程不要默认从 kernel 开始写。先查 NVIDIA 加速库——线代、深度学习、通信、I/O 都已经有官方高度优化版本，自己写 kernel 留给找不到合适库的热点。
+</div>
+
+
+<!-- ==================== SLIDE 10–11 ==================== -->
+<h2 class="slide-title">Slide 10–11 — 跑通例子：三杯热咖啡的冷却模拟</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-010.png" alt="Slide 10: 三只杯子 42°C / 24°C / 50°C 物理图">
+  <img class="slide-img" src="images/slide-011.png" alt="Slide 11: 冷却公式与下一步温度">
+</div>
+
+<div class="explanation">
+  <h3>讲座选这个例子的目的：一个简单可视化的"对每个元素做相同运算"的工作负载</h3>
+  <p>Slide 10 给出物理直觉：3 只一样的杯子，热成像显示当前温度分别是 42°C、24°C、50°C，环境温度 20°C。每过一段时间，每只杯子的温度都会往环境温度靠拢一点。</p>
+  <p>Slide 11 把这个物理过程数学化：</p>
+  <pre><code>Next Temp = Current Temp + Heat Transfer Coefficient × (Ambient Temp − Current Temp)</code></pre>
+  <p>这是<strong>牛顿冷却定律的离散化</strong>：温差越大冷却越快，温差为 0 时停下。Slide 给的参数：<em>Ambient Temp = 20°C</em>，<em>Heat Transfer Coefficient k = 0.5</em>。</p>
+  <p>套数验证：</p>
+  <ul>
+    <li>42°C 杯：next = 42 + 0.5 × (20 − 42) = 42 − 11 = <strong>31°C</strong> ✓</li>
+    <li>24°C 杯：next = 24 + 0.5 × (20 − 24) = 24 − 2 = <strong>22°C</strong> ✓</li>
+    <li>50°C 杯：next = 50 + 0.5 × (20 − 50) = 50 − 15 = <strong>35°C</strong> ✓</li>
+  </ul>
+  <p>关键性质：<strong>每只杯子的更新只依赖自己当前的温度</strong>，杯子之间没有相互影响——这是典型的"embarrassingly parallel"（尴尬并行）模式。<em>所有杯子可以完全并行更新</em>，没有数据依赖、没有通信、没有同步。这正是 GPU 最舒服的工作负载形状，所以讲座挑这个例子来从串行 → CUDA 并行一步步演化。</p>
+</div>
+
+<div class="takeaway">
+  💡 例子：N 只杯子各自独立按 <code>Next = Cur + k(Ambient − Cur)</code> 冷却。每个元素更新独立，是 GPU 最理想的"对每个元素做相同运算"的负载形状。
+</div>
+
+
+<!-- ==================== SLIDE 12–15 ==================== -->
+<h2 class="slide-title">Slide 12–15 — 串行 C++ 版本：用 std::transform 写冷却循环</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-012.png" alt="Slide 12: 数据声明 steps/k/ambient_temp/cups">
+  <img class="slide-img" src="images/slide-013.png" alt="Slide 13: 加上 lambda op">
+  <img class="slide-img" src="images/slide-014.png" alt="Slide 14: 加上 for 循环骨架">
+  <img class="slide-img" src="images/slide-015.png" alt="Slide 15: 加上 std::transform 完成代码">
+</div>
+
+<div class="explanation">
+  <h3>这 4 页是同一段代码的逐行揭示，最终就是这一份串行实现</h3>
+  <p>从 slide 12 到 15 一行一行加，最终代码大致是：</p>
+  <pre><code>int steps = 3;
+float k = 0.5;
+float ambient_temp = 20;
+std::vector&lt;float&gt; cups{42, 24, 50};
+
+auto op = [=] (float t) {
+  float diff = ambient_temp - t;
+  return t + k * diff;
+};
+
+for (int step : std::views::iota(0, steps)) {
+  std::println("{} {}", step, cups);
+  std::transform(cups.begin(), cups.end(),
+                 cups.begin(), op);
+}</code></pre>
+
+  <h3>每一行的作用</h3>
+  <ul>
+    <li><code>std::vector&lt;float&gt; cups{42, 24, 50}</code>：N 只杯子的当前温度，存成普通 STL vector。</li>
+    <li><code>auto op = [=] (float t) { ... }</code>：一个 lambda，输入当前温度 <code>t</code>，输出下一时刻温度。<code>[=]</code> 表示按值捕获外部变量 <code>k</code>、<code>ambient_temp</code>——所以 lambda 自带这两个常数，不用作参数传。</li>
+    <li><code>for (int step : std::views::iota(0, steps))</code>：C++20 ranges 风格的循环，等价于 <code>for (int step = 0; step &lt; steps; ++step)</code>。<code>iota(0, steps)</code> 生成 [0, steps) 这段整数视图。</li>
+    <li><code>std::println("{} {}", step, cups)</code>：C++23 的格式化打印，直接打 step 和整个 vector（vector 的格式化也是 C++23 才进的）。</li>
+    <li><code>std::transform(first, last, result, op)</code>：STL 算法，对 [first, last) 中每个元素调 <code>op</code>，把结果写到 <code>result</code> 起始的位置。这里源和目标都是 <code>cups.begin()</code>——<strong>原地更新</strong>。</li>
+  </ul>
+
+  <h3>Slide 15 右侧那张图：transform 的语义</h3>
+  <p>右上写着 <code>std::transform(first, last, result, op)</code>，下面画了三条对应：<code>op(42) → 31</code>、<code>op(24) → 22</code>、<code>op(50) → 35</code>。<code>first</code> 指向 cups 第一个元素，<code>last</code> 指向末尾哨兵，<code>result</code> 指向写出位置。这就是把 <code>op</code> 应用到每个元素的过程——<strong>语义上每个 <code>op</code> 之间互不依赖，可以并行做</strong>，但 <code>std::transform</code> 默认是串行实现。</p>
+
+  <h3>为什么用 std::transform 而不是手写 for 循环？</h3>
+  <p>因为后面要把它"GPU 化"——只要把 <code>std::transform</code> 换成它的并行版本（<code>std::transform(std::execution::par_unseq, ...)</code> 或 Thrust 的 <code>thrust::transform</code>），代码主体不变就能跑到多核或 GPU 上。<strong>用 STL 算法表达"对每个元素做同样的事"，比手写 for 循环更容易自动并行化</strong>，这是讲座后面那条主线。</p>
+</div>
+
+<div class="takeaway">
+  💡 串行版本的核心是 <code>std::transform(cups.begin(), cups.end(), cups.begin(), op)</code> —— 把"对每个元素做相同运算"用 STL 算法表达出来，原地更新。后面只要换成并行版的 transform 就能跑到 GPU。
+</div>
+
+
+<!-- ==================== SLIDE 16–17 ==================== -->
+<h2 class="slide-title">Slide 16–17 — 编译流水线：g++ vs nvcc，多产物输出</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-016.png" alt="Slide 16: g++ 编译只产生 host 可执行">
+  <img class="slide-img" src="images/slide-017.png" alt="Slide 17: nvcc 编译同时产生 host 和 device 可执行">
+</div>
+
+<div class="explanation">
+  <h3>同一份源码，两种编译器，产物完全不同</h3>
+  <p>两张图都从同一个 C++ 表达式 <code>t + k * diff</code> 出发，看编译器把它翻译成什么样的机器指令。</p>
+
+  <h3>Slide 16：g++ 路径</h3>
+  <p>命令：<code>g++ main.cpp -o a.out</code>。产物只有一个——<em>"Host code executable by CPU"</em>。slide 上画的指令叫 <code>vmla.f32</code>（vector multiply-add，单精度 SIMD 乘加），这是 CPU 的 SIMD 指令。整个程序只跑在 CPU 上，GPU 完全没参与。</p>
+
+  <h3>Slide 17：nvcc 路径</h3>
+  <p>命令：<code>nvcc main.cpp -o a.out</code>。同样一份源码，<strong>nvcc 同时产生两份机器码</strong>：</p>
+  <ul>
+    <li><strong>Host code</strong>：跟 g++ 一样，CPU 指令（<code>vmla.f32</code>）。这部分是给 CPU 跑的逻辑（main、内存分配、kernel 启动调用等）。</li>
+    <li><strong>Device code</strong>：GPU 指令（slide 写的是 <code>fma.rn.f32</code>，是 NVIDIA PTX 里的 fused-multiply-add，<code>rn</code> 是 round-to-nearest-even 舍入模式）。这部分是给 GPU 跑的 kernel 逻辑。</li>
+  </ul>
+  <p>两份产物被打包进同一个可执行文件 <code>a.out</code>。运行时，CPU 跑 host 部分；当 host 调到 launch GPU kernel 的位置，CUDA runtime 把对应的 device 代码送到 GPU 上跑。</p>
+
+  <h3>关键概念：fat binary（胖二进制）</h3>
+  <p>nvcc 产生的 a.out 里同时含有多种架构的代码——可能有 PTX（中间表示，目标 GPU 架构上现场 JIT），也可能有 SASS（特定架构如 sm_80、sm_90 的最终机器码）。这让同一个二进制可以跑在多代 GPU 上，运行时挑合适的版本。后面 slides 会进一步展开。</p>
+</div>
+
+<div class="takeaway">
+  💡 nvcc 是个"双输出"编译器：同一份源码，编出来的 a.out 同时包含 CPU 指令和 GPU 指令。运行时根据代码所在位置决定送给谁执行。g++ 不认识 GPU 的部分，所以只能产 CPU 那一份。
+</div>
+
+
+<!-- ==================== SLIDE 18–22 ==================== -->
+<h2 class="slide-title">Slide 18–22 — <code>__host__</code> / <code>__device__</code>：标记函数能在哪边跑</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-018.png" alt="Slide 18: 无注解的代码">
+  <img class="slide-img" src="images/slide-019.png" alt="Slide 19: lambda 上加 __host__ __device__">
+  <img class="slide-img" src="images/slide-020.png" alt="Slide 20: __host__ 注解的含义">
+  <img class="slide-img" src="images/slide-021.png" alt="Slide 21: __device__ 注解的含义">
+  <img class="slide-img" src="images/slide-022.png" alt="Slide 22: __host__ __device__ 同时注解的含义">
+</div>
+
+<div class="explanation">
+  <h3>问题：编译器怎么知道哪个函数要给 GPU 编一份？</h3>
+  <p>Slide 18 是上一节的串行代码（无任何注解）。这样 nvcc 默认把所有函数当 host 函数，GPU 端就没法调 <code>op</code>——所以即使把 transform 换成并行版本，编译也会报错说"在 device 代码里调用了一个只能在 host 上跑的函数"。</p>
+
+  <h3>解决：用 <code>__host__</code> / <code>__device__</code> 注解告诉 nvcc"这函数能在哪跑"</h3>
+  <p>Slide 19 给 lambda 加上 <code>__host__ __device__</code>：</p>
+  <pre><code>auto op = [=] __host__ __device__ (float t) { ... };</code></pre>
+  <p>这告诉 nvcc：把这个 lambda 同时编译成 CPU 版本和 GPU 版本，两边都能调它。</p>
+
+  <h3>三种注解的语义（slide 20–22 的右侧标注栏）</h3>
+  <table>
+    <thead>
+      <tr><th>注解</th><th>函数声明示例</th><th>含义（slide 原文）</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>__host__</code><br>（或不加注解）</td>
+        <td><code>void a();</code> 或 <code>__host__ void b();</code></td>
+        <td>Only executable by the CPU. Includes all unannotated functions.<br>—— 只能 CPU 跑。所有没加注解的函数都默认是 <code>__host__</code>。</td>
+      </tr>
+      <tr>
+        <td><code>__device__</code></td>
+        <td><code>__device__ void c();</code></td>
+        <td>Only executable by the GPU.<br>—— 只能 GPU 跑。从 host 代码里调 <code>c()</code> 编译会报错。</td>
+      </tr>
+      <tr>
+        <td><code>__host__ __device__</code></td>
+        <td><code>__host__ __device__ void d();</code></td>
+        <td>Executable by CPU and GPU.<br>—— 两边都能跑。nvcc 会把 <code>d</code> 编译两份。</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>怎么选？</h3>
+  <ul>
+    <li>普通 host 工具函数（main、I/O、参数解析）：不加注解就好（默认 host）。</li>
+    <li>只在 GPU 上用的辅助函数：<code>__device__</code>。</li>
+    <li>想在 host 和 device 都用的纯计算函数（比如冷却那个 lambda）：<code>__host__ __device__</code>，让一份源码服务两边。</li>
+  </ul>
+
+  <p>注意：这里还<strong>没有</strong>提到 <code>__global__</code>——那是用来标记"从 host 启动、在 device 上执行的入口 kernel"的注解，是另一个东西。<code>__host__</code>/<code>__device__</code> 只是说"这个函数本身能在哪边跑"，不涉及"它是不是 kernel 入口"。</p>
+</div>
+
+<div class="takeaway">
+  💡 函数注解决定 nvcc 给哪一端编译这函数：<code>__host__</code> = 只 CPU（默认），<code>__device__</code> = 只 GPU，<code>__host__ __device__</code> = 两边都编一份。给跨端复用的 lambda/工具函数加 <code>__host__ __device__</code>。
+</div>
+
+
+<!-- ==================== SLIDE 23–25 ==================== -->
+<h2 class="slide-title">Slide 23–25 — 执行流转：Host 起步 → 显式 launch 到 Device</h2>
+
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-023.png" alt="Slide 23: Execution starts on the host">
+  <img class="slide-img" src="images/slide-024.png" alt="Slide 24: Work is explicitly launched on the device">
+  <img class="slide-img" src="images/slide-025.png" alt="Slide 25: Transitions between host and device are explicit">
+</div>
+
+<div class="explanation">
+  <h3>三页一张图，逐步揭示 host↔device 的执行模型</h3>
+
+  <h3>Slide 23：执行从 host 开始</h3>
+  <p>程序入口 <code>main</code> 跑在 CPU 上。slide 画的 main 里只调了 <code>a()</code>——一个普通的 host 函数。这是任何 CUDA 程序的起点：<strong>Execution starts on the host</strong>。GPU 此时是空闲的，等着被启动。</p>
+
+  <h3>Slide 24：要到 GPU 上跑活，必须显式 launch</h3>
+  <p>slide 加了一行 <code>launch(gpu, b);</code>——这是讲座的"伪 API"，对应实际 CUDA 里的 <code>&lt;&lt;&lt;...&gt;&gt;&gt;</code> kernel 启动语法（或 <code>cudaLaunchKernel</code>）。它的语义：</p>
+  <ul>
+    <li>把 device 函数 <code>b()</code> 的代码送到 GPU 上调度执行；</li>
+    <li>在 GPU 上 <code>b()</code> 又能调 <code>c()</code>（也是 <code>__device__</code>），但调用图整个发生在 device 一侧。</li>
+  </ul>
+  <p>关键点：<strong>Work is explicitly launched on the device</strong>——CPU 不会"自动发现"哪段代码该跑 GPU。所有 GPU 工作都得程序员主动 launch。这跟 OpenMP 的 <code>#pragma omp parallel</code> 那种"加一行代码就并行"的模型不一样：CUDA 里 host/device 之间的边界是显式的语法。</p>
+
+  <h3>Slide 25：上升到原则</h3>
+  <p>右上多出一句 <em>"Transitions between host and device are explicit."</em>——这是整页的精神总结。所有"从 CPU 进 GPU"或"从 GPU 回 CPU"的动作都需要程序员显式表达：</p>
+  <ul>
+    <li>启动 kernel：<code>launch(gpu, b)</code> / <code>kernel&lt;&lt;&lt;grid, block&gt;&gt;&gt;()</code>。</li>
+    <li>数据搬移：<code>cudaMemcpy</code> 或 unified memory 的 access（unified memory 看似自动，但底层 page fault 也是显式硬件机制）。</li>
+    <li>同步等待：<code>cudaDeviceSynchronize</code> / stream 上的 event。</li>
+  </ul>
+  <p>"显式"在 CUDA 里是优点——程序员能精确控制何时数据搬、何时 kernel 启、何时同步，因此能榨出性能。代价是写起来比"全自动"模型更啰嗦。</p>
+</div>
+
+<div class="takeaway">
+  💡 CUDA 程序模型：执行总是从 host (CPU) 开始；要让 GPU 干活必须 <em>显式</em> launch；host↔device 的所有切换（launch、memcpy、synchronize）都是程序员写的语法，不会自动发生。
+</div>
+
+
+<!-- ==================== SLIDE 26 ==================== -->
+<h2 class="slide-title">Slide 26 — Host/Device 模型整页总结：还有一条新规则"device 内部调用留在 device"</h2>
+
+<img class="slide-img" src="images/slide-026.png" alt="Slide 26: 完整 host/device 模型图，加上 functions invoked on the device stay on the device">
+
+<div class="explanation">
+  <h3>这页是 23–25 那张图的最终完整版</h3>
+  <p>Slide 26 把前面三页拼到一起：CPU 框里 <code>main</code> 调 <code>a()</code>（host）；同一个 main 里再 <code>launch(gpu, b)</code>，箭头跨过 host/device 边界，跑到 GPU 框里的 <code>__device__ void b() { c(); }</code>；<code>b</code> 再调 <code>__device__ void c()</code>，箭头停留在 GPU 框内。</p>
+
+  <h3>新加的一条原则（前面没明说）</h3>
+  <p>右下黄框：<em>"Functions invoked on the device stay on the device."</em>—— 一旦执行进了 GPU，调用图就一直留在 GPU 上，<strong>不会自动跳回 CPU 再回来</strong>。也就是说，<code>__device__</code> 函数里再调 <code>__device__</code> / <code>__host__ __device__</code> 函数都没事，但调一个纯 <code>__host__</code> 函数就编译报错——因为在 GPU 上没有那段代码可执行，跨回去也得程序员显式 launch（实际语义其实是从 CPU 主动发起的另一次 kernel launch，而不是"调一个函数"）。</p>
+  <p>合在一起就是 host↔device 模型的三条铁律：</p>
+  <ul>
+    <li>Execution starts on the host —— 程序入口在 CPU。</li>
+    <li>Work is explicitly launched on the device —— 进入 GPU 必须显式 launch。</li>
+    <li>Functions invoked on the device stay on the device —— 进入 GPU 后调用链不会自动溜回 CPU。</li>
+  </ul>
+  <p>这三条决定了 CUDA 代码长什么样：CPU 是"调度者"，写"在哪起、什么时候发活、什么时候等回结果"；GPU 是"工人队伍"，一旦发活就在自己的世界里跑完整段调用图。</p>
+</div>
+
+<div class="takeaway">
+  💡 Host/device 模型三铁律：① 从 host 起步 ② 进 device 必须显式 launch ③ 进 device 后调用图就留在 device。CPU 负责调度，GPU 负责一段封闭的执行域。
+</div>
+
+
+<!-- ==================== SLIDE 27–29 ==================== -->
+<h2 class="slide-title">Slide 27–29 — 把串行例子变成 GPU 并行：<code>__host__ __device__</code> + <code>thrust::transform</code> + <code>universal_vector</code></h2>
+
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-027.png" alt="Slide 27: lambda 加 __host__ __device__">
+  <img class="slide-img" src="images/slide-028.png" alt="Slide 28: std::transform 换成 thrust::transform(thrust::cuda::par, ...)">
+  <img class="slide-img" src="images/slide-029.png" alt="Slide 29: std::vector 换成 thrust::universal_vector">
+</div>
+
+<div class="explanation">
+  <h3>从串行到 GPU 并行，三步走（每页只改一处）</h3>
+  <p>这三页延续 slide 12–15 那段冷却代码，每翻一页只改一行，最终把它从纯 CPU 串行变成跑在 GPU 上的并行版本。改动的关键是<strong>看每一步还差什么、补哪一块</strong>。</p>
+
+  <h3>Slide 27：lambda 加 <code>__host__ __device__</code></h3>
+  <pre><code>auto op = [=] __host__ __device__ (float t) { ... };</code></pre>
+  <p>对应 slide 18–22 学到的注解规则。<code>op</code> 现在两边都能调，是后续把它扔给 GPU 的前提。光加注解还没真"上 GPU"——因为 <code>std::transform</code> 仍是串行实现，CPU 调它就在 CPU 上跑。</p>
+
+  <h3>Slide 28：把 <code>std::transform</code> 换成 <code>thrust::transform(thrust::cuda::par, ...)</code></h3>
+  <pre><code>thrust::transform(thrust::cuda::par,
+                  cups.begin(), cups.end(),
+                  cups.begin(), op);</code></pre>
+  <p>Thrust 是 NVIDIA 提供的"GPU 上的 STL"，API 形状跟 STL 算法一一对应。第一个参数是<strong>执行策略 (execution policy)</strong>：</p>
+  <ul>
+    <li><code>thrust::cuda::par</code>：在 CUDA 设备上并行执行。</li>
+    <li>其他常见策略：<code>thrust::host</code>（CPU 串行/并行）、<code>thrust::seq</code>（强制串行）。</li>
+  </ul>
+  <p>这一行改完，<code>transform</code> 本身的工作已经在 GPU 上做了——但 <code>cups</code> 还是个 <code>std::vector</code>，它的内存只在 host 端可见。Thrust 在内部会做一次隐式拷贝（host→device 算→device→host），代价不小，所以下一步要把容器也换掉。</p>
+
+  <h3>Slide 29：把 <code>std::vector</code> 换成 <code>thrust::universal_vector</code></h3>
+  <pre><code>thrust::universal_vector&lt;float&gt; cups{42, 24, 50};</code></pre>
+  <p><code>universal_vector</code> 用 CUDA 的 <em>unified / managed memory</em> 分配存储——同一块内存对 CPU 和 GPU 都可见，运行时按 page fault 在两边迁移。<code>std::println</code> 在 CPU 侧打印没问题，<code>thrust::transform</code> 在 GPU 侧计算也直接读到同一块数据，省掉了显式 <code>cudaMemcpy</code>。</p>
+
+  <h3>整体看：从 STL 到 Thrust，代码主体几乎没变</h3>
+  <p>对比串行版和最终 GPU 版，只有 3 处差异——加注解、换算法命名空间、换容器类型。"对每个元素做相同运算"这个抽象层稳稳地把串行实现和 GPU 并行实现连了起来。<strong>这就是 Thrust 的设计动机：用 STL 风格表达并行算法，让你像换执行策略一样换硬件后端</strong>，不需要重写算法逻辑。</p>
+</div>
+
+<div class="takeaway">
+  💡 GPU 化三步：① lambda 加 <code>__host__ __device__</code> ② 算法换 <code>thrust::transform(thrust::cuda::par, ...)</code> ③ 容器换 <code>thrust::universal_vector</code>。代码主体保持 STL 风格不动。
+</div>
+
+
+<!-- ==================== SLIDE 30–36 ==================== -->
+<h2 class="slide-title">Slide 30–36 — Thrust 全景：Algorithms / Containers / Iterators 三大件</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-030.png" alt="Slide 30: Thrust 标题页">
+  <img class="slide-img" src="images/slide-031.png" alt="Slide 31: + Standard Algorithms">
+  <img class="slide-img" src="images/slide-032.png" alt="Slide 32: + Extended Algorithms">
+  <img class="slide-img" src="images/slide-033.png" alt="Slide 33: + Containers">
+  <img class="slide-img" src="images/slide-034.png" alt="Slide 34: std::vector 串行构造和赋值">
+  <img class="slide-img" src="images/slide-035.png" alt="Slide 35: thrust::universal_vector 并行构造和赋值">
+  <img class="slide-img" src="images/slide-036.png" alt="Slide 36: + Iterators (完整全景)">
+</div>
+
+<div class="explanation">
+  <h3>Thrust 是什么</h3>
+  <p>Slide 30 给出 Thrust 的定位：<em>"The C++ Parallel Algorithms Library"</em>，主页 <code>nvidia.github.io/cccl/thrust</code>。它属于 CCCL（CUDA C++ Core Libraries）的一部分，提供 STL 风格的并行算法 + 容器 + 迭代器。从 slide 31 起，讲座一页加一栏地把它的"产品目录"展开。</p>
+
+  <h3>三大功能类别（slide 31–33 + 36）</h3>
+  <ul>
+    <li><strong>Standard Algorithms</strong>（slide 31，左上）：直接对应 STL 同名算法的并行版本。slide 列了 <code>thrust::transform_reduce</code>、<code>thrust::inclusive_scan</code>、<code>thrust::sort</code>、<code>thrust::copy</code>。这些就是日常用得最多的并行原语。</li>
+    <li><strong>Extended Algorithms</strong>（slide 32，左下）：STL 没有但并行计算很常用的扩展。<code>thrust::reduce_by_key</code>（按 key 分组归约）、<code>thrust::sort_by_key</code>（带 payload 的排序，用 keys 排）、<code>thrust::tabulate</code>（用函数生成序列）、<code>thrust::gather</code>（按索引列表收集元素）。</li>
+    <li><strong>Containers</strong>（slide 33，右上）：<code>thrust::device_vector</code>（只在 GPU 内存）、<code>thrust::host_vector</code>（只在 CPU 内存）、<code>thrust::universal_vector</code>（unified memory，两边可见）、<code>thrust::allocate_unique</code>（带 deleter 的 device 端 unique_ptr）。</li>
+    <li><strong>Iterators</strong>（slide 36，右下）：<code>thrust::counting_iterator</code>（生成连续整数）、<code>thrust::constant_iterator</code>（永远返回同一个值）、<code>thrust::transform_iterator</code>（对底层 iterator 套一个变换函数，惰性求值）、<code>thrust::zip_iterator</code>（把多个序列"拉链"成 tuple 序列）。这些是 Thrust 的"幕后英雄"——后面 slides 会重点展开，因为它们能让算法链条免去中间临时数组。</li>
+  </ul>
+
+  <h3>Slide 34–35：容器并行性的关键差异（讲座中插的一段对比）</h3>
+  <p>Slide 34 用 <code>std::vector&lt;T&gt; h0(1 &lt;&lt; 30)</code>（10 亿元素）和 <code>h0 = h1</code>，配文字说：<em>std::vector 的内容只在 host code 里可访问；构造和赋值是串行的</em>。也就是说初始化/拷贝这些"看似无关计算"的步骤，在 std::vector 上是 CPU 单线程逐个走的。</p>
+  <p>Slide 35 把同样的代码换成 <code>thrust::universal_vector</code>：<em>universal_vector 的内容在 host 和 device 上都能访问；构造和赋值是并行的</em>。所以即便你只是初始化一个 1G 的 vector，universal_vector 也是用 GPU 的所有线程一起填进去的——这种"基础操作并行化"是 Thrust 容器的隐藏价值。</p>
+
+  <h3>记忆方法</h3>
+  <p>Thrust 的 catalog 可以背成"<strong>4 类东西，每类 4 个代表</strong>"：算法（standard / extended）、容器、迭代器。复习时先记住有这四个抽屉，里面具体函数名用到再查文档。</p>
+</div>
+
+<div class="takeaway">
+  💡 Thrust = STL 风格的 GPU 库，四大件：Standard Algorithms、Extended Algorithms、Containers、Iterators。其中 universal_vector 不仅算法并行，构造和赋值也并行。Iterator 是"无中间数组"地组合算法的关键。
+</div>
+
+
+<!-- ==================== SLIDE 37–39 ==================== -->
+<h2 class="slide-title">Slide 37–39 — <code>for_each_n</code> + counting / constant iterator：用迭代器当输入流</h2>
+
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-037.png" alt="Slide 37: for_each_n 配 universal_vector">
+  <img class="slide-img" src="images/slide-038.png" alt="Slide 38: for_each_n 配 counting_iterator">
+  <img class="slide-img" src="images/slide-039.png" alt="Slide 39: for_each_n 配 constant_iterator">
+</div>
+
+<div class="explanation">
+  <h3><code>thrust::for_each_n(policy, first, n, op)</code> 的语义</h3>
+  <p>三页都用同一个函数：从 <code>first</code> 起取 <code>n</code> 个元素，对每个元素并行调一次 <code>op</code>。和 <code>std::for_each</code> 同名，不返回结果，靠副作用做事（计数、写另一个数组、修改原元素等）。<code>op</code> 是 <code>__host__ __device__</code> lambda。</p>
+
+  <h3>Slide 37：输入是真实数据（universal_vector）</h3>
+  <pre><code>thrust::universal_vector X(N);
+thrust::for_each_n(thrust::cuda::par, X.begin(), N,
+  [...] __host__ __device__ (auto&amp; obj) { ... });</code></pre>
+  <p>下面那张 Input/Operations 图：上排是 <code>X[0], X[1], X[2], ...</code> 的格子，下排每格有一个 λ。意思是 <strong>每个元素都被并行喂给 op 一次</strong>，op 拿到引用 <code>obj</code>（注意是 <code>auto&amp;</code>，可改写）。这是最直观的用法。</p>
+
+  <h3>Slide 38：输入是"虚拟流"（counting_iterator）</h3>
+  <pre><code>auto i = thrust::make_counting_iterator(0);
+thrust::for_each_n(thrust::cuda::par, i, N,
+  [...] __host__ __device__ (auto idx) { ... });</code></pre>
+  <p>不存在真实数组——<code>counting_iterator(0)</code> 在被解引用时返回 0、1、2、3、...。下面图里上排格子是 <code>0, 1, 2, ...</code>。所以 <code>op</code> 拿到的不是元素，而是<strong>"我是第几个"的索引</strong>。这给你回到了"传统并行 for-loop"的写法：</p>
+  <pre><code>for (int idx in 并行 [0, N))
+  op(idx);</code></pre>
+  <p>不需要先 allocate 一个 <code>{0,1,...,N-1}</code> 的数组——<code>counting_iterator</code> 是惰性的，整数是按需生成的。这一招在需要 grid index 的 kernel（比如初始化、生成坐标网格）里非常常见。</p>
+
+  <h3>Slide 39：输入是常量流（constant_iterator）</h3>
+  <pre><code>auto i = thrust::make_constant_iterator(42);
+thrust::for_each_n(thrust::cuda::par, i, N,
+  [...] __host__ __device__ (auto idx) { ... });</code></pre>
+  <p>下面图里上排格子全是 <code>42, 42, 42, ...</code>。<code>constant_iterator(42)</code> 怎么解引用都是 42，可以让 N 个并行任务都拿到同一个常量值——比如把"广播一个标量"和别的序列组合用。</p>
+
+  <h3>为什么这一节重要</h3>
+  <p>这两个 iterator 的共同点是<strong>"无内存分配的虚拟序列"</strong>。在 GPU 上分配 1 亿元素的数组不便宜（slide 42 后面会强调"materialize O(N) 临时数组在 device memory 是浪费"），所以 Thrust 鼓励你用 iterator 表达"概念上是这样的输入"，让算法在跑的时候按需生成值，不真的占内存。这条思路是后面 transform_iterator / zip_iterator 的基础。</p>
+</div>
+
+<div class="takeaway">
+  💡 Thrust iterator 不一定来自真实数组：<code>counting_iterator</code> 生成 0,1,2,...，<code>constant_iterator</code> 永远返回同一个值。配合 <code>for_each_n</code> 可以零成本表达"做 N 次"或"广播标量"，不需要分配中间数组。
+</div>
+
+
+<!-- ==================== SLIDE 40–43 ==================== -->
+<h2 class="slide-title">Slide 40–43 — transform + reduce → 用 <code>transform_iterator</code> 融合掉中间数组</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-040.png" alt="Slide 40: transform 写到 tmp，reduce 再读 tmp">
+  <img class="slide-img" src="images/slide-041.png" alt="Slide 41: 中间需要全部完成才能开始 reduce">
+  <img class="slide-img" src="images/slide-042.png" alt="Slide 42: tmp 浪费 O(N) device memory">
+  <img class="slide-img" src="images/slide-043.png" alt="Slide 43: 用 transform_iterator 融合，去掉 tmp">
+</div>
+
+<div class="explanation">
+  <h3>问题：为什么"先 transform 再 reduce"不够好</h3>
+  <p>这是个常见 pattern——对每个元素先做点变换（<code>f</code>），再把结果合起来（用 <code>g</code> 归约成一个标量）。比如算 <code>sum(f(X[i]))</code>。Slide 40 给出最朴素的写法：</p>
+  <pre><code>thrust::universal_vector X(N), tmp(N);
+
+thrust::transform(thrust::cuda::par,
+  X.begin(), X.end(), tmp.begin(), f);
+
+auto r = thrust::reduce(thrust::cuda::par,
+  tmp.begin(), tmp.end(), T{}, g);</code></pre>
+  <p>下面图里 X 走过 4 个 <code>f</code>，得到一行中间结果，再走两层 <code>g</code> 归约成一个值。从结果上看是对的，但实现上有两个问题——slide 41 和 42 分别揭示。</p>
+
+  <h3>Slide 41：阻塞问题（红线 + Blocked 紫框）</h3>
+  <p>红色横线把 <code>f</code> 的输出和 <code>g</code> 的输入隔开。意思是：<strong>整个 transform 必须先全部跑完，reduce 才能开始</strong>。右侧紫色框画了多个"Blocked"块，配红色波浪箭头——表示 reduce 的线程都在等 transform 写完那块 tmp 内存才能往下读。两个 kernel 之间有一次硬同步（kernel 启动 + global memory 写入 + 下一次 kernel 读取）。即使 GPU 计算单元闲着，也得等。</p>
+
+  <h3>Slide 42：内存浪费（红色文字）</h3>
+  <p>右上加了一行：<em>"Materializes O(N) temporary storage in precious device memory."</em> —— <code>tmp</code> 是 N 个元素的真实数组，分配在 GPU 的 HBM 上。GPU 的 device memory 又贵又少，把它拿去存"只用一次就被求和掉的中间值"是个明显浪费。N 大的时候，可能根本放不下。</p>
+
+  <h3>Slide 43：用 <code>transform_iterator</code> 融合两步</h3>
+  <pre><code>thrust::universal_vector X(N);
+
+auto tmp = thrust::make_transform_iterator(X.begin(), f);
+
+auto r = thrust::reduce(thrust::cuda::par,
+  tmp, tmp + N, T{}, g);</code></pre>
+  <p>关键变化：<code>tmp</code> 不再是个 vector，而是一个<strong>惰性 iterator</strong>。<code>thrust::make_transform_iterator(it, f)</code> 包了底层 iterator <code>it</code> 一层，每次解引用 <code>*tmp</code> 时<em>才</em>调 <code>f(*it)</code>。</p>
+  <p>从 reduce 的角度看，它根本不知道这些值是"算出来的"还是"读出来的"——它就照常 <code>*it</code> 拿值，然后两两 <code>g</code> 合并。但 <strong><code>f</code> 的执行被推到 reduce 的 leaf 那一层</strong>，上一行画的图就变成了：每个 <code>f</code> 的箭头不再写到中间一行，而是直接进 <code>g</code> 的归约树。</p>
+  <p>好处有两个：</p>
+  <ul>
+    <li><strong>没有 O(N) 中间数组</strong>——device memory 省下来了，N 多大都没分配压力。</li>
+    <li><strong>没有两个 kernel 的硬同步</strong>——<code>f</code> 和 <code>g</code> 都在同一个 reduce kernel 里执行，每个线程在自己的寄存器/共享内存里就完成 "load → f → 局部归约"，吞吐显著提高。</li>
+  </ul>
+  <p>这种把"上一步的输出"换成"按需生成的 iterator"叫做 <strong>kernel fusion（核融合）</strong>，是 GPU 编程里的基本性能优化手段。Thrust 的 iterator 就是为了让 fusion 在 STL 风格代码里也表达得出来。</p>
+</div>
+
+<div class="takeaway">
+  💡 朴素的"transform 写 tmp，再 reduce 读 tmp"有两宗罪：tmp 占 O(N) 设备内存，且两个 kernel 间要硬同步。用 <code>thrust::make_transform_iterator</code> 把 transform 变成惰性，融进 reduce 内部，tmp 直接消失——这是 GPU 编程最常用的 fusion 技巧。
+</div>
+
+
+<!-- ==================== SLIDE 44–45 ==================== -->
+<h2 class="slide-title">Slide 44–45 — <code>zip_iterator</code>：把多个序列"拉链"成 tuple 流</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-044.png" alt="Slide 44: zip_iterator(X, Y) → tuple{X[i], Y[i]}">
+  <img class="slide-img" src="images/slide-045.png" alt="Slide 45: zip_iterator(X, X+1) → tuple{X[i], X[i+1]}">
+</div>
+
+<div class="explanation">
+  <h3>动机：算法每次只接受一个 iterator，但很多运算需要多路输入</h3>
+  <p>STL/Thrust 的算法签名一般是 <code>algo(first, last, op)</code>——只有一条输入序列。但实际算的东西经常涉及"两条流的对应位置"：<code>X[i] + Y[i]</code>、<code>X[i+1] − X[i]</code>、坐标对 <code>(x[i], y[i])</code> 等。<code>zip_iterator</code> 就是把多条 iterator 打包成一条"tuple iterator"。</p>
+
+  <h3>Slide 44：把两个不同 vector 拉链</h3>
+  <pre><code>thrust::universal_vector X(N), Y(N);
+
+auto XY = thrust::make_zip_iterator(
+  thrust::cuda::par, X.begin(), Y.begin());
+
+thrust::for_each_n(thrust::cuda::par, XY, N, f);</code></pre>
+  <p>解引用 <code>*XY</code> 得到的是 <code>tuple{X[i], Y[i]}</code>。下面图里 Input 那一段画了 X 和 Y 两行格子，对应位置纵向对齐；Operations 那一段画了 <code>f(tuple{X[0], Y[0]})</code>、<code>f(tuple{X[1], Y[1]})</code>、… 也就是 <code>f</code> 拿到的不是单个元素而是 tuple，可以在内部 <code>auto [x, y] = ab;</code> 解结构。</p>
+
+  <h3>Slide 45：把同一个 vector 错位拉链（adjacent pairs）</h3>
+  <pre><code>auto adj = thrust::make_zip_iterator(
+  thrust::cuda::par, X.begin(), X.begin() + 1);
+
+thrust::for_each_n(thrust::cuda::par, adj, N - 1, f);</code></pre>
+  <p>第二个 iterator 比第一个偏移 1，所以 <code>*adj</code> 是 <code>tuple{X[i], X[i+1]}</code>——相邻两个元素一起喂给 <code>f</code>。下面图里 Input 上下两行都是 X 的格子，但下行从 X[1] 起。<strong>这是表达"差分 / 相邻关系"的标准技巧</strong>，比如 <code>X[i+1] − X[i]</code> 这种。注意长度变成 <code>N − 1</code>，因为最后一个元素没有"下一个"。</p>
+
+  <h3>和 transform_iterator 的关系</h3>
+  <p>这两个 iterator 互补：<code>zip_iterator</code> 把"多路输入"打包成 tuple；<code>transform_iterator</code> 把"输出做点计算"惰性化。组合起来就能写出"任意结构的多输入流水线"，全程不占额外内存（slide 50 是这个组合的实战展示）。</p>
+</div>
+
+<div class="takeaway">
+  💡 <code>zip_iterator</code> 把多个 iterator 拉链成 tuple iterator，让单输入算法接受多路输入。两种典型用法：① 不同 vector 同位置 → <code>(X[i], Y[i])</code>；② 同一 vector 错位 → <code>(X[i], X[i+1])</code> 表达相邻关系。
+</div>
+
+
+<!-- ==================== SLIDE 46–50 ==================== -->
+<h2 class="slide-title">Slide 46–50 — 综合例子：max abs difference of A and B（两版实现）</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-046.png" alt="Slide 46: 算法目标 max(abs(A-B))">
+  <img class="slide-img" src="images/slide-047.png" alt="Slide 47: 输入 A, B 两个 vector">
+  <img class="slide-img" src="images/slide-048.png" alt="Slide 48: transform 求 diffs">
+  <img class="slide-img" src="images/slide-049.png" alt="Slide 49: 加 reduce 求 max_diff（朴素版）">
+  <img class="slide-img" src="images/slide-050.png" alt="Slide 50: 用 zip + transform_iterator + reduce 全融合（融合版）">
+</div>
+
+<div class="explanation">
+  <h3>问题陈述（Slide 46）</h3>
+  <p>给两条等长序列 <code>A</code> 和 <code>B</code>，算 <code>max_i |A[i] − B[i]|</code>——逐位置算绝对差，再取最大值。这是数值算法里最常见的"误差度量"模式。</p>
+  <p>Slide 上举了具体数：A = [5,2,9,7]，B = [1,9,6,8]。每位作差得 [4,−7,3,−1]，绝对值 [4,7,3,1]，最大 <strong>7</strong>。底下还标了符号 <em>"A − B → max(abs)"</em>，把算法步骤可视化清楚。</p>
+
+  <h3>朴素版（Slide 47–49）：transform 写 diffs，再 reduce</h3>
+  <p>Slide 47 先把数据放进 universal_vector：</p>
+  <pre><code>thrust::universal_vector&lt;int&gt; A(...);
+thrust::universal_vector&lt;int&gt; B(...);</code></pre>
+  <p>Slide 48 加上 transform 求 diffs：</p>
+  <pre><code>thrust::universal_vector&lt;int&gt; diffs(A.size());
+
+thrust::transform(thrust::cuda::par,
+  A.begin(), A.end(), B.begin(), diffs.begin(),
+  [] __host__ __device__ (int a, int b) {
+    return abs(a - b);
+  });</code></pre>
+  <p>这里用了 <code>std::transform</code> 的"二元版本"重载——多一个输入 iterator <code>B.begin()</code>，op 接受两个参数。结果写到 <code>diffs</code>。下面图画了 4 个红格子 <code>5-1, 2-9, 9-6, 7-8</code>。</p>
+  <p>Slide 49 加上 reduce 求 max：</p>
+  <pre><code>auto max_diff = thrust::reduce(
+  thrust::cuda::par,
+  diffs.begin(), diffs.end(),
+  0,
+  cuda::maximum{});</code></pre>
+  <p>初始值 <code>0</code>，归约函数 <code>cuda::maximum{}</code>（取两个里大的那个）。下面图把 4 个红格子两两归约成 2 个绿圆，再合成 1 个绿圆——典型的 reduce 树。</p>
+  <p>这一版正确但有 slide 40–42 提的两个问题：分配了 N 个元素的 <code>diffs</code>（O(N) 设备内存），且 transform 和 reduce 是两个 kernel，中间要硬同步。</p>
+
+  <h3>融合版（Slide 50）：zip + transform_iterator + reduce 全在一个 kernel</h3>
+  <p>把 slide 43（transform_iterator 融进 reduce）和 slide 44（zip_iterator 拼多路输入）的两招合起来：</p>
+  <pre><code>auto AB = thrust::make_zip_iterator(
+  A.begin(), B.begin());
+
+auto diffs = thrust::make_transform_iterator(
+  AB.begin(),
+  [] __host__ __device__
+  (cuda::std::tuple&lt;int, int&gt; ab) {
+    auto [a, b] = ab;
+    return abs(a - b);
+  });
+
+auto max_diff = thrust::reduce(
+  thrust::cuda::par,
+  diffs, diffs + A.size(),
+  0,
+  cuda::maximum{});</code></pre>
+  <p>逐层看：</p>
+  <ol>
+    <li><code>AB</code> 是 zip iterator，解引用得 <code>tuple{A[i], B[i]}</code>。</li>
+    <li><code>diffs</code> 是 transform iterator，包在 <code>AB</code> 上，解引用时拿出 tuple、解结构成 <code>(a, b)</code>，返回 <code>abs(a − b)</code>。</li>
+    <li><code>thrust::reduce</code> 把这条惰性 iterator 当输入，<code>cuda::maximum{}</code> 归约。</li>
+  </ol>
+  <p>右侧图里把每个 <code>{A[i], B[i]}</code> 红格子直接喂给灰色的 <code>−</code> 八边形（绝对差），再进绿圆 reduce 树。<strong>整个流程不存任何中间数组，所有计算融在一个 reduce kernel 里</strong>：每个 GPU 线程读一对 (a,b)、算 abs(a−b)、参与局部 max 归约，结果只有一个标量。</p>
+
+  <h3>对比意义</h3>
+  <p>同样的逻辑，朴素版分配 O(N) 的 diffs、跑两个 kernel；融合版零额外内存、一个 kernel 跑完。性能差距随 N 增大越来越明显——这就是为什么 Thrust 这么重视 iterator：<em>用 iterator 表达数据流，让算法引擎自动把链路融合到尽可能少的 kernel 里</em>。</p>
+</div>
+
+<div class="takeaway">
+  💡 max abs difference 的实现演化：朴素版 = <code>transform</code> 写中间数组 + <code>reduce</code>；融合版 = <code>zip_iterator</code>(A,B) → <code>transform_iterator</code>(abs(a−b)) → <code>reduce</code>(maximum)。融合版零中间数组、一次 kernel，是 Thrust 风格 GPU 代码的代表。
+</div>
+
+
+<!-- ==================== SLIDE 51–54 ==================== -->
+<h2 class="slide-title">Slide 51–54 — <code>transform_reduce</code> 一步到位 + 引出 <code>cuda::std::*</code> / <code>cuda::*</code></h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-051.png" alt="Slide 51: zip + transform_iterator + reduce 同一段代码">
+  <img class="slide-img" src="images/slide-052.png" alt="Slide 52: 同上，准备替换">
+  <img class="slide-img" src="images/slide-053.png" alt="Slide 53: 用 thrust::transform_reduce 取代 transform_iterator + reduce">
+  <img class="slide-img" src="images/slide-054.png" alt="Slide 54: 高亮 cuda::std::tuple / cuda::maximum 是 libcu++ 提供的">
+</div>
+
+<div class="explanation">
+  <h3>Slide 51–52：复习上节融合版（无变化页）</h3>
+  <p>这两页是 slide 50 的复用，把"zip_iterator + transform_iterator + reduce"那一整套代码再展示一次，作为 slide 53 改写的起点。</p>
+
+  <h3>Slide 53：用 <code>thrust::transform_reduce</code> 把"transform_iterator + reduce"合并成一个 API</h3>
+  <p>把 <code>thrust::make_transform_iterator(AB, λ)</code> 那一段去掉，把 lambda 直接传给 <code>thrust::transform_reduce</code>：</p>
+  <pre><code>auto AB = thrust::make_zip_iterator(A.begin(), B.begin());
+
+auto max_diff = thrust::transform_reduce(
+  thrust::cuda::par,
+  AB, AB + A.size(),
+  [] __host__ __device__
+  (cuda::std::tuple&lt;int, int&gt; ab) {
+    auto [a, b] = ab;
+    return abs(a - b);
+  },
+  0,
+  cuda::maximum{});</code></pre>
+  <p><code>transform_reduce(policy, first, last, transform_op, init, reduce_op)</code> 是 Thrust 提供的<strong>融合算法</strong>：内部就是"对每个元素先 apply transform_op，再用 reduce_op 归约"。它和"transform_iterator + reduce"在效果与性能上等价，但代码读起来更清晰——<em>一行就能看到"先变换、再归约"两个意图</em>，不必去拼 iterator。</p>
+  <p>建议：日常代码优先用 <code>transform_reduce</code> / <code>transform_inclusive_scan</code> 这种"已经融合好"的 API；只有当你需要把更多步骤拼到一起（比如 zip 后再 transform 后再 reduce）时才手写 iterator 链。</p>
+
+  <h3>Slide 54：高亮的 <code>cuda::std::tuple</code> 和 <code>cuda::maximum{}</code> 不是 std::*——它们来自 libcu++</h3>
+  <p>这页只把代码里两个出现的"<code>cuda::std::</code>" 和 "<code>cuda::</code>" 命名空间高亮，引导你注意：</p>
+  <ul>
+    <li><code>cuda::std::tuple&lt;int, int&gt;</code>：和 <code>std::tuple</code> 接口完全一致，但在 device 上也能用。</li>
+    <li><code>cuda::maximum{}</code>：和 <code>std::ranges::max</code>/函数对象类似的"二元取大"函数对象，但属于 cuda 命名空间下专为 device/host 双端用的实现。</li>
+  </ul>
+  <p>这两个名字都是 <strong>libcu++</strong> 这个库提供的——下一节（slide 55–59）会专门展开 libcu++ 的命名空间组织。这里只是为了引出"<em>为什么不能直接用 std::tuple 和 std::ranges::max？</em>"这个问题：因为 host 标准库不保证 device 端可用，所以 NVIDIA 提供了一份"双端可用的 std 子集 + CUDA 扩展"，就是 libcu++。</p>
+</div>
+
+<div class="takeaway">
+  💡 <code>thrust::transform_reduce(policy, first, last, transform_op, init, reduce_op)</code> 把"transform iterator + reduce"压成一个 API，可读性更好。代码里的 <code>cuda::std::tuple</code>、<code>cuda::maximum</code> 不是标准库——属于 libcu++（下一节展开），目的是让 host/device 双端都能用同一个名字。
+</div>
+
+
+<!-- ==================== SLIDE 55–59 ==================== -->
+<h2 class="slide-title">Slide 55–59 — libcu++：CUDA C++ 基础库的三层命名空间</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-055.png" alt="Slide 55: libcu++ 标题页">
+  <img class="slide-img" src="images/slide-056.png" alt="Slide 56: + Host Compiler's Standard Library (std::)">
+  <img class="slide-img" src="images/slide-057.png" alt="Slide 57: + cuda::std:: 子集">
+  <img class="slide-img" src="images/slide-058.png" alt="Slide 58: + cuda:: 扩展 API">
+  <img class="slide-img" src="images/slide-059.png" alt="Slide 59: + cuda::experimental:: beta features">
+</div>
+
+<div class="explanation">
+  <h3>libcu++ 是什么</h3>
+  <p>Slide 55 给定位：<em>"The CUDA C++ Foundational Library"</em>，主页 <code>nvidia.github.io/cccl/libcudacxx</code>。它和 Thrust 一样是 CCCL 的一部分，但角色不同——Thrust 提供"算法+容器"（高层），libcu++ 提供"类型+原语"（底层），相当于 GPU 上的 std 库。</p>
+
+  <h3>四类头文件 / 命名空间（slide 56–59 一层一层加）</h3>
+  <table>
+    <thead>
+      <tr><th>来源</th><th>头文件</th><th>命名空间</th><th>能在哪跑</th><th>说明</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Host 编译器的标准库（GCC/LLVM/MSVC 等）</td>
+        <td><code>#include &lt;...&gt;</code></td>
+        <td><code>std::</code></td>
+        <td><strong>仅 host</strong></td>
+        <td>完整、严格符合 Standard C++。Slide 56 的关键点：标准库在 device 上没保证，所以 <code>std::vector</code>、<code>std::tuple</code> 这种放进 <code>__device__</code> 函数里可能编译不过或运行错误。</td>
+      </tr>
+      <tr>
+        <td>libcu++ 的"std 镜像"</td>
+        <td><code>#include &lt;cuda/std/...&gt;</code></td>
+        <td><code>cuda::std::</code></td>
+        <td><strong>host + device</strong></td>
+        <td>把 Standard C++ 库的一个子集移植到 device 端，接口和 std 一一对应。Slide 57 强调 "Subset, strictly conforming"——能用的部分跟 <code>std::</code> 行为一致，可以"无脑替换"。例：<code>cuda::std::tuple</code>、<code>cuda::std::atomic</code>、<code>cuda::std::array</code>。</td>
+      </tr>
+      <tr>
+        <td>libcu++ 的 CUDA 扩展</td>
+        <td><code>#include &lt;cuda/...&gt;</code></td>
+        <td><code>cuda::</code></td>
+        <td><strong>host 和/或 device</strong></td>
+        <td>专为 CUDA 设计的 API，在标准库基础上加 GPU 才有的语义（thread scope、memory order、warp 协作等）。Slide 58 描述："Modern C++ API for CUDA &amp; Standard C++ extensions." 例：<code>cuda::atomic_ref</code>（带 thread scope）、<code>cuda::pipeline</code>、<code>cuda::maximum</code>。</td>
+      </tr>
+      <tr>
+        <td>libcu++ 实验区</td>
+        <td><code>#include &lt;cuda/experimental/...&gt;</code></td>
+        <td><code>cuda::experimental::</code>（别名 <code>cudax::</code>）</td>
+        <td>视具体 API</td>
+        <td>Beta features——还在演化、API 可能变。Slide 59 标识为试用区，新设计先在这里"放风"，稳定后再搬进 <code>cuda::</code>。</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>实践规则</h3>
+  <p>写代码时按"想在哪边跑 + 接口是不是和 std 等价"决定用哪个：</p>
+  <ul>
+    <li>纯 host 代码：用 <code>std::</code>（最完整）。</li>
+    <li>device 端要用类似 std 的东西：换成 <code>cuda::std::</code>，行为一致。</li>
+    <li>需要 GPU 才有的语义（thread scope 的 atomic、warp 同步原语等）：用 <code>cuda::</code>。</li>
+    <li>试用最新原语（早期 cudax::launch、cudax::stream 等）：<code>cuda::experimental::</code> / <code>cudax::</code>，但要做好将来 API 改动的心理准备。</li>
+  </ul>
+
+  <h3>回看 slide 54</h3>
+  <p>之前 transform_reduce 例子里的 <code>cuda::std::tuple&lt;int, int&gt;</code>（host+device 都能用的 std 镜像）和 <code>cuda::maximum{}</code>（CUDA 扩展函数对象）——现在能精确归类：第一个属于 <em>cuda::std::</em>，第二个属于 <em>cuda::</em>。</p>
+</div>
+
+<div class="takeaway">
+  💡 libcu++ 的三个命名空间分别对应"标准库子集（cuda::std::）"、"CUDA 扩展（cuda::）"、"实验 API（cuda::experimental::/cudax::）"。device 代码里凡是想用 std::* 的功能，第一反应改成 cuda::std::*；要 GPU 特有语义就用 cuda::*。
+</div>
+
+
+<!-- ==================== SLIDE 60–70 ==================== -->
+<h2 class="slide-title">Slide 60–70 — <code>reduce_by_key</code> 实战：矩阵每行求和</h2>
+
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-060.png" alt="Slide 60: Thrust 全景，高亮 reduce_by_key">
+  <img class="slide-img" src="images/slide-061.png" alt="Slide 61: 矩阵 M (nx*ny)，目标算每行和">
+  <img class="slide-img" src="images/slide-062.png" alt="Slide 62: 解释 group 概念">
+  <img class="slide-img" src="images/slide-063.png" alt="Slide 63: keys 是 0,0,0,0;1,1,1,1;...">
+  <img class="slide-img" src="images/slide-064.png" alt="Slide 64: 用 transform + counting iterator 惰性生成 row_ids">
+  <img class="slide-img" src="images/slide-065.png" alt="Slide 65: 输出 sums 大小为 nx">
+  <img class="slide-img" src="images/slide-066.png" alt="Slide 66: 引入 thrust::reduce_by_key">
+  <img class="slide-img" src="images/slide-067.png" alt="Slide 67: 第一段参数 // Keys input">
+  <img class="slide-img" src="images/slide-068.png" alt="Slide 68: + Values input M.begin()">
+  <img class="slide-img" src="images/slide-069.png" alt="Slide 69: callout: algorithm 应用到每个 group 的 values">
+  <img class="slide-img" src="images/slide-070.png" alt="Slide 70: + Keys output">
+</div>
+
+<div class="explanation">
+  <h3>Slide 60：从 Standard Algorithms 转到 Extended Algorithms 的入口</h3>
+  <p>Thrust 全景图再次出现，但这次<code>thrust::reduce_by_key</code>那一行被高亮。它在 STL 里没有对应物——属于"<em>Extended Algorithms</em>"，是 GPU 编程里非常常用的"按组归约"原语。下面一整套 slides 用一个具体例子把它讲透。</p>
+
+  <h3>Slide 61：问题场景——矩阵每行求和</h3>
+  <p>定义：</p>
+  <pre><code>int nx, ny;
+thrust::universal_vector&lt;float&gt; M(nx * ny);</code></pre>
+  <p>这是把一个 <code>nx × ny</code> 的二维矩阵<strong>按 row-major 拍平存进一维 vector</strong>——内存里依次是第 0 行的 ny 个元素、第 1 行的 ny 个元素…。右边图画了 8 行 4 列的具体数据 M（粉色格），目标是计算右边那条红色"行和向量"（每个红格 = 该行 4 个元素之和）。</p>
+
+  <h3>Slide 62：核心概念——group</h3>
+  <p>右下黄框：<em>"Each set of consecutive keys that compare equal defines a group."</em> 这是 <code>reduce_by_key</code> 的关键定义：<strong>一段相邻的、键值相等的元素就是一组</strong>。<code>reduce_by_key</code> 会把每组的 value 用归约函数合成一个值。</p>
+  <p>注意"<em>consecutive</em>（相邻）"——它不会去全局找等键的元素再合，所以输入必须按 key 排好。</p>
+
+  <h3>Slide 63：把"行号"当成 keys</h3>
+  <p>右图的粉色矩阵换成绿色"keys 矩阵"：第 0 行全是 0，第 1 行全是 1，…，第 7 行全是 7。也就是说，<strong>把每个矩阵元素的行号作为它的 key</strong>，那相邻同 key 的连续 ny 个值就构成一组——正好是同一行。这样 <code>reduce_by_key</code> 就能为每行算一个和，输出 nx 个值。</p>
+
+  <h3>Slide 64：用迭代器惰性生成 row_ids（不分配 nx*ny 数组）</h3>
+  <pre><code>auto row_ids_begin = thrust::make_transform_iterator(
+  thrust::make_counting_iterator(0),
+  [=] __host__ __device__ (int x) { return x / ny; });
+
+auto row_ids_end = row_ids_begin + nx * ny;</code></pre>
+  <p>组合用了两个迭代器：</p>
+  <ul>
+    <li>底层 <code>counting_iterator(0)</code> 提供 0, 1, 2, ..., nx*ny − 1 的虚拟整数流。</li>
+    <li>外层 <code>transform_iterator</code> 在解引用时算 <code>x / ny</code>——第 0..ny−1 个返回 0，第 ny..2*ny−1 个返回 1，… 正好就是行号。</li>
+  </ul>
+  <p>这就是 slide 63 那张"keys 矩阵"——<strong>但它不真的占内存</strong>。如果矩阵很大，分配一个 nx*ny 的 keys 数组又是一笔 O(N) 浪费；用迭代器按需生成，零开销表达"每个位置的行号"。这正是 slide 37–39 学的"虚拟序列"思想的一次实战。</p>
+
+  <h3>Slide 65：开输出空间——nx 个行和</h3>
+  <pre><code>thrust::universal_vector&lt;float&gt; sums(nx);</code></pre>
+  <p>因为有 nx 行，输出 nx 个数。右图把"行和列"画成红色 1×nx，提示 reduce_by_key 的产出形状。</p>
+
+  <h3>Slide 66–68：调用 <code>thrust::reduce_by_key</code>，参数一段一段拼</h3>
+  <p>Slide 66 把函数名引出，参数留 …。Slide 67 标记第一段参数注释 <em>"// Keys input."</em>，slide 68 把 keys 区间 + values 起点填上：</p>
+  <pre><code>thrust::reduce_by_key(thrust::cuda::par,
+  row_ids_begin, row_ids_end,  // Keys input
+  M.begin(),                    // Values input
+  ...);</code></pre>
+
+  <h3>Slide 69：callout 解释 reduce 的语义</h3>
+  <p>黄框：<em>"The underlying algorithm is applied to the values in each group."</em> ——也就是说，对每段相邻同 key 的 values，用归约函数（默认是加法 <code>plus&lt;&gt;</code>，可自定义）合成一个标量。组的判定靠 keys，归约靠 values。</p>
+
+  <h3>Slide 70：完整签名——还要写出 keys output 和 values output</h3>
+  <pre><code>thrust::reduce_by_key(thrust::cuda::par,
+  row_ids_begin, row_ids_end,  // Keys input
+  M.begin(),                    // Values input
+  /* keys output */,            // 每组的代表 key
+  /* values output */, ...);    // 每组归约结果（行和）</code></pre>
+  <p>右图新增一列绿色——<strong>keys output</strong>：每组只输出一个代表 key（行号 0,1,…,nx−1），所以也是 nx 个。要是只关心行和、不在乎行号，可以把 keys output 写成 <code>thrust::make_discard_iterator()</code> 把它丢掉。</p>
+
+  <h3>整条流水线一行一行回顾</h3>
+  <ul>
+    <li><strong>输入数据</strong>：拍平的矩阵 M（nx*ny 个 float）。</li>
+    <li><strong>虚拟 keys</strong>：counting + transform iterator，按位置算 <code>x / ny</code> 当行号，零内存开销。</li>
+    <li><strong>算法</strong>：<code>reduce_by_key</code> 把相邻同行号的 values 加起来。</li>
+    <li><strong>输出</strong>：nx 个行和（+ nx 个行号，可丢弃）。</li>
+  </ul>
+  <p>整体就是一个 GPU kernel 跑完——没有显式的双重循环、没有手写并行归约、不需要 atomic。这是 Thrust + libcu++ 风格的典型"声明式"代码：<em>把数据形状（"按行分组"）用迭代器表达出来，让算法引擎完成具体并行调度</em>。</p>
+</div>
+
+<div class="takeaway">
+  💡 <code>thrust::reduce_by_key</code> 把"相邻同 key 的 values"作为一组归约。矩阵行求和的 idiom：<strong>用 <code>counting_iterator + transform_iterator(x / ny)</code> 惰性生成行号当 keys</strong>，把拍平的矩阵 M 作为 values，调一次 reduce_by_key 就拿到所有行和。键不用真的分配一个数组——这是迭代器在大规模问题里省内存 + 省 kernel 的代表用法。
+</div>
+
+
+<!-- ==================== SLIDE 71–76 ==================== -->
+<h2 class="slide-title">Slide 71–76 — <code>reduce_by_key</code> 收尾：keys output 用 <code>discard_iterator</code> 丢掉 + by-key 算法家族</h2>
+
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-071.png" alt="Slide 71: keys output 写出每组的第一个 key">
+  <img class="slide-img" src="images/slide-072.png" alt="Slide 72: 用 thrust::make_discard_iterator() 把 keys 丢掉">
+  <img class="slide-img" src="images/slide-073.png" alt="Slide 73: + // Values output. 注释">
+  <img class="slide-img" src="images/slide-074.png" alt="Slide 74: callout 算法结果写到 values output, 列出 54/89/25/...">
+  <img class="slide-img" src="images/slide-075.png" alt="Slide 75: 完整代码：sums.begin() 写出行和">
+  <img class="slide-img" src="images/slide-076.png" alt="Slide 76: By Key Algorithms 完整列表">
+</div>
+
+<div class="explanation">
+  <h3>Slide 71：keys output 的内容</h3>
+  <p>右下黄框：<em>"The first key in each group is copied to the key output range."</em> ——<code>reduce_by_key</code> 把每组的第一个 key 复制到 keys 输出区间。所以右图绿色 keys output 列就是 0,1,2,3,4,5,6,7（每行的代表 key）。</p>
+
+  <h3>Slide 72：把 keys output 丢掉——<code>thrust::make_discard_iterator()</code></h3>
+  <p>多数情况下我们只关心行和，不关心"每组的代表 key"。Thrust 提供 <code>make_discard_iterator()</code>：写入它的所有数据都被丢弃，<strong>不真的存任何东西</strong>。代码改成：</p>
+  <pre><code>thrust::reduce_by_key(thrust::cuda::par,
+  row_ids_begin, row_ids_end,
+  M.begin(),
+  thrust::make_discard_iterator(),  // keys output 不要
+  ...);</code></pre>
+  <p>右图绿色 keys 列变成"叉叉"——表示这些位置没有真实存储。这是又一次"用迭代器表达 0 内存语义"——和 counting/constant/transform iterator 同一思路。</p>
+
+  <h3>Slide 73–74：values output 接口 + 实际结果</h3>
+  <p>Slide 73 加上 <code>// Values output.</code> 注释，slide 74 callout：<em>"The algorithm result for each group is written to the values output."</em>——每组归约结果写到 values output。右图把红色 values output 列填上具体数：54, 89, 25, 38, 68, 75, 80, 40。逐行验证：第 0 行 15+6+18+15 = 54 ✓，第 1 行 29+26+24+10 = 89 ✓，依此类推。</p>
+
+  <h3>Slide 75：完整代码</h3>
+  <pre><code>thrust::universal_vector&lt;float&gt; sums(nx);
+
+thrust::reduce_by_key(thrust::cuda::par,
+  row_ids_begin, row_ids_end,         // Keys input
+  M.begin(),                           // Values input
+  thrust::make_discard_iterator(),     // Keys output (丢弃)
+  sums.begin());                       // Values output</code></pre>
+  <p>整段下来：输入是 nx*ny 矩阵 M（拍平存储）+ 虚拟行号 keys；输出是 nx 个行和到 sums。<strong>没有显式分配过 keys 数组、没写过 GPU kernel、没用过 atomic</strong>——纯组合迭代器和算法。</p>
+
+  <h3>Slide 76：By-Key 算法家族</h3>
+  <p>Thrust 提供的"按 key 分组"算法不止 reduce_by_key 一个。常用列表：</p>
+  <ul>
+    <li><code>reduce_by_key</code> —— 每组归约成一个值（刚刚的例子）。</li>
+    <li><code>(inclusive|exclusive)_scan_by_key</code> —— 每组内做前缀和（含/不含当前位置）。</li>
+    <li><code>sort_by_key</code> —— 用 keys 排，values 跟着重排（稳定地搬动 payload）。</li>
+    <li><code>unique_by_key</code> —— 去掉相邻重复的 keys（保留每组第一个）。</li>
+    <li><code>merge_by_key</code> —— 两路有序输入按 key 归并。</li>
+    <li><code>set_(union|difference|intersection)_by_key</code> —— 集合并/差/交，按 key 比较。</li>
+  </ul>
+  <p>共同模式：<strong>都把"相邻同 key 的元素"当成一组操作</strong>，所以输入要按 key 排序好（或者用迭代器制造出排好的视图，比如刚才的 row_ids 就天然递增）。<em>"分组"在 GPU 上不是免费的——靠相邻+预排实现，而不是哈希</em>，因为 GPU 不擅长跳跃式哈希访问。</p>
+</div>
+
+<div class="takeaway">
+  💡 用 <code>thrust::make_discard_iterator()</code> 丢掉 reduce_by_key 的 keys output，零内存。By-Key 家族（reduce / scan / sort / unique / merge / set）的共同前提：输入按 key 排好（或迭代器天然递增），group = 相邻同 key 的元素。
+</div>
+
+
+<!-- ==================== SLIDE 77–78 ==================== -->
+<h2 class="slide-title">Slide 77–78 — 章节过渡：烤箱里的热扩散 + 2D 5 点 stencil</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-077.png" alt="Slide 77: 讲者烤饼干的照片 + 温度图">
+  <img class="slide-img" src="images/slide-078.png" alt="Slide 78: 2D grid 上 (i,j) 点和 4 个邻居 (i±1, j) (i, j±1) 的拓扑图">
+</div>
+
+<div class="explanation">
+  <h3>Slide 77：现实类比——热在烤箱里如何分布</h3>
+  <p>讲者放出自己烤饼干的照片配上一张二维温度场图（红=热，黑=冷）。这是接下来要写的<strong>"二维热方程"</strong>例子的物理动机：放进烤箱里的食物，热量沿着边界往内传，每个位置的下一时刻温度依赖周围邻居的温度。</p>
+  <p>从 slide 10–11 的"三杯咖啡冷却"升级到 2D 后，关键差别是<em>每个格子不再只依赖自己</em>——它要看上下左右邻居的当前温度。这把"独立元素"问题升级成了"<strong>stencil 计算（模板计算）</strong>"。stencil 在 PDE 仿真、图像处理、卷积等领域无处不在。</p>
+
+  <h3>Slide 78：2D 5 点 stencil 的邻居关系</h3>
+  <p>右图把一个 2D 网格画成多张 3×3 小卡片，每张卡片代表一个网格点。中间高亮的 <code>(i, j)</code> 用黄色虚线连到它的 4 个直接邻居 <code>(i−1, j)</code>、<code>(i+1, j)</code>、<code>(i, j−1)</code>、<code>(i, j+1)</code>——也就是上下左右各 1 步。中心点加上这 4 个邻居一共 <strong>5 个点</strong>，所以叫 "5-point stencil"。</p>
+  <p>对应的更新公式（slide 85 会出现完整代码）就是离散化的 2D 拉普拉斯：</p>
+  <pre><code>U_next(x, y) = U(x, y) + α × ( ∂²U/∂x² + ∂²U/∂y² )</code></pre>
+  <p>其中两个二阶导按中心差分展开就用到 5 个点：</p>
+  <pre><code>∂²U/∂x² ≈ U(x, y−1) − 2·U(x, y) + U(x, y+1)
+∂²U/∂y² ≈ U(x−1, y) − 2·U(x, y) + U(x+1, y)</code></pre>
+  <p>注意 stencil 的特殊性：<strong>每个内部格子的更新仍然彼此独立</strong>（都只读 U、写 V，不互相干扰），所以本质上还是"对每个元素并行做相同运算"——只是这次的"运算"要访问 5 个位置，比 slide 12–15 的"只看自己一个"复杂一档。GPU 处理这种规则邻居访问极其在行（访存模式可预测、可合并），是经典 GPU 工作负载。</p>
+</div>
+
+<div class="takeaway">
+  💡 把"对每个元素做运算"扩展到 2D：每个网格点的更新依赖自己 + 上下左右 4 个邻居（5-point stencil）。例子是 2D 热方程 <code>U_next = U + α·(∂²U/∂x² + ∂²U/∂y²)</code>，每个内部点更新仍然彼此独立 → GPU 友好。
+</div>
+
+
+<!-- ==================== SLIDE 79–86 ==================== -->
+<h2 class="slide-title">Slide 79–86 — heat_equation 函数 raw-pointer 版：counting + xy 解码 + 边界 + 5 点拉普拉斯</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-079.png" alt="Slide 79: 函数签名 heat_equation(policy, nx, ny, U_data, V_data)">
+  <img class="slide-img" src="images/slide-080.png" alt="Slide 80: + thrust::for_each_n + counting_iterator">
+  <img class="slide-img" src="images/slide-081.png" alt="Slide 81: + lambda capture [?, nx, ny] + (int xy) 参数">
+  <img class="slide-img" src="images/slide-082.png" alt="Slide 82: + raw_pointer_cast 提取 U/V，capture [U, V, nx, ny]">
+  <img class="slide-img" src="images/slide-083.png" alt="Slide 83: + xy 拆成 x = xy/ny, y = xy%ny">
+  <img class="slide-img" src="images/slide-084.png" alt="Slide 84: + 内部点边界判定 if (x>0 && y>0 && x<nx-1 && y<ny-1)">
+  <img class="slide-img" src="images/slide-085.png" alt="Slide 85: + 内部 5 点 stencil 公式">
+  <img class="slide-img" src="images/slide-086.png" alt="Slide 86: + else 分支：边界格子直接 V = U">
+</div>
+
+<div class="explanation">
+  <h3>从空函数到完整 stencil kernel——8 步逐行揭示</h3>
+  <p>这一节把 slide 78 的数学公式翻译成可跑的 Thrust 代码。每页只加一两行，最终代码大约这样：</p>
+  <pre><code>void heat_equation(auto policy, int nx, int ny,
+                   const thrust::universal_vector&lt;float&gt;&amp; U_data,
+                         thrust::universal_vector&lt;float&gt;&amp;       V_data) {
+  const float* U = thrust::raw_pointer_cast(U_data.data());
+        float* V = thrust::raw_pointer_cast(V_data.data());
+
+  thrust::for_each_n(policy, thrust::make_counting_iterator(0), U.size(),
+    [U, V, nx, ny] __host__ __device__ (int xy) {
+      int x = xy / ny;
+      int y = xy % ny;
+
+      if (x &gt; 0 &amp;&amp; y &gt; 0 &amp;&amp; x &lt; nx - 1 &amp;&amp; y &lt; ny - 1) {
+        auto d2tdx2 = U[x*ny + y - 1]   - U[x*ny + y]*2 + U[x*ny + y + 1];
+        auto d2tdy2 = U[(x - 1)*ny + y] - U[x*ny + y]*2 + U[(x + 1)*ny + y];
+
+        V[x*ny + y] = U[x*ny + y] + 0.2f * (d2tdx2 + d2tdy2);
+      } else {
+        V[x*ny + y] = U[x*ny + y];   // 边界保持
+      }
+    });
+}</code></pre>
+
+  <h3>逐 slide 的关键点</h3>
+  <ul>
+    <li><strong>Slide 79（签名）</strong>：<code>policy</code> 是模板化的执行策略（<code>auto</code> 让调用方自由切换 <code>thrust::cuda::par</code> / <code>thrust::host</code>）；<code>U_data</code> 是 <em>const &amp;</em>（输入），<code>V_data</code> 是 <em>&amp;</em>（输出）。<strong>不直接传指针</strong>，因为 vector 提供 size 信息和 RAII；指针稍后再取。</li>
+    <li><strong>Slide 80（loop 入口）</strong>：用 <code>thrust::for_each_n + counting_iterator(0)</code> 表达"对 0..N−1 每个 xy 并行做同一件事"，<code>U.size()</code> 等于 <code>nx*ny</code>。这沿用了 slide 38 学的 idiom。</li>
+    <li><strong>Slide 81（lambda 框架）</strong>：lambda 接受 <code>int xy</code>（线性下标），加 <code>__host__ __device__</code>。capture 列表暂用 <code>[?, nx, ny]</code> 占位——还差怎么把 U/V 数据带进来。</li>
+    <li><strong>Slide 82（raw_pointer_cast）</strong>：关键转换。<strong>vector 不能直接被 lambda capture 跨到 device</strong>——它的拷贝构造器是 host-only，传到 device 上会编译报错。所以先在 host 端用 <code>thrust::raw_pointer_cast(vec.data())</code> 拿到裸指针 <code>const float* U</code> / <code>float* V</code>，再 capture 指针。指针在 device 上可以解引用读 universal memory（因为 universal_vector 的 backing 在 unified memory 上）。capture 列表变成 <code>[U, V, nx, ny]</code>。</li>
+    <li><strong>Slide 83（xy 解码）</strong>：线性下标 <code>xy</code> 拆回 2D 坐标 <code>x = xy / ny</code>、<code>y = xy % ny</code>。这是 row-major 拍平存储的反向计算（slide 61 已说过同样的存储约定）。</li>
+    <li><strong>Slide 84（边界判定）</strong>：<code>if (x &gt; 0 &amp;&amp; y &gt; 0 &amp;&amp; x &lt; nx - 1 &amp;&amp; y &lt; ny - 1)</code>——只有完全是<strong>内部点</strong>（4 个邻居都存在）才能算 stencil。边界格子下一步走 else 分支。</li>
+    <li><strong>Slide 85（5 点公式）</strong>：</li>
+  </ul>
+  <pre><code>auto d2tdx2 = U[x*ny + y - 1]   - U[x*ny + y]*2 + U[x*ny + y + 1];
+auto d2tdy2 = U[(x - 1)*ny + y] - U[x*ny + y]*2 + U[(x + 1)*ny + y];
+
+V[x*ny + y] = U[x*ny + y] + 0.2f * (d2tdx2 + d2tdy2);</code></pre>
+  <p>三行直接对应 slide 78 的二阶差分公式，<code>0.2f</code> 是离散步长系数（α，slide 没解释具体由来，对应于 Δt × κ / Δx² 之类的物理常数；当作给定就行）。注意访存：每个 xy 读 5 个 U 位置（自己 + 上下左右），写 1 个 V 位置——典型 stencil 模式。</p>
+  <ul>
+    <li><strong>Slide 86（else 分支）</strong>：<code>V[x*ny + y] = U[x*ny + y]</code>——边界格子简单地保持原温度。这隐式实现了"<em>Dirichlet 边界条件</em>"：边界值由调用方在 U 里设置好，每一步迭代都不变。后面 slide 90 会看到 <code>initialize_oven</code> 是怎么把烤箱顶/底两条边设成高温的。</li>
+  </ul>
+
+  <h3>为什么 V 不能写 U（必须用两个 buffer）</h3>
+  <p>注意整段代码 <em>读 U、写 V</em>，没有原地更新。原因很关键：if 我们写 <code>U[...] = ...</code>，那当并行的另一个线程要读这个位置作为它的邻居时，可能读到"已经被这一步更新过"或"还没更新"的值——结果不确定。<strong>Stencil 计算必须 ping-pong：U 是上一时刻、V 是下一时刻；下一步把 U/V 角色对调（slide 后面会展开）</strong>。这是 stencil 算法的通用规矩。</p>
+
+  <h3>这版本的"丑"——后面要用 mdspan 改</h3>
+  <p>注意 <code>U[x*ny + y - 1]</code> 这种"手算偏移"出现了 7 次——容易写错（行/列搞反、ny 写成 nx）。用 raw pointer + 手动 row-major 偏移，是 GPU 老代码常见风格但不安全。slide 87–89 会用 <code>cuda::std::mdspan</code> 把它换成可读的 <code>U(x, y)</code>。</p>
+</div>
+
+<div class="takeaway">
+  💡 heat_equation 的 idiom：<code>for_each_n + counting_iterator</code> 表达"对每个 xy 做事"；用 <code>raw_pointer_cast</code> 把 universal_vector 拆成裸指针 capture 进 lambda；从 xy 解出 (x, y)；内部点算 5 点 stencil 写 V，边界点直接复制。<strong>必须 U→V 双缓冲</strong>（不能原地），否则邻居读到不确定值。
+</div>
+
+
+<!-- ==================== SLIDE 87 ==================== -->
+<h2 class="slide-title">Slide 87 — <code>std::mdspan</code>：多维数组的非拥有 view（C++23）</h2>
+
+<img class="slide-img" src="images/slide-087.png" alt="Slide 87: std::mdspan 模板签名 + row-major / column-major 对比">
+
+<div class="explanation">
+  <h3>动机：手动 row-major 偏移容易写错，需要可读的 2D 索引</h3>
+  <p><code>std::mdspan</code> 是 C++23 标准库新增的<strong>多维数组 view</strong>——它<em>不持有数据</em>，只是把一段已有内存按指定的形状和布局重新解释为多维数组。模板签名：</p>
+  <pre><code>template &lt;class T, class Extents,
+          class LayoutPolicy = ..., class AccessorPolicy = ...&gt;
+class std::mdspan;</code></pre>
+  <p>四个模板参数：元素类型、形状（<code>Extents</code>，可静态或动态）、内存布局（<code>LayoutPolicy</code>）、访问器（<code>AccessorPolicy</code>，控制如何读写每个元素，默认就是 <code>operator*</code>）。</p>
+
+  <h3>同一段内存，两种布局</h3>
+  <p>Slide 用同一个 <code>data</code> 数组配两种 layout 演示：</p>
+  <table>
+    <thead>
+      <tr><th></th><th>Row-major（C/NumPy）</th><th>Column-major（Fortran/MATLAB）</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>构造</td>
+        <td><code>mdspan A(data, N, M);</code><br>等价于 <code>layout_right::mapping(dims(N, M))</code></td>
+        <td><code>mdspan B(data, layout_left::mapping(dims(N, M)));</code></td>
+      </tr>
+      <tr>
+        <td>下标到偏移</td>
+        <td><code>A(i, j) == data[i * M + j]</code></td>
+        <td><code>B(i, j) == data[i + j * N]</code></td>
+      </tr>
+      <tr>
+        <td>stride(0)</td>
+        <td>M（跳一行 = 跳 M 个元素）</td>
+        <td>1（跳一行 = 跳 1 个元素）</td>
+      </tr>
+      <tr>
+        <td>stride(1)</td>
+        <td>1（跳一列 = 跳 1 个元素）</td>
+        <td>N（跳一列 = 跳 N 个元素）</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>底下表格画了一个 2×2 矩阵 [[a₀₀, a₀₁], [a₁₀, a₁₁]] 在两种布局下的实际内存顺序：row-major 是 a₀₀, a₀₁, a₁₀, a₁₁；column-major 是 a₀₀, a₁₀, a₀₁, a₁₁。</p>
+
+  <h3>为什么这对 GPU 重要</h3>
+  <p>三点：</p>
+  <ul>
+    <li><strong>可读性</strong>——<code>U(x, y)</code> 比 <code>U[x*ny + y]</code> 直观得多，写错概率低。</li>
+    <li><strong>布局可换</strong>——同一段算法代码可以接收 row-major 或 column-major 输入，不改 kernel；只换 mdspan 的 LayoutPolicy。和别人的库（Fortran/MATLAB 风格）对接时省事。</li>
+    <li><strong>非拥有 = GPU 友好</strong>——mdspan 自身不分配内存，只存指针 + 形状 + stride。可以安全地 capture 进 device lambda（不像 std::vector）。下一节 slide 89 就要用它。</li>
+  </ul>
+  <p>注意：标准库的 <code>std::mdspan</code> 仅 host 可用；<strong>device 端要用 libcu++ 的 <code>cuda::std::mdspan</code></strong>（接口一致，slide 57 的 cuda::std 子集）。</p>
+</div>
+
+<div class="takeaway">
+  💡 <code>std::mdspan</code>（C++23）= 多维 view，不拥有数据，只把一段连续内存按 (extents, layout) 解释成多维数组。优点：<code>U(x, y)</code> 比手算 <code>x*ny + y</code> 更安全；row-major 和 column-major 同一段代码兼容；non-owning 因此能 capture 进 device lambda。device 端用 <code>cuda::std::mdspan</code>。
+</div>
+
+
+<!-- ==================== SLIDE 88–89 ==================== -->
+<h2 class="slide-title">Slide 88–89 — 用 <code>cuda::std::mdspan</code> 重写 heat_equation：raw-pointer 版 vs mdspan 版对比</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-088.png" alt="Slide 88: raw pointer + 手算偏移版（再展示一次作为对比基线）">
+  <img class="slide-img" src="images/slide-089.png" alt="Slide 89: 用 cuda::std::mdspan 改写的 heat_equation">
+</div>
+
+<div class="explanation">
+  <h3>把 slide 86 的 raw-pointer 版 vs mdspan 版并排放</h3>
+  <p>Slide 88 是 slide 86 的复制（raw pointer + 手算偏移），slide 89 是用 <code>cuda::std::mdspan</code> 改写的版本。把两边对比着看，差异极其清晰。</p>
+
+  <h3>函数签名的变化</h3>
+  <table>
+    <thead>
+      <tr><th></th><th>Raw pointer 版（88）</th><th>mdspan 版（89）</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>形参</td>
+        <td><code>nx, ny, const universal_vector&lt;float&gt;&amp; U_data, universal_vector&lt;float&gt;&amp; V_data</code></td>
+        <td><code>cuda::std::mdspan&lt;float const, cuda::std::dims&lt;2&gt;&gt; U, cuda::std::mdspan&lt;float, cuda::std::dims&lt;2&gt;&gt; V</code></td>
+      </tr>
+      <tr>
+        <td>形状信息</td>
+        <td>另传 nx, ny 两个 int</td>
+        <td>形状<strong>嵌在 mdspan 里</strong>：<code>U.extent(0)</code> = nx, <code>U.extent(1)</code> = ny</td>
+      </tr>
+      <tr>
+        <td>const 标记</td>
+        <td>vector 加 const、指针加 const</td>
+        <td>把 <code>float const</code> 写到 mdspan 元素类型里就行</td>
+      </tr>
+    </tbody>
+  </table>
+  <p><code>cuda::std::dims&lt;2&gt;</code> 是 <code>cuda::std::extents</code> 的别名，表示"2 维、所有 extent 都是 dynamic"——形状在运行时才确定。如果是固定大小（比如 16×16）可以写 <code>cuda::std::extents&lt;size_t, 16, 16&gt;</code>，编译期就知道。</p>
+
+  <h3>函数体的变化</h3>
+  <p>对照三处关键差异（左 = raw pointer，右 = mdspan）：</p>
+  <ul>
+    <li><strong>提指针那两行没了</strong>——mdspan 直接被 capture，无需 <code>raw_pointer_cast</code>。capture 简化成 <code>[U, V]</code>。</li>
+    <li><strong>循环长度</strong>：<code>U.size()</code> 仍然是 <code>nx*ny</code>（mdspan 提供 size()）。但内部用 <code>U.extent(1)</code> 替代了 ny——形状自带，不再依赖外部参数。</li>
+    <li><strong>访问语法</strong>：<code>U[x*ny + y]</code> 全部改成 <code>U(x, y)</code>，<code>U[(x-1)*ny + y]</code> 改成 <code>U(x-1, y)</code>，等等。<em>读起来像数学公式</em>。stencil 那行从两行 <code>x*ny + y±1</code>、<code>(x±1)*ny + y</code> 的混合，变成一目了然的 <code>U(x, y±1)</code>、<code>U(x±1, y)</code>。</li>
+  </ul>
+  <p>边界判定也用 <code>U.extent(0)</code>、<code>U.extent(1)</code>（slide 89 写成 <code>I.extent(0)</code> 应是笔误，应该是 <code>U.extent(0)</code>）替代了 nx、ny——形状信息全部从 mdspan 取。</p>
+
+  <h3>结论</h3>
+  <p>同样的 stencil 计算，mdspan 版：</p>
+  <ul>
+    <li><strong>少了两次 raw_pointer_cast</strong>，不再手动管理"vector → 指针"的转换。</li>
+    <li><strong>下标计算从 7 处手算偏移变成 7 处 (x, y) 调用</strong>——可读性大幅提升。</li>
+    <li><strong>nx, ny 不再单独传</strong>——形状嵌进 mdspan，签名更简洁。</li>
+    <li><strong>布局可切换</strong>——如果数据来自 column-major 的库，只需改 mdspan 的 LayoutPolicy，kernel 代码不动。</li>
+  </ul>
+  <p>这是"现代 CUDA C++"的代表写法：用 libcu++ 的 mdspan / span / array 取代裸指针 + 手算偏移，让 GPU 代码看起来和数学公式同构。</p>
+</div>
+
+<div class="takeaway">
+  💡 用 <code>cuda::std::mdspan&lt;T, cuda::std::dims&lt;2&gt;&gt;</code> 改写后：raw_pointer_cast 没了、nx/ny 不用单独传（嵌在 mdspan 的 extent 里）、<code>U[x*ny+y]</code> 变 <code>U(x, y)</code>。Stencil 代码读起来和数学公式同构，写错概率显著降低，且布局可换。
+</div>
+
+
+<!-- ==================== SLIDE 90 ==================== -->
+<h2 class="slide-title">Slide 90 — initialize_oven：把"烤箱"边界温度初始化（mdspan 接口）</h2>
+
+<img class="slide-img" src="images/slide-090.png" alt="Slide 90: initialize_oven 函数签名 + 烤箱热分布初始可视化">
+
+<div class="explanation">
+  <h3>函数签名沿用 mdspan 风格</h3>
+  <pre><code>void initialize_oven(auto policy, cuda::std::mdspan&lt;float, cuda::std::dims&lt;2&gt;&gt; U);</code></pre>
+  <p>只接受一个可写 mdspan U——内部要给 U 写入"初始温度场"。沿用 slide 89 的同一种接口风格：把数据形状和访问方式都封进 mdspan，函数不再操心 nx/ny 怎么传。</p>
+
+  <h3>右下那张可视化图：要初始化成的目标</h3>
+  <p>图里是一个 ~280×1024 的二维网格，颜色编码温度：<strong>顶边和底边亮黄/红（高温）</strong>，中间深红/黑（低温/室温）。这模拟烤箱的物理：上下加热管把热量打进腔体，中间还没被加热到。</p>
+  <p>这正好是 slide 86 / 89 里 else 分支保持的<strong>边界条件</strong>来源——<code>initialize_oven</code> 把 U 的边界格设成高温、内部格设成低温，之后 heat_equation 一步一步迭代，热量就会从边界往内传。运行起来视觉上就是烤箱里温度场逐步从两端往中间扩散。</p>
+
+  <h3>这一页的位置：完整 demo 的最后一块</h3>
+  <p>到这里，2D 热方程 demo 的所有"零件"已经齐了：</p>
+  <ul>
+    <li><strong>数据容器</strong>：<code>thrust::universal_vector&lt;float&gt;</code> 存 U 和 V 的拍平数据。</li>
+    <li><strong>多维视图</strong>：<code>cuda::std::mdspan</code> 把它包装成 2D 接口。</li>
+    <li><strong>初始化</strong>：<code>initialize_oven</code> 把边界设高温、内部设低温（本页）。</li>
+    <li><strong>每步更新</strong>：<code>heat_equation</code> 用 5 点 stencil 算下一时刻 V，边界保持。</li>
+    <li><strong>时间循环</strong>：（后续 slides 会出现）外层 for 循环里反复调用 heat_equation 并交换 U/V 角色。</li>
+  </ul>
+  <p>本节就停在 demo 主体搭好的位置——具体怎么写 initialize_oven 内部、怎么做 U/V swap、怎么落到磁盘 / 显示，是后面 slides 的内容。</p>
+</div>
+
+<div class="takeaway">
+  💡 initialize_oven 用同一种 <code>cuda::std::mdspan</code> 接口风格写：传一个 2D mdspan 进来，函数内给边界设高温、内部设低温。它给 heat_equation 准备初始 U——边界值就是 stencil 迭代里 else 分支永远保持的"Dirichlet 边界"。
+</div>
+
+
+<!-- ==================== SLIDE 91–94 ==================== -->
+<h2 class="slide-title">Slide 91–94 — initialize_oven 实现：用 <code>submdspan</code> 切顶/中/底三段，再 <code>fill_n</code> 填温度</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-091.png" alt="Slide 91: 取出 top/bot 子 mdspan">
+  <img class="slide-img" src="images/slide-092.png" alt="Slide 92: 加上 mid 子 mdspan（行 1..nx-2）">
+  <img class="slide-img" src="images/slide-093.png" alt="Slide 93: fill_n 填 top 和 bot 为 90.0">
+  <img class="slide-img" src="images/slide-094.png" alt="Slide 94: + fill_n 填 mid 为 15.0">
+</div>
+
+<div class="explanation">
+  <h3><code>cuda::std::submdspan</code>：从一个 mdspan 切出子区域，仍是一个 mdspan</h3>
+  <p>关键工具函数：<code>submdspan(parent, slice₀, slice₁, ...)</code>。每个 slice 可以是：</p>
+  <ul>
+    <li>一个整数 <em>k</em>——取这一维的第 k 行/列，<strong>这一维消失</strong>（降维）；</li>
+    <li><code>cuda::std::full_extent</code>——这一维全保留；</li>
+    <li><code>cuda::std::tuple(begin, end)</code>——取这一维 [begin, end) 的连续区间；</li>
+    <li><code>cuda::std::strided_slice{...}</code>——带步长的切片。</li>
+  </ul>
+
+  <h3>本例的三段切分</h3>
+  <pre><code>auto top = cuda::std::submdspan(U, 0,                               cuda::std::full_extent);
+auto mid = cuda::std::submdspan(U, cuda::std::tuple(1, nx-2),       cuda::std::full_extent);
+auto bot = cuda::std::submdspan(U, nx-1,                            cuda::std::full_extent);</code></pre>
+  <ul>
+    <li><code>top</code>：第 0 行（标量切片，<strong>降维成 1D mdspan</strong>，长度 ny）。</li>
+    <li><code>mid</code>：1..nx-2 的中间所有行（<strong>仍是 2D</strong>，shape 为 (nx-2, ny)）。</li>
+    <li><code>bot</code>：第 nx-1 行（同 top，1D，长度 ny）。</li>
+  </ul>
+  <p>三段加起来正好覆盖整个 U，互不重叠。<strong>子 mdspan 不复制数据，只是同一块底层内存的另一种 view</strong>。</p>
+
+  <h3>填值（slide 93–94）</h3>
+  <pre><code>thrust::fill_n(policy, top.data_handle(), top.size(), 90.0);
+thrust::fill_n(policy, mid.data_handle(), mid.size(), 15.0);
+thrust::fill_n(policy, bot.data_handle(), bot.size(), 90.0);</code></pre>
+  <p><code>data_handle()</code> 拿到底层指针，<code>size()</code> 是元素总数。三个并行的 fill_n 把"烤箱"初始温度场填好：上下两条边 90°C（加热管），中间区域 15°C（室温）。</p>
+  <p>注意 mid 是 2D，但因为底层是连续 row-major 存储，<strong>把它当作一段 size = (nx-2)*ny 的扁平数组用 fill_n 是正确的</strong>——每行 ny 个元素，nx-2 行连在一起就是这段 vector。如果 mdspan 的 layout 不是 row-major 连续（比如有非平凡 stride），这种"扁平 fill"就不行；这里默认 layout_right 所以可以。</p>
+</div>
+
+<div class="takeaway">
+  💡 <code>submdspan</code> = 多维数组的"slice"——整数降维、<code>full_extent</code> 全保留、<code>tuple(b,e)</code> 取区间。本例用三个 submdspan 把 U 切成 top/mid/bot 三段，再各自 <code>fill_n</code> 填不同温度，零内存拷贝。
+</div>
+
+
+<!-- ==================== SLIDE 95–102 ==================== -->
+<h2 class="slide-title">Slide 95–102 — main 流程逐行搭出来：double-buffer + write/compute 嵌套循环 + U/V swap</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-095.png" alt="Slide 95: nx, ny, write_steps, compute_steps 声明">
+  <img class="slide-img" src="images/slide-096.png" alt="Slide 96: + universal_vector U_data/V_data + mdspan U/V">
+  <img class="slide-img" src="images/slide-097.png" alt="Slide 97: + initialize_oven(par, U)">
+  <img class="slide-img" src="images/slide-098.png" alt="Slide 98: + 外层 for write_steps 循环骨架">
+  <img class="slide-img" src="images/slide-099.png" alt="Slide 99: + save_to_file(U) + 内层 compute_steps 循环">
+  <img class="slide-img" src="images/slide-100.png" alt="Slide 100: + heat_equation(par, U, V) 在内层">
+  <img class="slide-img" src="images/slide-101.png" alt="Slide 101: + U.swap(V) ping-pong">
+  <img class="slide-img" src="images/slide-102.png" alt="Slide 102: callout 展示 swap 后实际 U/V 角色交替">
+</div>
+
+<div class="explanation">
+  <h3>整段代码（slide 101 完整版）</h3>
+  <pre><code>int nx, ny, write_steps, compute_steps;
+
+thrust::universal_vector&lt;float&gt; U_data(nx * ny), V_data(nx * ny);
+cuda::std::mdspan U(thrust::raw_pointer_cast(U_data.data()), nx, ny);
+cuda::std::mdspan V(thrust::raw_pointer_cast(V_data.data()), nx, ny);
+
+initialize_oven(thrust::cuda::par, U);
+
+for (auto write_step : std::views::iota(0, write_steps)) {
+  save_to_file(U);
+
+  for (auto compute_step : std::views::iota(0, compute_steps)) {
+    heat_equation(thrust::cuda::par, U, V);
+    U.swap(V);
+  }
+}</code></pre>
+
+  <h3>结构</h3>
+  <ul>
+    <li><strong>double-buffer</strong>：两块同样大小的 universal_vector U_data / V_data，再用 mdspan 包装成 2D 接口。slide 88–89 解释过为什么必须双缓冲（stencil 计算不能原地）。</li>
+    <li><strong>外层 write_steps 循环</strong>：控制"快照写盘"的次数。每过一段计算就保存一次当前温度场（slide 99 的 <code>save_to_file(U)</code>）——后期可以看到温度场如何随时间演化。</li>
+    <li><strong>内层 compute_steps 循环</strong>：每两次写盘之间跑 compute_steps 个 stencil 步。这是<em>"少写盘多算"</em>的标准模式——磁盘 I/O 慢，所以让 GPU 多算几步再写一次。</li>
+    <li><strong><code>U.swap(V)</code></strong>：mdspan 的 swap 不交换底层数据（universal_vector 没动），只交换"哪个 mdspan 指向 U_data、哪个指向 V_data"。下一步 V 变成新的"上一时刻"读源，U 变成新的"下一时刻"写目标。<strong>O(1) 操作</strong>。</li>
+  </ul>
+
+  <h3>Slide 102：把 swap 展开看本质</h3>
+  <p>右下白框写的是把内层循环展开后的实际效果（compute_steps == 3）：</p>
+  <pre><code>heat_equation(..., U_data.data(), V_data.data());  // 第 0 步：读 U，写 V
+heat_equation(..., V_data.data(), U_data.data());  // 第 1 步：读 V，写 U
+heat_equation(..., U_data.data(), V_data.data());  // 第 2 步：读 U，写 V</code></pre>
+  <p>看出来了：U/V 角色每步对调一次，<strong>底层 U_data / V_data 这两块物理内存交替扮演"上一步"和"这一步"</strong>。这就是经典的 <em>ping-pong buffering</em>——同样的两块内存被反复重用，没有第三块。</p>
+</div>
+
+<div class="takeaway">
+  💡 时间步进 idiom：双缓冲 (U_data, V_data) + mdspan 包装；外循环写盘、内循环算 stencil；每步 <code>U.swap(V)</code> 让两个 mdspan ping-pong 角色。物理内存只有两块，但语义上是无限的时间序列。
+</div>
+
+
+<!-- ==================== SLIDE 103–106 ==================== -->
+<h2 class="slide-title">Slide 103–106 — 同步开销：每次 launch host 都 block；用 <code>par_nosync</code> + 显式 sync 解耦</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-103.png" alt="Slide 103: 时序图——host 在每次 launch 之间都 Blocked">
+  <img class="slide-img" src="images/slide-104.png" alt="Slide 104: 还在用 thrust::cuda::par（默认会 sync）">
+  <img class="slide-img" src="images/slide-105.png" alt="Slide 105: 切换到 thrust::cuda::par_nosync">
+  <img class="slide-img" src="images/slide-106.png" alt="Slide 106: + 显式 cudaDeviceSynchronize 在 save_to_file 前">
+</div>
+
+<div class="explanation">
+  <h3>问题：<code>thrust::cuda::par</code> 在每次 launch 后都隐式同步</h3>
+  <p>Slide 103 的时序图把这个开销画出来：每次调 <code>heat_equation(par, ...)</code>，host 启动 kernel → host 进入 <em>Blocked</em> → device 跑 → device 跑完 → host 解除 → 下一行 <code>U.swap(V)</code> 才能继续。两次 launch 之间，host 都在干等。</p>
+  <p>这是 <code>thrust::cuda::par</code> 的"<strong>每次结束时同步</strong>"行为——为了语义干净（Thrust 算法返回时数据保证就绪）。但对内层 1000 次 stencil 这种纯 GPU 计算来说，host 没事可干，每次都阻塞 100% 是浪费。</p>
+
+  <h3>解决：换成 <code>thrust::cuda::par_nosync</code></h3>
+  <p>Slide 105 把所有 policy 从 <code>thrust::cuda::par</code> 改成 <code>thrust::cuda::par_nosync</code>。语义差异：</p>
+  <table>
+    <thead>
+      <tr><th></th><th><code>par</code></th><th><code>par_nosync</code></th></tr>
+    </thead>
+    <tbody>
+      <tr><td>调用返回时</td><td>device 已完成</td><td>device 可能还在跑</td></tr>
+      <tr><td>host 是否 block</td><td>是</td><td>否（除非算法结果依赖计算）</td></tr>
+      <tr><td>谁负责同步</td><td>Thrust 自动</td><td>程序员显式 <code>cudaDeviceSynchronize</code> 或 stream 同步</td></tr>
+    </tbody>
+  </table>
+
+  <h3>但还是要在"读 device 数据"前手动同步——<code>cudaDeviceSynchronize</code></h3>
+  <p>Slide 106 在 <code>save_to_file(U)</code> 前面加一行 <code>cudaDeviceSynchronize();</code>。原因：<code>save_to_file</code> 在 host 上读 U_data 内容写文件，<strong>必须保证此时 GPU 上的 stencil 计算已经完成、最新值已经写回 universal memory</strong>。par_nosync 不替你管这个，所以你要自己 sync。</p>
+  <p>整体效果：内层 compute_steps × heat_equation 调用之间不同步（因为相邻两次 stencil 通过同一 stream 已天然有序，且彼此独立），外层 write_step 之前一次 sync 等所有累计计算完成。<strong>同步次数从 N 次降到 1 次</strong>——大幅减少 host/device 互等。</p>
+</div>
+
+<div class="takeaway">
+  💡 <code>thrust::cuda::par</code> 默认每次 kernel 结束都同步，host 频繁 block。换成 <code>thrust::cuda::par_nosync</code> 不再自动同步——但你必须在"host 要读 device 数据"之前显式 <code>cudaDeviceSynchronize()</code>。同步开销从每步 1 次降到每个 write_step 1 次。
+</div>
+
+
+<!-- ==================== SLIDE 107–111 ==================== -->
+<h2 class="slide-title">Slide 107–111 — CUDA streams：执行顺序的"通道"</h2>
+
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-107.png" alt="Slide 107: cudax::stream A + 两个 for_each on(A)">
+  <img class="slide-img" src="images/slide-108.png" alt="Slide 108: + A.sync()，stream 可记录 event">
+  <img class="slide-img" src="images/slide-109.png" alt="Slide 109: + Stream B 独立运行">
+  <img class="slide-img" src="images/slide-110.png" alt="Slide 110: + Stream C wait for B 的 event 后跑 h">
+  <img class="slide-img" src="images/slide-111.png" alt="Slide 111: 多 GPU 上的 stream（devices[0] / devices[1]）">
+</div>
+
+<div class="explanation">
+  <h3>Stream = "device work 的串行通道"</h3>
+  <p>Slide 107 的黄框：<em>"A stream is a chain of device work that is executed in order."</em>——同一 stream 上提交的 kernel 按提交顺序依次跑（FIFO）。不同 stream 之间默认<strong>互相并发</strong>，硬件可以同时执行。</p>
+
+  <h3>API：<code>cudax::stream</code> + <code>policy.on(stream)</code></h3>
+  <pre><code>auto pol(thrust::cuda::par_nosync);
+cudax::stream A;
+thrust::for_each(pol.on(A), ..., f);   // f 进 stream A
+thrust::for_each(pol.on(A), ..., g);   // g 进 stream A，跟在 f 后</code></pre>
+  <p>右图把这两行可视化为 GPU 里 Stream A 通道里 <em>Run f → Run g</em>（顺序执行）。</p>
+
+  <h3>Slide 108：A.sync() + event</h3>
+  <p>右下黄框：<em>"They can record events that host code can sync with."</em> ——<code>A.sync()</code> 让 host 阻塞到 stream A 上当前已提交的所有工作完成。这是 stream 粒度的同步，比 cudaDeviceSynchronize 精细：只等这一个 stream，别的 stream 可以继续跑。</p>
+
+  <h3>Slide 109：多个 stream 并发</h3>
+  <p>开第二个 stream B 跑 x/y/z。Stream A 和 Stream B 在 GPU 上<strong>可以同时执行</strong>（如果硬件资源够），互不阻塞。</p>
+
+  <h3>Slide 110：跨流依赖——event</h3>
+  <pre><code>auto e = B.record_event();   // 在 stream B 上当前位置打一个 event
+thrust::for_each(pol.on(B), ..., z);  // z 提交到 B
+cudax::stream C;
+thrust::copy(pol.on(C), M, ..., N);   // C 上跑 copy
+C.wait(e);                            // C 等 e（即 B 在 record 时的状态完成）
+thrust::for_each(pol.on(C), ..., h);  // 这之后才在 C 上跑 h</code></pre>
+  <p>右图：Stream C 里出现 "Wait for e" 块，把 Run h 推后到 e 完成之后。这是<strong>无 host 介入的跨流同步</strong>——device 自己决定执行顺序，host 不被 block。比 host 端 sync 后再启动效率高。</p>
+
+  <h3>Slide 111：跨多个 GPU 的 stream</h3>
+  <pre><code>cudax::stream A(cudax::devices[0]);
+cudax::stream B(cudax::devices[1]);</code></pre>
+  <p>每个 stream 绑定到具体 device，提交到它的工作只在对应 GPU 上跑。Slide 右图把 GPU 0 和 GPU 1 并排画出：A、C 在 GPU 0，B 在 GPU 1。stream B 在 GPU 1 record event，stream C 在 GPU 0 wait——<strong>跨 GPU 的同步也走 event 机制</strong>，不需要 host 介入。这是多 GPU 编程的基础原语。</p>
+</div>
+
+<div class="takeaway">
+  💡 Stream = 设备上的"串行通道"：同一 stream 内 FIFO 执行，不同 stream 间默认并发。三件事工具：<code>policy.on(stream)</code> 提交工作、<code>stream.sync()</code> host 等流、<code>stream.record_event()</code>+<code>stream.wait(e)</code> 跨流（甚至跨 GPU）依赖。
+</div>
+
+
+<!-- ==================== SLIDE 112–113 ==================== -->
+<h2 class="slide-title">Slide 112–113 — 用 stream 替代 <code>cudaDeviceSynchronize</code> 做精准同步</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-112.png" alt="Slide 112: 主循环里用 cudaDeviceSynchronize">
+  <img class="slide-img" src="images/slide-113.png" alt="Slide 113: 改成 cudax::stream + policy.on(stream) + stream.sync()">
+</div>
+
+<div class="explanation">
+  <h3>问题：<code>cudaDeviceSynchronize</code> 太重</h3>
+  <p>Slide 112 是 slide 106 的复习——<code>cudaDeviceSynchronize</code> 等的是<em>整张卡上所有 stream</em> 的当前工作。如果同一进程里还有别的 stream 在做无关任务，也会被等。这是个粗粒度工具。</p>
+
+  <h3>更优雅：明确给主流水线开一个 stream，只 sync 它</h3>
+  <pre><code>cudax::stream stream;
+auto policy(thrust::cuda::par_nosync.on(stream.get()));
+
+initialize_oven(policy, U);
+
+for (auto write_step : std::views::iota(0, write_steps)) {
+  stream.sync();                        // 只等这个 stream
+  save_to_file(U);
+
+  for (auto compute_step : std::views::iota(0, compute_steps)) {
+    heat_equation(policy, U, V);
+    U.swap(V);
+  }
+}</code></pre>
+  <p>关键变化：</p>
+  <ul>
+    <li>声明一个 <code>cudax::stream stream;</code>。</li>
+    <li>policy 用 <code>par_nosync.on(stream.get())</code> 绑到这个 stream——所有 kernel 都进同一通道。</li>
+    <li><code>stream.sync()</code> 替代 <code>cudaDeviceSynchronize()</code>——只等这一条流，<strong>不影响 GPU 上别的 stream</strong>。</li>
+  </ul>
+  <p>这两点合起来构成"现代 CUDA 编程"的标配：<em>每个独立工作流给一个独立 stream，同步用 stream 粒度，永远不要 cudaDeviceSynchronize</em>。后者只在 debug / shutdown 时用。</p>
+</div>
+
+<div class="takeaway">
+  💡 用 <code>cudax::stream</code> + <code>policy.on(stream.get())</code> + <code>stream.sync()</code> 替代 <code>cudaDeviceSynchronize()</code>。同步粒度从"整张卡所有工作"缩到"这一个流"，不影响其他 stream，可移植可组合。
+</div>
+
+
+<!-- ==================== SLIDE 114–119 ==================== -->
+<h2 class="slide-title">Slide 114–119 — 哪些 Thrust 算法会自动 block？看返回值是否依赖计算结果</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-114.png" alt="Slide 114: for_each_n 不返回；transform 返回 end iterator (precomputed)">
+  <img class="slide-img" src="images/slide-115.png" alt="Slide 115: callout - 返回值依赖计算结果的算法会 block">
+  <img class="slide-img" src="images/slide-116.png" alt="Slide 116: + inclusive_scan 返回 end of output, 但需 tmp storage">
+  <img class="slide-img" src="images/slide-117.png" alt="Slide 117: + copy_if 返回 end，依赖计算 → 阻塞">
+  <img class="slide-img" src="images/slide-118.png" alt="Slide 118: + reduce, find_if 都阻塞">
+  <img class="slide-img" src="images/slide-119.png" alt="Slide 119: + reduce_into 用输出 iterator 不阻塞">
+</div>
+
+<div class="explanation">
+  <h3>规则：<em>"返回值是否依赖计算结果"</em> 决定该算法在 par_nosync 下要不要 block</h3>
+  <p>右上黄框（slide 115）：<em>"Some Thrust algorithms return a result that depends on the computation. These interfaces will always block."</em>——即使你用 <code>par_nosync</code>，这类算法仍然会 host-block 直到 device 算完，<strong>因为不阻塞就拿不到要返回的值</strong>。</p>
+
+  <h3>四类例子（slide 114–119 一行行加）</h3>
+  <table>
+    <thead>
+      <tr><th>算法</th><th>返回</th><th>依赖计算？</th><th>par_nosync 下行为</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>for_each_n</code></td><td>无返回</td><td>—</td><td><strong>不阻塞</strong></td></tr>
+      <tr><td><code>transform</code></td><td>iterator 指向输出 end</td><td>否（end 就是 <code>B.begin() + A.size()</code>，编译期可算）</td><td><strong>不阻塞</strong></td></tr>
+      <tr><td><code>inclusive_scan</code></td><td>iterator 指向输出 end</td><td>否（同上），但需要 device 上 tmp 存储</td><td><strong>不阻塞</strong>（slide 116 注释 "needs temporary storage" 是另一回事）</td></tr>
+      <tr><td><code>copy_if</code></td><td>iterator 指向输出 end</td><td><em>是</em>——end 位置取决于"满足条件的元素有几个"，必须算完才知道</td><td><strong>阻塞</strong></td></tr>
+      <tr><td><code>reduce</code></td><td>归约后的标量值</td><td>是——值就是计算结果</td><td><strong>阻塞</strong></td></tr>
+      <tr><td><code>find_if</code></td><td>iterator 指向第一个满足条件的位置</td><td>是——位置由数据决定</td><td><strong>阻塞</strong></td></tr>
+      <tr><td><code>reduce_into</code></td><td>无返回（结果通过输出 iterator 写出）</td><td>—</td><td><strong>不阻塞</strong></td></tr>
+    </tbody>
+  </table>
+
+  <h3>怎么避免被迫阻塞——把"返回值"改成"输出 iterator"</h3>
+  <p>Slide 119 是关键示范：<code>thrust::reduce_into(policy, A.begin(), A.end(), out.begin(), f, init)</code>——结果不再 return，而是写到 <code>out.begin()</code> 指向的位置（一般是 <code>universal_vector&lt;T&gt; r(1)</code>）。<strong>调用立即返回，host 不等</strong>；要读 r 再 stream.sync()。</p>
+  <p>规律：<em>把"算法把值返给我"改成"算法把值写到这块内存里，我以后再去读"</em>——这是异步 GPU 编程通用的去同步技巧。这个理念在 slide 122 起的 CUB API 里会更彻底地展开。</p>
+</div>
+
+<div class="takeaway">
+  💡 <code>par_nosync</code> 不能让所有 Thrust 算法都不阻塞——若返回值依赖计算结果（reduce 标量、copy_if 的 end、find_if 的位置），算法仍 host-block。规避：用 *_into 变体把结果写到输出 iterator，调用立即返回。
+</div>
+
+
+<!-- ==================== SLIDE 120–121 ==================== -->
+<h2 class="slide-title">Slide 120–121 — CUB：CUDA C++ 算法编写工具箱（Device / Block / Warp / Per-Thread）</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-120.png" alt="Slide 120: CUB 全景四象限">
+  <img class="slide-img" src="images/slide-121.png" alt="Slide 121: 高亮 Device-Wide Kernels 一栏">
+</div>
+
+<div class="explanation">
+  <h3>CUB 是什么</h3>
+  <p>主页 <code>nvidia.github.io/cccl/cub</code>。如果说 Thrust 是"GPU 上的 STL"，CUB 就是<strong>"写 kernel 时直接用的并行原语"</strong>。它分四个层级，每个层级解决不同尺度的并行问题：</p>
+
+  <h3>四象限</h3>
+  <table>
+    <thead>
+      <tr><th>层级</th><th>颗粒度</th><th>典型 API</th><th>用途</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Device-Wide Kernels</strong>（slide 121 高亮）</td>
+        <td>整张 GPU 一把梭</td>
+        <td><code>cub::DeviceReduce</code>, <code>cub::DeviceHistogram</code>, <code>cub::DeviceRadixSort</code>, <code>cub::DeviceSelect</code></td>
+        <td>对整段数据做归约/排序/扫描——和 Thrust 的算法层重合，但接口更底层（手控 tmp 存储和 stream）。</td>
+      </tr>
+      <tr>
+        <td><strong>Block-Wide Cooperative Primitives</strong></td>
+        <td>一个 block 内的线程协作</td>
+        <td><code>cub::BlockReduce</code>, <code>cub::BlockScan</code>, <code>cub::BlockRunLengthDecode</code>, <code>cub::BlockLoad/Store</code></td>
+        <td>写自定义 kernel 时，block 内部跨线程协作（共享内存归约/扫描）的现成砖块。</td>
+      </tr>
+      <tr>
+        <td><strong>Warp-Wide Cooperative Primitives</strong></td>
+        <td>一个 warp（32 线程）协作</td>
+        <td><code>cub::WarpReduce</code>, <code>cub::WarpScan</code>, <code>cub::WarpMergeSort</code>, <code>cub::WarpLoad/Store</code></td>
+        <td>warp 级别的同步原语，比 block 级更细更快（用 warp shuffle 指令）。</td>
+      </tr>
+      <tr>
+        <td><strong>Per-Thread Primitives</strong></td>
+        <td>单线程</td>
+        <td><code>cub::ThreadReduce</code>, <code>cub::ThreadScan</code>, <code>cub::MergePathSearch</code>, <code>cub::ThreadLoad/Store</code></td>
+        <td>线程内寄存器级别小循环——序列归约、合并搜索等基本操作的高效实现。</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>CUB 和 Thrust 的关系</h3>
+  <ul>
+    <li><strong>Thrust 高层、CUB 低层</strong>。Thrust 内部有些算法就是用 CUB 实现的。</li>
+    <li><strong>CUB 给你更多控制</strong>：自己分配 tmp 存储、自己挑 stream、Per-thread/warp/block 级别协作。代价是接口繁琐。</li>
+    <li><strong>项目里的常态</strong>：先用 Thrust（写得快、性能够），关键热点 kernel 用 CUB Device API 直接调，最深的内核里用 Block/Warp 级 CUB 原语。</li>
+  </ul>
+  <p>Slide 121 高亮的 <strong>Device-Wide</strong> 是下面 slide 122–128 要展开的对象——那段教你怎么直接调 <code>cub::DeviceReduce::Reduce</code>。</p>
+</div>
+
+<div class="takeaway">
+  💡 CUB 四个层级覆盖整张 GPU → block → warp → 单线程的并行原语。Thrust 是"会自动调度的高层 STL"，CUB 是"写 kernel 时直接用的可控砖块"。下一节聚焦 Device-Wide。
+</div>
+
+
+<!-- ==================== SLIDE 122–128 ==================== -->
+<h2 class="slide-title">Slide 122–128 — CUB DeviceReduce：两次调用模式（先查 tmp_size，再分配，再启动）</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-122.png" alt="Slide 122: thrust::reduce 起点">
+  <img class="slide-img" src="images/slide-123.png" alt="Slide 123: 2-kernel 层次归约图">
+  <img class="slide-img" src="images/slide-124.png" alt="Slide 124: 输出 res 是 universal_vector(1)">
+  <img class="slide-img" src="images/slide-125.png" alt="Slide 125: 第一次调用 nullptr 查 tmp_size">
+  <img class="slide-img" src="images/slide-126.png" alt="Slide 126: 高亮 nullptr / tmp_size 配对">
+  <img class="slide-img" src="images/slide-127.png" alt="Slide 127: + device_vector tmp(tmp_size)">
+  <img class="slide-img" src="images/slide-128.png" alt="Slide 128: 第二次调用 raw_pointer_cast(tmp) 真正启动 kernel">
+</div>
+
+<div class="explanation">
+  <h3>为什么要两次调用？——大型并行算法需要中间存储</h3>
+  <p>Slide 123 解释 reduce 在 GPU 上的实现：<strong>分两个 kernel</strong>。第 1 个 kernel 把 N 个元素分成多个 block（图里 Block 0/1/3），block 内部协作归约成一个 block-sum；第 2 个 kernel 把 blocks 个 block-sum 再归约成 1 个最终值。第 1 个 kernel 的输出（每 block 一个值，共 O(blocks) 个）需要一块<strong>临时存储</strong>。</p>
+  <p>Thrust 帮你管这块 tmp（隐式分配释放，slide 122 的 <code>thrust::reduce</code> 就这么做）。CUB 让你自己管，<strong>因为更可控</strong>：可以重复用同一块 tmp、跨调用复用、放到自己选的 allocator 上。</p>
+
+  <h3>两次调用模式</h3>
+  <pre><code>// 第 1 次：传 nullptr，CUB 把"需要多少 tmp"写到 tmp_size，不真正算
+int tmp_size = 0;
+cub::DeviceReduce::Reduce(
+  nullptr, tmp_size,
+  X.begin(), res.begin(), X.size(),
+  cuda::maximum{}, T{});
+
+// 准备 tmp 缓冲区
+thrust::device_vector&lt;cuda::std::byte&gt; tmp(tmp_size);
+
+// 第 2 次：传真正 tmp 指针，启动 kernel
+cub::DeviceReduce::Reduce(
+  thrust::raw_pointer_cast(tmp.data()), tmp_size,
+  X.begin(), res.begin(), X.size(),
+  cuda::maximum{}, T{});</code></pre>
+
+  <h3>关键点</h3>
+  <ul>
+    <li><strong>nullptr → 查询模式</strong>（slide 125–126 高亮的 <code>nullptr, tmp_size</code> 配对）。CUB 看到 nullptr 就只算 tmp_size，不真启动 kernel。这是 CUB 风格 API 的统一约定。</li>
+    <li><strong>tmp 类型用 <code>cuda::std::byte</code></strong>——CUB 要的是"这么多字节的不透明缓冲"，不在乎里面装什么。</li>
+    <li><strong>结果输出位置</strong>：<code>res.begin()</code> 指向的 universal_vector(1)。这是 slide 119 那条"用输出 iterator 替代 return 值"的实践——<code>cub::DeviceReduce::Reduce</code> 不阻塞 host。</li>
+    <li>API 全部接受 stream 参数（这些 slide 没画出来，但实际签名最后一个参数是 <code>cudaStream_t</code>，默认 0），可以绑到自己的 stream 上。</li>
+  </ul>
+
+  <h3>什么时候用 CUB DeviceReduce 而不是 thrust::reduce？</h3>
+  <ul>
+    <li>同一个 reduce 在主循环里跑很多次——可以预分配一次 tmp 反复用，避免每次启动都重新 malloc。</li>
+    <li>需要明确的 stream 控制（例如要叠到 stream pipeline 里）。</li>
+    <li>对 host 端阻塞行为敏感的代码——CUB 永远不阻塞。</li>
+  </ul>
+  <p>代价：代码长 5 行、要管 tmp 生命周期、看上去复杂。一般项目里 thrust::reduce 够用就别自找麻烦。</p>
+</div>
+
+<div class="takeaway">
+  💡 CUB Device API 的两次调用模式：第 1 次传 <code>nullptr</code> 查询所需 tmp_size（不启动 kernel），分配 <code>device_vector&lt;cuda::std::byte&gt;</code>，第 2 次传真 tmp 启动 kernel。优势：tmp 可复用、host 不阻塞、stream 可控；代价：代码繁琐。性能敏感的热点用，普通场景仍然 thrust::* 优先。
+</div>
+
+
+<!-- ==================== SLIDE 129–133 ==================== -->
+<h2 class="slide-title">Slide 129–133 — <code>cub::DeviceFor::ForEachN</code> / <code>ForEachInLayout</code>：直接接 stream + 自动多维索引</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-129.png" alt="Slide 129: heat_equation 用 thrust::for_each_n + policy">
+  <img class="slide-img" src="images/slide-130.png" alt="Slide 130: 替换为 cub::DeviceFor::ForEachN + stream 末尾参数">
+  <img class="slide-img" src="images/slide-131.png" alt="Slide 131: 函数签名改成 cudax::stream_ref">
+  <img class="slide-img" src="images/slide-132.png" alt="Slide 132: 高亮 thrust::make_counting_iterator">
+  <img class="slide-img" src="images/slide-133.png" alt="Slide 133: 改用 ForEachInLayout(U.layout(), [...](idx, x, y))">
+</div>
+
+<div class="explanation">
+  <h3>动机：让 heat_equation 接受 stream 而不是 policy</h3>
+  <p>之前签名是 <code>heat_equation(auto policy, ..., U, V)</code>。policy 把"用什么并行后端 + 用什么 stream"两件事捆在一起。但 main 那边明明已经有一个 stream 在管，调用 heat_equation 时再传一个 policy 显得多余。</p>
+  <p>Slide 130–131 把签名改成：</p>
+  <pre><code>void heat_equation(cudax::stream_ref stream, mdspan U, mdspan V) {
+  cub::DeviceFor::ForEachN(thrust::make_counting_iterator(0), U.size(),
+    [U, V] __host__ __device__ (int xy) { ... },
+    stream);   // 最后一个参数：stream
+}</code></pre>
+  <p><code>cub::DeviceFor::ForEachN</code> 是 CUB 的"并行 for_each"封装，<strong>第一个或最后一个参数就是 stream</strong>，不需要 policy 包一层。<code>cudax::stream_ref</code> 是个轻量句柄，用 ref 而不是 by-value 避免 stream 生命周期混乱。</p>
+
+  <h3>更进一步：<code>ForEachInLayout</code>——按 mdspan 的 layout 直接给多维索引</h3>
+  <p>Slide 133 把整个 lambda 改写：</p>
+  <pre><code>cub::DeviceFor::ForEachInLayout(U.layout(),
+  [U, V] __host__ __device__ (int idx, int x, int y) {
+    // 不再 xy / U.extent(1) 自己算！x, y 直接给到
+    if (x &gt; 0 &amp;&amp; y &gt; 0 &amp;&amp; x &lt; U.extent(0) - 1 &amp;&amp; y &lt; U.extent(1) - 1) {
+      auto d2tdx2 = U(x, y - 1) - U(x, y) * 2 + U(x, y + 1);
+      auto d2tdy2 = U(x - 1, y) - U(x, y) * 2 + U(x + 1, y);
+      V(x, y) = U(x, y) + 0.2f * (d2tdx2 + d2tdy2);
+    } else {
+      V(x, y) = U(x, y);
+    }
+  }, stream);</code></pre>
+  <p><code>ForEachInLayout</code> 拿到 mdspan 的 layout，<strong>知道要遍历的多维索引集合的全部信息</strong>。它给 lambda 传三个参数：</p>
+  <ul>
+    <li><code>idx</code>：线性下标（0..N-1）；</li>
+    <li><code>x</code>、<code>y</code>：已经按 layout 解码出来的 2D 坐标。</li>
+  </ul>
+  <p>之前要自己 <code>x = xy / ny; y = xy % ny;</code> 那两行没了——<strong>解码逻辑由 layout 自动提供</strong>。如果换成 column-major mdspan，同一个 lambda 自动按 col-major 顺序拿到 (x, y)，kernel 一行不改。</p>
+
+  <h3>为什么这是个进步</h3>
+  <ul>
+    <li><strong>消除手算偏移</strong>——之前是 raw pointer + 偏移，slide 89 改成 mdspan 但仍要自己拆 xy；现在彻底由库决定遍历顺序。</li>
+    <li><strong>访存模式可优化</strong>——库知道 layout 后可以重排线程↔元素映射，按 row-major 还是 col-major 安排 warp 内的连续访问，<em>直接影响 GPU 全局内存合并访存（coalescing）的效果</em>。</li>
+    <li><strong>多维感知</strong>——后续如果输入是 3D / 4D 数组，<code>ForEachInLayout</code> 会自动按维度数给出对应数量的索引参数。</li>
+  </ul>
+</div>
+
+<div class="takeaway">
+  💡 <code>cub::DeviceFor::ForEachN(stream)</code> 让算法直接接 stream，不必走 policy。更进一步，<code>ForEachInLayout(mdspan.layout(), ...)</code> 自动按 layout 把线性 idx 解成多维 (x, y)——告别手写 <code>xy / ny</code>，且能让库依据 layout 优化访存合并。
+</div>
+
+
+<!-- ==================== SLIDE 134–135 ==================== -->
+<h2 class="slide-title">Slide 134–135 — initialize_oven 改用 <code>ForEachInLayout</code>：fill_n 也升级</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-134.png" alt="Slide 134: 原 initialize_oven 用 thrust::fill_n + policy">
+  <img class="slide-img" src="images/slide-135.png" alt="Slide 135: 改用 lambda + cub::DeviceFor::ForEachInLayout 三段">
+</div>
+
+<div class="explanation">
+  <h3>对照</h3>
+  <p>Slide 134（原版）三行 <code>thrust::fill_n(policy, top.data_handle(), top.size(), 90.0)</code>。slide 135（新版）每段写一个 lambda 用 <code>ForEachInLayout</code>：</p>
+  <pre><code>auto set_top = [top] __host__ __device__ (int idx, int x, int y) { top[x, y] = 90.0; };
+auto set_mid = [mid] __host__ __device__ (int idx, int x, int y) { mid[x, y] = 15.0; };
+auto set_bot = [bot] __host__ __device__ (int idx, int x, int y) { bot[x, y] = 90.0; };
+
+cub::DeviceFor::ForEachInLayout(top.layout(), set_top, stream);
+cub::DeviceFor::ForEachInLayout(mid.layout(), set_mid, stream);
+cub::DeviceFor::ForEachInLayout(bot.layout(), set_bot, stream);</code></pre>
+
+  <h3>差异点</h3>
+  <ul>
+    <li><strong>fill_n 假定底层是连续内存</strong>——slide 91–94 提到过这点。如果 mdspan 用了非连续 layout（带 stride），fill_n 直接当扁平数组写就会破坏其它数据。</li>
+    <li><strong>ForEachInLayout 通过 layout 遍历</strong>——只访问该子 mdspan 真实占据的位置，跨 stride 安全。</li>
+    <li><strong>接 stream</strong>——和 heat_equation 一样进同一个流水线，整体异步。</li>
+    <li><strong>用 <code>top[x, y]</code> 多下标访问</strong>（C++23 的 multi-arg subscript）替代 <code>top.data_handle()[idx]</code>，更直观。</li>
+  </ul>
+  <p>这一步把 initialize_oven 也从"假定连续 + 扁平 fill"提升到"<strong>感知 layout + 多维寻址 + 流式</strong>"。整个程序的接口风格统一了：所有 GPU 工作都是 <code>cub::DeviceFor::ForEachInLayout(layout, lambda, stream)</code>。</p>
+</div>
+
+<div class="takeaway">
+  💡 把 <code>thrust::fill_n</code> 也升级成 <code>cub::DeviceFor::ForEachInLayout</code>：好处是支持非连续 layout、接 stream、用 <code>top[x, y]</code> 多下标语法。整个程序统一成"layout + lambda + stream"模式。
+</div>
+
+
+<!-- ==================== SLIDE 136–147 ==================== -->
+<h2 class="slide-title">Slide 136–147 — Unified Memory 按页隐式迁移可视化 + 三种 Thrust 容器对比表</h2>
+
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-136.png" alt="Slide 136: universal_vector 概念图（i, j, k 三个位置）">
+  <img class="slide-img" src="images/slide-137.png" alt="Slide 137: + Host Memory + Device Memory 双区视图">
+  <img class="slide-img" src="images/slide-138.png" alt="Slide 138: 从 host 访问 i → 红色 transfer 箭头到 device">
+  <img class="slide-img" src="images/slide-139.png" alt="Slide 139: i 现在在 device（hatched）">
+  <img class="slide-img" src="images/slide-140.png" alt="Slide 140: 从 host 访问 j → transfer">
+  <img class="slide-img" src="images/slide-141.png" alt="Slide 141: 现在 i, j 都 hatched 在 device">
+  <img class="slide-img" src="images/slide-142.png" alt="Slide 142: 从 device 访问 i → transfer 回 host">
+  <img class="slide-img" src="images/slide-143.png" alt="Slide 143: i 现在 hatched 在 host">
+  <img class="slide-img" src="images/slide-144.png" alt="Slide 144: callout - transfers are implicit and piecemeal">
+  <img class="slide-img" src="images/slide-145.png" alt="Slide 145: 容器表 - universal_vector 行">
+  <img class="slide-img" src="images/slide-146.png" alt="Slide 146: + host_vector + device_vector 行">
+  <img class="slide-img" src="images/slide-147.png" alt="Slide 147: + 显式 thrust::copy 转移">
+</div>
+
+<div class="explanation">
+  <h3>这一节的核心：理解"Unified Memory 不免费"</h3>
+  <p>之前一直把 universal_vector 当"两边都能访问的魔法 vector"，但<strong>跨边界访问是有代价的</strong>。这 12 页用动画把代价显式画出来。</p>
+
+  <h3>Slide 136–137：universal_vector 的两个面</h3>
+  <p>同一个 universal_vector 的"内容"概念上对 host 和 device 都可见，物理上 backing 在 unified memory 里。OS / CUDA driver 决定<strong>每页（page，约 4KB 或 64KB）当前住在 host RAM 还是 device VRAM</strong>。slide 137 把两边都画出来——同一个 vector 实例，两个 memory 域里都有它的"位置"。</p>
+
+  <h3>Slide 138–143：访问触发按页迁移（migration）</h3>
+  <ul>
+    <li><strong>138</strong>：host 代码访问位置 i → CUDA driver 检测到 i 那一页当前不在 host → 启动 page transfer device→host（红色箭头）。host 等这页搬完才能继续。</li>
+    <li><strong>139</strong>：i 这页搬过来后，<em>device 一侧的同样这页变成 hatched (灰阴影)</em> ——表示"概念上还属于 vector，但物理副本不在这边了"。</li>
+    <li><strong>140–141</strong>：再访问 j 同样触发一次。两次访问之后，host 端有 i, j 的最新副本；device 端 i, j 是 hatched（远端有副本）。</li>
+    <li><strong>142–143</strong>：现在 device 代码访问 i → transfer 反向，i 搬回 device。host 端 i 变 hatched。</li>
+  </ul>
+
+  <h3>Slide 144：原则</h3>
+  <p>红色 callout：<em>"With Unified Memory, transfers are implicit and piecemeal."</em></p>
+  <ul>
+    <li><strong>Implicit</strong>——你不写任何 cudaMemcpy，但当下访问触发的硬件 page fault 在背后自动搬。代码读起来像 CPU 程序，但每次跨域访问都付出一次页迁移延迟。</li>
+    <li><strong>Piecemeal</strong>——按页搬，不是整个 vector 一把搬。只搬"现在被访问"的页。如果你只读 vector 第 0 个元素，只搬第 0 个元素所在那页。这避免了"用 1 个数搬 1 GB 的浪费"。</li>
+  </ul>
+
+  <h3>但 piecemeal 也有代价：每次跨域都要 stall</h3>
+  <p>这是 slide 148+ 要解决的问题——save_to_file 在 host 访问刚被 device 写完的 U_data，每读一页 stall 一次，吞吐很差。后面会改成<strong>批量显式拷贝到 host_vector 再读</strong>。</p>
+
+  <h3>Slide 145–147：三种 Thrust 容器对比表</h3>
+  <table>
+    <thead>
+      <tr><th>Thrust 容器</th><th>Accessible in...</th><th>Transfers are...</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>universal_vector</code></td>
+        <td>Host and device</td>
+        <td><strong>Implicit upon access</strong>（按页 page-fault 自动搬）</td>
+      </tr>
+      <tr>
+        <td><code>host_vector</code></td>
+        <td>Host only</td>
+        <td rowspan="2"><strong>Explicit via <code>thrust::copy</code></strong>（要搬必须显式调）</td>
+      </tr>
+      <tr>
+        <td><code>device_vector</code></td>
+        <td>Device only</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>选用建议：</p>
+  <ul>
+    <li><strong>universal_vector</strong>——开发期/原型期最爽：写起来像普通 STL，性能"还行"。</li>
+    <li><strong>host_vector + device_vector</strong>——性能关键场景：自己控制何时搬、能批量搬、能和 stream 重叠。慢的是 page fault 不是 cudaMemcpy 本身。</li>
+  </ul>
+  <p>slide 148+ 的优化就基于这条：<em>把 save_to_file 用的拷贝从隐式 page fault 换成显式 thrust::copy_n 到 host_vector</em>。</p>
+</div>
+
+<div class="takeaway">
+  💡 universal_vector 跨域访问 = <strong>implicit + piecemeal</strong> 按页迁移；写起来无痛但每次 page fault 都 stall。性能敏感时用 host_vector + device_vector + 显式 <code>thrust::copy</code>，能批量搬、能和 stream 重叠。
+</div>
+
+
+<!-- ==================== SLIDE 148–151 ==================== -->
+<h2 class="slide-title">Slide 148–151 — 显式 host_vector + <code>copy_n</code>：让 host 写盘和 device 计算并行</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-148.png" alt="Slide 148: stream.wait + save_to_file(U) 隐式 device→host transfer">
+  <img class="slide-img" src="images/slide-149.png" alt="Slide 149: 高亮 save_to_file(U) 是 implicit device to host transfer">
+  <img class="slide-img" src="images/slide-150.png" alt="Slide 150: + host_vector buf + thrust::copy_n; save_to_file(buf) 不再 transfer">
+  <img class="slide-img" src="images/slide-151.png" alt="Slide 151: 完整代码（同 150）">
+</div>
+
+<div class="explanation">
+  <h3>问题（slide 148–149）</h3>
+  <p>当前代码：</p>
+  <pre><code>stream.wait();          // 等 GPU 算完
+save_to_file(U);        // 在 host 上读 U_data 写文件</code></pre>
+  <p>save_to_file 是 host 函数，逐元素遍历 U.data() 写文件——但 U_data 的所有页此时都在 device 上（刚被 stencil kernel 写完）。<strong>每读一个元素就触发一次 page fault，把那页从 device 搬到 host</strong>。这个过程：</p>
+  <ul>
+    <li>每个 page fault 引一次 ~10μs 级别的延迟；</li>
+    <li>device 上的 stencil 也只能等这块页面搬空（因为下一轮要写）；</li>
+    <li>整个文件写期间，<em>GPU 完全空闲</em>。</li>
+  </ul>
+
+  <h3>解决（slide 150–151）：开一个 host_vector buf，显式批量拷</h3>
+  <pre><code>thrust::host_vector&lt;float&gt; buf_data(nx * ny);
+cuda::std::mdspan buf(...);
+
+for (auto write_step : ...) {
+  thrust::copy_n(policy, U.data(), U.size(), buf);   // Device to host. 一次性批量拷贝
+  stream.wait();                                      // 等拷贝完成
+
+  for (auto compute_step : ...) {
+    heat_equation(stream, U, V);                      // 立即开始下一轮 GPU 计算
+    U.swap(V);
+  }
+
+  save_to_file(buf);   // No transfer. 在 host 上读 host_vector，直接走 RAM
+}</code></pre>
+
+  <h3>三个关键改动</h3>
+  <ul>
+    <li><strong>新增 <code>host_vector buf</code></strong>——专门用来接收 device 拷贝过来的整张温度场。host_vector 的内存可以是 pinned (page-locked) 的，这让 cudaMemcpy 走 DMA 全速运行，比 page-fault 快得多。</li>
+    <li><strong><code>thrust::copy_n(policy, U.data(), U.size(), buf)</code></strong>——这是显式 device→host 的整块拷贝，一次完成，不是按访问触发。policy 绑在 stream 上，<strong>不阻塞 host</strong>，<code>stream.wait()</code> 才等它完成。</li>
+    <li><strong>注释 <code>// No transfer</code></strong>——<code>save_to_file(buf)</code> 现在读的是 host_vector，纯 host 操作，没有任何 device 介入。</li>
+  </ul>
+
+  <h3>真正的胜利在 slide 158：调度顺序</h3>
+  <p>注意这版 slide 150 把<strong>"copy + wait"放在 compute_steps 循环之前</strong>。也就是说：</p>
+  <ol>
+    <li>启动 device→host copy（异步，进 stream）；</li>
+    <li>stream.wait() 等这一次 copy 完成；</li>
+    <li>立即把 compute_steps × heat_equation 全部 launch 到同一个 stream（异步，host 不等）；</li>
+    <li><strong>host 转回去</strong> save_to_file(buf)——纯 host，与 device 上正在跑的 compute_steps 完全并行。</li>
+  </ol>
+  <p>当 host 写完盘进入下一轮 write_step 顶部时，运气好的话 device 也正好把这轮 compute_steps 跑完——下一次 copy 可以立即开始。<strong>host 和 device 接近 100% 利用率</strong>。slide 158 的时序图会把这一并行可视化出来。</p>
+</div>
+
+<div class="takeaway">
+  💡 把"save_to_file(U) 隐式触发 page fault"改成"先 <code>thrust::copy_n(stream, U → buf)</code>，再 save_to_file(buf)"。host_vector + 显式批量拷贝走 DMA，比按页 fault 快很多；更重要的是把 host 写盘和 device 下一轮 compute 调度成并行，CPU/GPU 都不闲。
+</div>
+
+
+<!-- ==================== SLIDE 152–158 ==================== -->
+<h2 class="slide-title">Slide 152–158 — Host vs Device 时序图：save_to_file 与 compute_steps 重叠的"为什么"</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-152.png" alt="Slide 152: initialize_oven 在 Device 列">
+  <img class="slide-img" src="images/slide-153.png" alt="Slide 153: + Repeat write_steps 大方框">
+  <img class="slide-img" src="images/slide-154.png" alt="Slide 154: + Copy U to buf (Device 列)">
+  <img class="slide-img" src="images/slide-155.png" alt="Slide 155: + stream.wait() Barrier 横跨 host/device">
+  <img class="slide-img" src="images/slide-156.png" alt="Slide 156: + Repeat compute_steps × heat_equation 块">
+  <img class="slide-img" src="images/slide-157.png" alt="Slide 157: + save_to_file(buf) (Host 列)">
+  <img class="slide-img" src="images/slide-158.png" alt="Slide 158: + 紫色箭头表示 host save_to_file 与 device compute_steps 并行">
+</div>
+
+<div class="explanation">
+  <h3>七页画一张时序图，最后一页揭示 host/device 并行</h3>
+  <p>整个图分两列：左 Host、右 Device，按时间从上到下走。每一页加一块。</p>
+
+  <h3>从上到下读完后的整体流程</h3>
+  <ol>
+    <li><strong>initialize_oven()</strong>（slide 152）——一次性的初始化，跑在 device 上。host 闲着等也行（这只是一次）。</li>
+    <li><strong>Repeat write_steps 次</strong>（slide 153 的大白框）——下面这一组动作循环 write_steps 次：
+      <ol>
+        <li><strong>Copy U → buf</strong>（slide 154）：device→host 拷贝，跑在 device 上（DMA engine）。</li>
+        <li><strong>stream.wait() barrier</strong>（slide 155）：横跨 host/device 的虚线，host 等 device 这一段做完才往下走。<em>这是必要的同步点</em>——host 需要 buf 的数据才能写盘。</li>
+        <li><strong>device 上启动 compute_steps × heat_equation</strong>（slide 156，黄色循环箭头）：所有这些 kernel 都进 stream，但<strong>host 不等</strong>（par_nosync 行为），launch 完立即下一行。</li>
+        <li><strong>host 上 save_to_file(buf)</strong>（slide 157）：host 拿刚刚 wait 出来的 buf 数据，逐元素写文件。</li>
+      </ol>
+    </li>
+  </ol>
+
+  <h3>Slide 158：紫色箭头——host 和 device 完全并行</h3>
+  <p>这一页是关键。Slide 画了两条紫色箭头：</p>
+  <ul>
+    <li>从 device 的 "compute_steps × heat_equation" 块循环出来 → 回到 device 的 "Copy U to buf"（下一轮 write_step）。</li>
+    <li>从 host 的 "save_to_file(buf)" 出来 → 回到 host 的 stream.wait（下一轮）。</li>
+  </ul>
+  <p>这两条箭头<strong>同时进行</strong>。也就是说：</p>
+  <ul>
+    <li>当 device 在跑这一轮的 compute_steps 时，host 在写这一轮的 buf 到文件；</li>
+    <li>当 host 写完文件回到 stream.wait 时，理想情况 device 也正好跑完 compute_steps，准备好下一轮的 U 数据；</li>
+    <li>下一次 Copy U → buf 立即开始。</li>
+  </ul>
+  <p><strong>整张时序图里 host 和 device 几乎都没空闲</strong>。这就是 slide 148–151 那次重构的全部价值——重构本身没改算法，但调度顺序的重排让两侧并行起来，吞吐成倍提升。</p>
+
+  <h3>这一节的复习重点</h3>
+  <p>"性能不仅来自更快的 kernel，也来自<strong>让 host 和 device 互相不挡道</strong>。"实现这个需要的工具组合：</p>
+  <ul>
+    <li>par_nosync 或 cub::DeviceFor 让 launch 不阻塞；</li>
+    <li>显式 host_vector + thrust::copy_n 让数据搬动可控；</li>
+    <li>stream.wait 只在确实需要数据时同步；</li>
+    <li>用单一 stream 把 device 上的工作排成有序队列。</li>
+  </ul>
+</div>
+
+<div class="takeaway">
+  💡 时序图揭示：每个 write_step 内部，<em>host 在写盘</em> 与 <em>device 在跑下一批 compute_steps</em> 完全并行（slide 158 紫色箭头）。重构没改算法，只重排了调度——但 host 和 device 不再互等，吞吐显著提升。
+</div>
+
+
+<!-- ==================== SLIDE 159–160 ==================== -->
+<h2 class="slide-title">Slide 159–160 — 最终代码 + NVIDIA 库墙总结</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-159.png" alt="Slide 159: 最终完整代码（=slide 150/151）">
+  <img class="slide-img" src="images/slide-160.png" alt="Slide 160: NVIDIA CUDA 加速库 logo 全景（同 slide 9）">
+</div>
+
+<div class="explanation">
+  <h3>Slide 159：完整最终代码</h3>
+  <p>把所有重构合在一起的最终版（同 slide 150/151）。复习时把这页和 slide 95（最初版本）对照看，能感受到一路演化的整体：</p>
+  <ul>
+    <li>初始：<code>thrust::cuda::par</code> + <code>universal_vector</code> + 隐式 page fault。</li>
+    <li>最终：<code>thrust::cuda::par_nosync.on(stream)</code> + <code>cuda::std::mdspan</code> + <code>host_vector + thrust::copy_n</code> + <code>stream.wait()</code>。</li>
+  </ul>
+  <p>主体算法（heat_equation 的 5 点 stencil）一行没变，但周边的<strong>调度、同步、数据搬运</strong>全面优化。</p>
+
+  <h3>Slide 160：库全景再次出现</h3>
+  <p>讲座头尾呼应——开头 slide 9 这张图说"先查库"，结尾再放一次说"这些库的内部都用了今天讲的工具"：cuBLAS / cuDNN / cuSOLVER / cuSPARSE / cuFFT / cuTENSOR / TensorRT 等高层库，背后是 Thrust / CUB / libcu++ 这套基础设施支撑的。所以理解了今天这套底层工具，就理解了 NVIDIA 整套加速库的实现机理——用户能更好地选择用哪个库、什么时候自己写 kernel。</p>
+</div>
+
+<div class="takeaway">
+  💡 最终代码 = par_nosync + stream + mdspan + host_vector + 显式 copy_n。算法没变，调度全变。整套库（cuBLAS / cuDNN / cuSPARSE / TensorRT 等）也是用 Thrust + CUB + libcu++ 写出来的——理解这层基础设施就理解了 GPU 库的内部。
+</div>
+
+
+<!-- ==================== SLIDE 161–164 ==================== -->
+<h2 class="slide-title">Slide 161–164 — 课后资源 + 讲者收尾</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-161.png" alt="Slide 161: GTC CUDA Developer Track + Accelerated Computing Hub QR codes">
+  <img class="slide-img" src="images/slide-162.png" alt="Slide 162: NVIDIA DLI Courses">
+  <img class="slide-img" src="images/slide-163.png" alt="Slide 163: ADSP Podcast (Algorithms + Data Structures = Programs)">
+  <img class="slide-img" src="images/slide-164.png" alt="Slide 164: 讲者收尾页 (Bryce Adelstein Lelbach)">
+</div>
+
+<div class="explanation">
+  <h3>这 4 页是讲者推荐的进一步学习资源（行政页，知识点信息量低，仅做索引）</h3>
+  <ul>
+    <li><strong>Slide 161</strong>：GTC 上其它 CUDA 主题讲座的列表（CUDA C++ / CUDA Python / CUTLASS / Multi-GPU / Performance Optimization 等），适合按主题深挖。</li>
+    <li><strong>Slide 162</strong>：NVIDIA DLI 在线课程（自学，有证书）：CUDA Python / Modern CUDA C++ / Accelerated Data Science / Nsight Profiling / 等。系统化学习路径。</li>
+    <li><strong>Slide 163</strong>：讲者主持的 podcast <em>"Algorithms + Data Structures = Programs"</em>（adspthepodcast.com）——和另外几位 C++/算法专家的长访谈，话题宽于 GPU。</li>
+    <li><strong>Slide 164</strong>：讲座最后一页。讲者 Bryce Adelstein Lelbach（NVIDIA Principal Architect，brycelelbach@gmail.com / @blelbach），加上前面几个资源的二维码集合。<em>"The CUDA C++ Developer's Toolbox"</em> ——本讲座的标题，也是讲者多年想交付给社区的核心讯息：用 Thrust / libcu++ / CUB / cudax 这套现代 C++ 工具去写 GPU 程序，比写裸 CUDA C 优雅得多、安全得多。</li>
+  </ul>
+</div>
+
+<div class="takeaway">
+  💡 课后资源（按 时间投入 升序）：podcast → GTC 单场讲座 → DLI 系列课程。讲座的中心论点：<strong>用 Thrust / CUB / libcu++ 这套现代 C++ 工具写 GPU 程序，把"裸 CUDA C 时代"留在历史里</strong>。
+</div>
+
+
+<script>
+(function() {
+  const STORAGE_KEY = 'cs2050-lec9-highlights';
+  const state = {
+    highlightMode: false,
+    eraserMode: false,
+    currentColor: 'yellow',
+    highlights: []
+  };
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      state.highlights = raw ? JSON.parse(raw) : [];
+    } catch (e) { state.highlights = []; }
+  }
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.highlights));
+  }
+  function genId() {
+    return 'hl_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  }
+
+  // ---------- Toolbar ----------
+  function buildToolbar() {
+    const tb = document.createElement('div');
+    tb.id = 'hl-toolbar';
+    tb.innerHTML =
+      '<button id="hl-mode-btn" class="hl-btn">高亮模式: 关</button>' +
+      '<span class="hl-color-picker">' +
+        '<span class="hl-color" data-color="yellow" title="黄"></span>' +
+        '<span class="hl-color" data-color="green"  title="绿"></span>' +
+        '<span class="hl-color" data-color="pink"   title="粉"></span>' +
+        '<span class="hl-color" data-color="blue"   title="蓝"></span>' +
+      '</span>' +
+      '<button id="hl-eraser-btn" class="hl-btn">🧽 橡皮擦: 关</button>' +
+      '<button id="hl-toggle-btn" class="hl-btn">隐藏标记</button>' +
+      '<button id="hl-clear-btn" class="hl-btn">清除全部</button>';
+    document.body.appendChild(tb);
+
+    const modeBtn = document.getElementById('hl-mode-btn');
+    const eraserBtn = document.getElementById('hl-eraser-btn');
+
+    function refreshModeUI() {
+      modeBtn.textContent = '高亮模式: ' + (state.highlightMode ? '开' : '关');
+      modeBtn.classList.toggle('active', state.highlightMode);
+      eraserBtn.textContent = '🧽 橡皮擦: ' + (state.eraserMode ? '开' : '关');
+      eraserBtn.classList.toggle('active', state.eraserMode);
+      document.body.classList.toggle('hl-active', state.highlightMode);
+      document.body.classList.toggle('hl-eraser', state.eraserMode);
+    }
+
+    modeBtn.addEventListener('click', () => {
+      state.highlightMode = !state.highlightMode;
+      if (state.highlightMode) state.eraserMode = false;
+      refreshModeUI();
+    });
+    eraserBtn.addEventListener('click', () => {
+      state.eraserMode = !state.eraserMode;
+      if (state.eraserMode) state.highlightMode = false;
+      refreshModeUI();
+    });
+
+    tb.querySelectorAll('.hl-color').forEach(el => {
+      el.addEventListener('click', () => {
+        state.currentColor = el.dataset.color;
+        tb.querySelectorAll('.hl-color').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+      });
+    });
+    tb.querySelector('.hl-color[data-color="yellow"]').classList.add('selected');
+
+    const toggleBtn = document.getElementById('hl-toggle-btn');
+    toggleBtn.addEventListener('click', () => {
+      const hidden = document.body.classList.toggle('hl-hidden');
+      toggleBtn.textContent = hidden ? '显示标记' : '隐藏标记';
+    });
+
+    document.getElementById('hl-clear-btn').addEventListener('click', () => {
+      if (!confirm('清除全部高亮?')) return;
+      state.highlights = [];
+      save();
+      clearAllVisuals();
+    });
+  }
+
+  // ---------- Image highlights ----------
+  function setupImages() {
+    document.querySelectorAll('.slide-img').forEach(img => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'hl-img-wrapper';
+      img.parentNode.insertBefore(wrapper, img);
+      wrapper.appendChild(img);
+      attachImageDrag(img, wrapper);
+    });
+  }
+
+  function attachImageDrag(img, wrapper) {
+    let dragging = false;
+    let startX = 0, lockedY = 0;
+    let preview = null;
+    let rect = null;
+
+    img.addEventListener('mousedown', (e) => {
+      if (!state.highlightMode) return;
+      e.preventDefault();
+      rect = img.getBoundingClientRect();
+      startX = e.clientX - rect.left;
+      lockedY = e.clientY - rect.top;
+      dragging = true;
+
+      preview = document.createElement('div');
+      preview.className = 'hl-img-mark';
+      preview.dataset.color = state.currentColor;
+      preview.style.left = (startX / rect.width * 100) + '%';
+      preview.style.top  = (lockedY / rect.height * 100) + '%';
+      preview.style.width = '0';
+      preview.style.pointerEvents = 'none';
+      wrapper.appendChild(preview);
+    });
+
+    function onMove(e) {
+      if (!dragging) return;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      preview.style.left  = (xs / rect.width * 100) + '%';
+      preview.style.width = ((xe - xs) / rect.width * 100) + '%';
+    }
+    function onUp(e) {
+      if (!dragging) return;
+      dragging = false;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      const widthPx = xe - xs;
+      if (widthPx < 8) {
+        if (preview) preview.remove();
+        preview = null;
+        return;
+      }
+      const data = {
+        type: 'image',
+        img_src: img.getAttribute('src'),
+        y_pct: lockedY / rect.height * 100,
+        x_start_pct: xs / rect.width * 100,
+        x_end_pct: xe / rect.width * 100,
+        color: state.currentColor,
+        id: genId()
+      };
+      state.highlights.push(data);
+      save();
+      preview.dataset.hlId = data.id;
+      preview.style.pointerEvents = 'auto';
+      preview.title = '橡皮擦模式下点击删除';
+      preview.addEventListener('click', (ev) => {
+        if (!state.eraserMode) return;
+        ev.stopPropagation();
+        removeHighlight(data.id);
+      });
+      preview = null;
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  function applyImageHighlight(data) {
+    const img = document.querySelector('.slide-img[src="' + cssEscape(data.img_src) + '"]');
+    if (!img) return;
+    const wrapper = img.parentElement;
+    if (!wrapper.classList.contains('hl-img-wrapper')) return;
+    const m = document.createElement('div');
+    m.className = 'hl-img-mark';
+    m.dataset.color = data.color;
+    m.dataset.hlId = data.id;
+    m.style.left = data.x_start_pct + '%';
+    m.style.width = (data.x_end_pct - data.x_start_pct) + '%';
+    m.style.top = data.y_pct + '%';
+    m.title = '橡皮擦模式下点击删除';
+    m.addEventListener('click', (ev) => {
+      if (!state.eraserMode) return;
+      ev.stopPropagation();
+      removeHighlight(data.id);
+    });
+    wrapper.appendChild(m);
+  }
+
+  function cssEscape(s) {
+    return s.replace(/"/g, '\\"');
+  }
+
+  // ---------- Text highlights ----------
+  function setupTextSelection() {
+    document.addEventListener('mouseup', (e) => {
+      if (!state.highlightMode) return;
+      if (e.target.closest('#hl-toolbar')) return;
+      if (e.target.classList && e.target.classList.contains('slide-img')) return;
+      if (e.target.classList && e.target.classList.contains('hl-img-mark')) return;
+
+      setTimeout(() => {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        const text = sel.toString();
+        if (text.length === 0) return;
+
+        const range = sel.getRangeAt(0);
+        const ctx = computeContext(range);
+        if (!ctx) return;
+
+        const data = {
+          type: 'text',
+          text: text,
+          contextBefore: ctx.before,
+          contextAfter: ctx.after,
+          color: state.currentColor,
+          id: genId()
+        };
+        wrapRange(range, data);
+        state.highlights.push(data);
+        save();
+        sel.removeAllRanges();
+      }, 0);
+    });
+  }
+
+  function computeContext(range) {
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) root = root.parentElement;
+    while (root && root.tagName && !/^(P|LI|TD|H1|H2|H3|H4|DIV|BODY|PRE|BLOCKQUOTE|SUMMARY)$/.test(root.tagName)) {
+      root = root.parentElement;
+    }
+    if (!root) return null;
+    const fullText = root.textContent;
+    const startOffset = nodeOffset(root, range.startContainer, range.startOffset);
+    const endOffset = nodeOffset(root, range.endContainer, range.endOffset);
+    if (startOffset < 0 || endOffset < 0) return null;
+    const CTX = 25;
+    return {
+      before: fullText.slice(Math.max(0, startOffset - CTX), startOffset),
+      after: fullText.slice(endOffset, endOffset + CTX)
+    };
+  }
+
+  function nodeOffset(root, node, offsetInNode) {
+    let total = 0;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    let n;
+    while ((n = walker.nextNode())) {
+      if (n === node) return total + offsetInNode;
+      total += n.textContent.length;
+    }
+    return -1;
+  }
+
+  function wrapRange(range, data) {
+    const fragments = [];
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) {
+      fragments.push({ node: root, start: range.startOffset, end: range.endOffset });
+    } else {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+      let n;
+      while ((n = walker.nextNode())) {
+        if (!range.intersectsNode(n)) continue;
+        const start = (n === range.startContainer) ? range.startOffset : 0;
+        const end   = (n === range.endContainer)   ? range.endOffset   : n.textContent.length;
+        if (end > start) fragments.push({ node: n, start, end });
+      }
+    }
+    fragments.forEach(f => {
+      const r = document.createRange();
+      try {
+        r.setStart(f.node, f.start);
+        r.setEnd(f.node, f.end);
+        const m = document.createElement('mark');
+        m.className = 'hl-text-mark';
+        m.dataset.color = data.color;
+        m.dataset.hlId = data.id;
+        m.title = '橡皮擦模式下点击删除';
+        m.addEventListener('click', (ev) => {
+          if (!state.eraserMode) return;
+          ev.stopPropagation();
+          removeHighlight(data.id);
+        });
+        r.surroundContents(m);
+      } catch (e) { /* skip fragment */ }
+    });
+  }
+
+  function applyTextHighlight(data) {
+    const target = data.contextBefore + data.text + data.contextAfter;
+    const root = document.body;
+    const nodes = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => {
+        if (n.parentElement && n.parentElement.closest('script, style, #hl-toolbar')) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }, false);
+    let nd;
+    while ((nd = walker.nextNode())) nodes.push(nd);
+    const fullText = nodes.map(n => n.textContent).join('');
+    const idx = fullText.indexOf(target);
+    if (idx === -1) return;
+
+    const startPos = idx + data.contextBefore.length;
+    const endPos = startPos + data.text.length;
+    let cum = 0, startNode = null, startOff = 0, endNode = null, endOff = 0;
+    for (const n of nodes) {
+      const len = n.textContent.length;
+      if (!startNode && startPos >= cum && startPos < cum + len) {
+        startNode = n; startOff = startPos - cum;
+      }
+      if (startNode && endPos > cum && endPos <= cum + len) {
+        endNode = n; endOff = endPos - cum; break;
+      }
+      cum += len;
+    }
+    if (!startNode || !endNode) return;
+    const range = document.createRange();
+    try {
+      range.setStart(startNode, startOff);
+      range.setEnd(endNode, endOff);
+      wrapRange(range, data);
+    } catch (e) {}
+  }
+
+  // ---------- Remove / clear ----------
+  function removeHighlight(id) {
+    state.highlights = state.highlights.filter(h => h.id !== id);
+    save();
+    document.querySelectorAll('[data-hl-id="' + id + '"]').forEach(el => {
+      if (el.tagName === 'MARK') {
+        const p = el.parentNode;
+        while (el.firstChild) p.insertBefore(el.firstChild, el);
+        p.removeChild(el);
+        p.normalize();
+      } else {
+        el.remove();
+      }
+    });
+  }
+  function clearAllVisuals() {
+    document.querySelectorAll('.hl-img-mark').forEach(el => el.remove());
+    document.querySelectorAll('mark.hl-text-mark').forEach(el => {
+      const p = el.parentNode;
+      while (el.firstChild) p.insertBefore(el.firstChild, el);
+      p.removeChild(el);
+      p.normalize();
+    });
+  }
+
+  // ---------- Init ----------
+  function init() {
+    load();
+    buildToolbar();
+    setupImages();
+    setupTextSelection();
+    window.addEventListener('load', () => {
+      state.highlights.forEach(h => {
+        if (h.type === 'image') applyImageHighlight(h);
+        else if (h.type === 'text') applyTextHighlight(h);
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+</body>
+</html>

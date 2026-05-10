@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>CS 2050 Lecture 10 - 复习笔记</title>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    max-width: 980px;
+    margin: 40px auto;
+    padding: 0 24px;
+    line-height: 1.7;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 {
+    border-bottom: 3px solid #1f6feb;
+    padding-bottom: 10px;
+  }
+  h2.slide-title {
+    color: #1f6feb;
+    margin-top: 50px;
+    border-left: 5px solid #1f6feb;
+    padding-left: 12px;
+  }
+  h3 {
+    color: #333;
+    margin-top: 28px;
+  }
+  .slide-img {
+    display: block;
+    max-width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin: 16px 0 24px 0;
+  }
+  .explanation {
+    background: #fff;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
+  }
+  .qa {
+    background: #fff8e1;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border-left: 4px solid #f0a500;
+    margin-top: 20px;
+  }
+  .qa h3 { margin-top: 0; color: #b8730e; }
+  .qa ul li { margin-bottom: 8px; }
+  details.qa > summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #b8730e;
+    font-size: 1.08em;
+    padding: 6px 0;
+    user-select: none;
+    list-style: none;
+  }
+  details.qa > summary::before {
+    content: "▶ ";
+    display: inline-block;
+    transition: transform 0.15s;
+  }
+  details.qa[open] > summary::before {
+    content: "▼ ";
+  }
+  details.qa > summary:hover { color: #f0a500; }
+  details.qa[open] > summary { margin-bottom: 14px; }
+  code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.92em;
+  }
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th { background: #1f6feb; color: white; }
+  blockquote {
+    border-left: 4px solid #1f6feb;
+    margin: 16px 0;
+    padding: 4px 16px;
+    color: #555;
+    background: #eef4ff;
+  }
+  .takeaway {
+    background: #e8f5e9;
+    border-left: 4px solid #2e7d32;
+    padding: 14px 20px;
+    margin-top: 20px;
+    border-radius: 4px;
+  }
+
+  /* ============================================
+     Highlight feature (image + text)
+     ============================================ */
+  #hl-toolbar {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .hl-btn {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    user-select: none;
+  }
+  .hl-btn:hover { background: #e8e8e8; }
+  .hl-btn.active { background: #1f6feb; color: white; border-color: #1f6feb; }
+  .hl-color-picker {
+    display: inline-flex;
+    gap: 6px;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    padding: 0 10px;
+  }
+  .hl-color {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    display: inline-block;
+    box-sizing: border-box;
+  }
+  .hl-color.selected { border-color: #333; }
+  .hl-color[data-color="yellow"] { background: rgba(255, 235, 59, 0.85); }
+  .hl-color[data-color="green"]  { background: rgba(102, 187, 106, 0.85); }
+  .hl-color[data-color="pink"]   { background: rgba(236, 64, 122, 0.75); }
+  .hl-color[data-color="blue"]   { background: rgba(79, 195, 247, 0.85); }
+
+  body.hl-active { cursor: crosshair; }
+  body.hl-active .slide-img { cursor: crosshair; }
+  body.hl-eraser { cursor: not-allowed; }
+  body.hl-eraser .slide-img { cursor: not-allowed; }
+  body.hl-eraser .hl-img-mark,
+  body.hl-eraser mark.hl-text-mark {
+    outline: 2px dashed #d32f2f;
+    outline-offset: 1px;
+    cursor: pointer !important;
+  }
+
+  .hl-img-wrapper {
+    position: relative;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin: 16px 0 24px 0;
+  }
+  .hl-img-wrapper > .slide-img { margin: 0; }
+
+  .hl-img-mark {
+    position: absolute;
+    height: 14px;
+    transform: translateY(-50%);
+    border-radius: 2px;
+    mix-blend-mode: multiply;
+    pointer-events: auto;
+  }
+  .hl-img-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.65); }
+  .hl-img-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.55); }
+  .hl-img-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.50); }
+  .hl-img-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.55); }
+
+  mark.hl-text-mark {
+    padding: 1px 1px;
+    border-radius: 2px;
+    color: inherit;
+  }
+  mark.hl-text-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.55); }
+  mark.hl-text-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.40); }
+  mark.hl-text-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.30); }
+  mark.hl-text-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.40); }
+
+  body.hl-hidden .hl-img-mark { background: transparent !important; }
+  body.hl-hidden mark.hl-text-mark {
+    background: transparent !important;
+    padding: 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>CS 2050 Lecture 10 - 复习笔记</h1>
+<p><em>主题：Kernel Authoring with CUDA Python —— 从 Grid-Level 加速库到自己写 GPU kernel</em></p>
+
+<blockquote>
+  Lecture 10 是 NVIDIA Bryce Adelstein Lelbach 客座讲座的第二讲《Kernel Authoring with CUDA Python》（共 115 页 slides）。Lecture 9 介绍了 CUDA C++ 的全景（Host/Device 模型、Thrust 等高层抽象）；本讲转向 <strong>Python 视角</strong>，讨论什么时候应该自己写 kernel、CUDA Python 提供了哪些工具，以及怎么用 <code>numba.cuda</code> / <code>cuda.cccl</code> / Triton-like 风格的 API 把一个 Python 函数变成 GPU kernel。Slide 1 是讲者封面，跳过；技术内容从 slide 2 起。笔记按主题把连续同主题的 slides 合并成一节。
+</blockquote>
+
+<style>
+  /* 多 slide 合并后的图片网格，本 lecture 专用 */
+  .slide-grid {
+    display: grid;
+    gap: 12px;
+    margin: 16px 0 24px 0;
+  }
+  .slide-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .slide-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .slide-grid .slide-img { margin: 0; max-width: 100%; }
+</style>
+
+
+<!-- ==================== SLIDE 2–4 ==================== -->
+<h2 class="slide-title">Slide 2–4 — GPU 编程的两条路：Grid-Level 加速库 vs. 自己写 Kernel</h2>
+
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-002.png" alt="Slide 2: Grid-Level — cupy 例子，系统自动分块">
+  <img class="slide-img" src="images/slide-003.png" alt="Slide 3: NVIDIA 加速库全景（24 个 logo）">
+  <img class="slide-img" src="images/slide-004.png" alt="Slide 4: Writing Kernels — Break glass in case of emergency">
+</div>
+
+<div class="explanation">
+  <h3>Grid-Level：调一行库函数就用上整张卡</h3>
+  <p>Slide 2 给"Grid-Level"下了定义：<em>"Easy acceleration of bulk data operations"</em>——批量数据操作的简单加速。配的代码是 cupy 计算 95 分位数的例子：</p>
+<pre><code>import cupy as cp
+samples = ...
+sort = cp.sort(samples)
+cdf  = cp.cumsum(sort) / sort.sum()
+p95  = sort[cp.searchsorted(cdf, 0.95)]</code></pre>
+  <p>用户只写"<code>cp.sort</code>、<code>cp.cumsum</code>、<code>cp.searchsorted</code>"——四行 numpy 风格的代码，看不到任何 thread / block / grid 的概念。底下框里写的就是 Grid-Level 的本质：<strong>"<u>System</u> splits work into blocks, divides data into tiles, &amp; maps both onto threads"</strong>。系统替你切块、切瓦片、映射到线程。<em>用户负责"要做什么"，系统负责"怎么并行"。</em></p>
+  <p>Grid 在 CUDA 术语里就是一次 kernel launch 启动的全部线程的集合。所以"Grid-Level"= "调一次就把整张 GPU 用起来"的抽象层。</p>
+
+  <h3>库全景：和 Lecture 9 是同一张图，但本讲的语境是 Python</h3>
+  <p>Slide 3 是 NVIDIA CUDA 加速库的 24-logo 墙——cuBLAS / cuSPARSE / cuDNN / cuFFT / cuRAND / Thrust / CUB / libcu++ / RAPIDS / TensorRT 等等。复习时知道"这个领域有官方库"就够了，具体 API 现查。和 Lecture 9 slide 9 一字不差，重点在 <strong>Python 也能调它们</strong>——cupy / cuDF / cuML / pyNVCOMP 等都是这些 C++ 库的 Python 绑定，所以 slide 2 的 cupy 例子能跑，靠的就是 cuBLAS / Thrust 这套底座。</p>
+
+  <h3>"Writing Kernels: Break Glass in Case of Emergency"</h3>
+  <p>Slide 4 是本讲最重要的一张图——一面绿色面板，中间一个红色应急按钮写着"WRITING KERNELS"，下面"BREAK GLASS IN CASE OF EMERGENCY"（紧急情况才砸开）。左侧并排放着 CUB / cuBLAS / cuFFT 的 logo，右边一句话：<em>"Prefer using libraries! If no library exists or you can't get the perf you need with them, then…"</em></p>
+  <p>讲者立场清晰：<strong>能用库就用库，写 kernel 是最后手段</strong>。砸开应急按钮的两种情形：</p>
+  <ul>
+    <li>找不到合适的库（你的算法不在已有 API 里）。</li>
+    <li>有库但性能不够（已有库覆盖的情况太一般，针对你的数据布局/访存模式调不到极致）。</li>
+  </ul>
+  <p>这页定下了整堂课的基调——后面 100+ 页要讲怎么用 CUDA Python 写 kernel，但先给你一个心理预期：<em>"99% 的项目走 Grid-Level 就够了，本讲的内容是为剩下那 1% 准备的"</em>。学完这门课你不应该见每个性能问题就自己写 kernel，先去翻库目录。</p>
+</div>
+
+<div class="takeaway">
+  💡 GPU 编程有两层抽象。Grid-Level（cupy / Thrust / cuBLAS 等）"系统替你切块"——一行调用搞定，覆盖大多数场景。<strong>Kernel-Level 是应急手段</strong>，只在库不存在或性能不够时才砸开。本讲讲后者。
+</div>
+
+
+<!-- ==================== SLIDE 5–6 ==================== -->
+<h2 class="slide-title">Slide 5–6 — Thread-Level：用户自己分块、分瓦片、映射到线程</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-005.png" alt="Slide 5: matmul kernel 完整代码">
+  <img class="slide-img" src="images/slide-006.png" alt="Slide 6: Thread-Level — User splits work into blocks, divides data into tiles">
+</div>
+
+<div class="explanation">
+  <h3>什么叫"自己写 kernel"——用 matmul 做样板</h3>
+  <p>Slide 5 抛出一段约 30 行的代码，是一个分块矩阵乘法的 numba.cuda kernel。现在不用看懂每一行，只要看出三件事：</p>
+  <ul>
+    <li><code>@cuda.device.kernel</code>——装饰器。Python 函数加上它就被编译成 GPU kernel（也写成 <code>@cuda.jit</code>，slide 10 会用到）。</li>
+    <li>函数体里出现一堆 <code>cuda.blockDim.x</code> / <code>cuda.gridDim.x</code> / <code>cuda.threadIdx.x</code> / <code>cuda.grid(2)</code>——这些是当前线程的"身份证"，每个 GPU 线程跑同一份代码，但通过这些 ID 知道"我应该处理哪一块数据"。</li>
+    <li><code>cuda.shared.array((TPB, TPB), float32)</code> + <code>cuda.syncthreads()</code>——shared memory（一个 block 内的线程能共享的高速片上内存）和块内同步。这是写 kernel 才能用到的硬件特性，库里看不到。</li>
+  </ul>
+  <p>这段代码做的事是：每个 thread block 负责输出矩阵 C 的一个 TPB×TPB 瓦片；外层 <code>for i in range(BPG)</code> 把 K 维切成多个瓦片轮流加载到 shared memory；内层 <code>for j in range(TPB)</code> 在 shared memory 里做内积累加；最后写回 C。这是 GPU matmul 的经典分块模式（CUDA 教材第 1 章必讲），后面会一步步拆。</p>
+
+  <h3>Slide 6：把 slide 5 框成定义</h3>
+  <p>Slide 6 把同一段 matmul 代码复制到左半边，右半边写出 Thread-Level 的定义：<em>"Full control for all parallel workloads"</em>，下面接 <strong>"<u>User</u> splits work into blocks, divides data into tiles, &amp; maps both onto threads"</strong>。</p>
+  <p>对比 slide 2 的 Grid-Level 定义——一字不差，只把"<u>System</u>"换成"<u>User</u>"。这就是 kernel 编程的代价：之前系统替你切的事情，现在每一步都要你写代码控制。换来的是<em>对硬件的完全控制权</em>——shared memory 怎么用、warp 怎么协作、访存模式怎么设计，都你说了算。</p>
+  <p>Grid-Level vs. Thread-Level 的对比是这两讲反复出现的二分法。简单记：写 cupy 那种四行 numpy 代码 = Grid-Level；写出现 <code>threadIdx</code> / <code>blockIdx</code> 的代码 = Thread-Level。</p>
+</div>
+
+<div class="takeaway">
+  💡 Thread-Level = 用户自己掌控并行细节（block / tile / thread / shared memory / sync）。代价是每一行都要写，收益是 100% 硬件控制权。matmul 是后面讲解 numba.cuda 语法的样板，先记住它的存在。
+</div>
+
+
+<!-- ==================== SLIDE 7 ==================== -->
+<h2 class="slide-title">Slide 7 — Python kernel 性能 ≈ C++：本讲的"为什么"</h2>
+
+<img class="slide-img" src="images/slide-007.png" alt="Slide 7: Segmented Sort 与 FFT Convolution 在 C++ vs Python 的性能对比">
+
+<div class="explanation">
+  <h3>两条柱状图回答一个问题：用 Python 写 kernel 性能会不会很差？</h3>
+  <p>Slide 抛出两组实验数据（A6000，CUDA 12.6，引自 GTC 2025 "CUDA: New Features and Beyond"）：</p>
+  <ul>
+    <li><strong>左图：CUDA Segmented Sort Kernel</strong>——横轴是分段数从 2¹⁴ 到 2¹⁸，每个数据点上 C++ 和 Python 各一根柱子。<em>每对柱子高度都几乎一样</em>，Python 版的相对执行时间在 0.97–1.01 之间，意味着 Python kernel 和 C++ kernel 性能持平，差不到 3%。</li>
+    <li><strong>右图：CUDA FFT Convolution Kernel</strong>——三根柱子分别是 C++、Python (Numba)、Python (Warp)。前两根高度相同（≈1.0）；Warp 那根 ≈1.05，慢 5%。</li>
+  </ul>
+  <p>这页的论点很直白：<strong>Python 不再是性能税</strong>。Numba 编出的 PTX 和 nvcc 编出的 PTX，在这两个真实 kernel 上几乎是同一份机器码（其实就是同一份——LLVM/NVVM 后端共享）。slide 8/9 会展开这个流程图。</p>
+  <p>为什么这页要先放？因为本讲剩下的 100+ 页都建立在"用 Python 写 kernel 是 OK 的"这个前提上。如果 Python kernel 比 C++ 慢 5×，那本讲存在的合理性就动摇了。讲者把性能数据放在第 7 页，是先消除观众心里"Python 慢"的怀疑，然后才开始讲语法。</p>
+</div>
+
+<div class="takeaway">
+  💡 用 numba.cuda 写 kernel 跟用 C++ 写 kernel 的运行时性能在常见 workload 上基本一致（差距 ≤ 3-5%）。语言层不是性能瓶颈——后面学 Python kernel 时不用担心"是不是用 C++ 重写会更快"。
+</div>
+
+
+<!-- ==================== SLIDE 8–9 ==================== -->
+<h2 class="slide-title">Slide 8–9 — Numba 编译流水线：.py 怎么变成 GPU 上跑的 cubin</h2>
+
+<img class="slide-img" src="images/slide-008.png" alt="Slide 8: Numba 编译流程图（.py → Frontend → Numba IR → Numba → LLVM/NVVM → PTX → CUDA Driver Link → SASS/cubin → CUDA Driver Load）">
+
+<div class="explanation">
+  <h3>从 Python 源码到 GPU 机器码的全链路</h3>
+  <p>这两张 slide 内容完全一样（动画的两个停顿），核心是一张五段式流程图，解释"为什么 Python kernel 性能能跟 C++ 持平"。从左到右走一遍：</p>
+  <ol>
+    <li><strong>Frontend：<code>.py</code> 文件 → Python AST</strong>。Python 解释器先把源码解析成抽象语法树。这一步和普通 Python 一样。</li>
+    <li><strong>Numba IR</strong>。Numba 接管 AST，把它转成自己的中间表示（intermediate representation）。<em>Numba 是把 Python 子集 JIT 编译成机器码的库</em>，原本就是给 CPU 做加速的，<code>numba.cuda</code> 是它的 GPU 后端。</li>
+    <li><strong>Numba 内部三件套：Typing → Data Model → Lowering</strong>。
+      <ul>
+        <li><strong>Typing</strong>：推导每个变量的具体类型（Python 是动态类型，但 GPU 代码必须静态类型才能编译；Numba 通过看你 launch kernel 时传入的实参类型来推）。</li>
+        <li><strong>Data Model</strong>：决定每种类型在内存里怎么布局——<code>float32</code> 占 4 字节、tuple 怎么打包、numpy 数组的 strides 怎么传等等。</li>
+        <li><strong>Lowering</strong>：把带类型的 IR 翻译成 LLVM IR，这就接通了 LLVM 工具链。</li>
+      </ul>
+    </li>
+    <li><strong>LLVM → NVVM → PTX</strong>。LLVM IR 进 NVVM（NVIDIA 的 LLVM fork，专门给 GPU 后端做了扩展），编出 PTX——一种"GPU 汇编"，介于通用 IR 和具体硬件指令之间。<em>这一步和 C++/CUDA 走 nvcc 的路径在 PTX 这层会合</em>，所以下游优化能拿到一样的好处。</li>
+    <li><strong>CUDA Driver Link → SASS/cubin → CUDA Driver Load</strong>。CUDA 驱动把 PTX 翻译成具体 GPU 架构的真实机器码 SASS，打包成 cubin（CUDA binary），然后加载到 GPU 上跑。这一步对 C++ 和 Python 是完全相同的。</li>
+  </ol>
+  <p>右上角那个龙形 logo 是 LLVM 项目的 mascot，标在 LLVM/NVVM 旁边，提示这条路径是公开的开源工具链。</p>
+  <p>把这条流水线和 nvcc 的对比一下：nvcc 是 <em>"C++ 源码 → Clang frontend → LLVM IR → NVVM → PTX → cubin"</em>。numba 是 <em>"Python → Numba frontend → Numba IR → LLVM IR → NVVM → PTX → cubin"</em>。<strong>从 LLVM IR 往后两条路完全合并</strong>——这就是为什么 slide 7 的性能能持平。</p>
+</div>
+
+<div class="takeaway">
+  💡 numba.cuda 不是"解释器跑 Python 上 GPU"那种慢方案。它是 JIT 编译器，把带类型的 Python IR 一路降到 LLVM IR、PTX、SASS——<strong>从 LLVM 这层起和 nvcc 完全同路</strong>。性能持平的根因就在这。
+</div>
+
+
+<!-- ==================== SLIDE 10 ==================== -->
+<h2 class="slide-title">Slide 10 — 最小 numba.cuda kernel：copy 是什么样子</h2>
+
+<img class="slide-img" src="images/slide-010.png" alt="Slide 10: from numba import cuda; @cuda.jit def copy(s, d): t = cuda.grid(1); d[t] = s[t]">
+
+<div class="explanation">
+  <h3>四行代码体会 numba.cuda 的语法</h3>
+<pre><code>from numba import cuda
+
+@cuda.jit
+def copy(s, d):
+    t = cuda.grid(1)
+    d[t] = s[t]</code></pre>
+  <p>这是一个把 <code>s</code> 数组拷贝到 <code>d</code> 数组的 GPU kernel。每一行的含义：</p>
+  <ul>
+    <li><strong><code>from numba import cuda</code></strong>——导入 numba 的 GPU 子模块。后面所有 <code>cuda.*</code> API 都从这来。</li>
+    <li><strong><code>@cuda.jit</code></strong>——装饰器，告诉 Numba 把下面这个 Python 函数 JIT 编译成 GPU kernel。第一次调用时触发 typing → lowering → PTX → cubin 整条流水线（slide 8/9 那张图），编出来后缓存。<em>这是 numba.cuda 最常用的入口</em>；slide 5 那个 matmul 用的 <code>@cuda.device.kernel</code> 是 cccl Python（更新的 API），slide 10 用的是经典 numba 风格——本讲两套都会出现。</li>
+    <li><strong><code>def copy(s, d):</code></strong>——普通 Python 函数定义。kernel 没有返回值（GPU kernel 都是 void），结果通过往输入数组写来传。<code>s</code> 是 source，<code>d</code> 是 destination，调用时传进来的是 GPU 上的数组（cupy 数组或 numba 的 device array）。</li>
+    <li><strong><code>t = cuda.grid(1)</code></strong>——拿到当前线程的全局 ID。<code>1</code> 表示一维 grid。这一行等价于 <code>t = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x</code>，只是 numba 提供的速记。<em>每个线程拿到的 <code>t</code> 不一样</em>，这就是并行的源头：N 个线程同时跑这个函数，每个负责一个下标。</li>
+    <li><strong><code>d[t] = s[t]</code></strong>——这个线程读 <code>s[t]</code>，写 <code>d[t]</code>。N 个线程并行就把整个数组复制完了。</li>
+  </ul>
+  <p>这段代码缺一个东西：<em>怎么 launch？</em>——也就是怎么决定启动多少线程。slide 11 之后会展开 <code>copy[blocks_per_grid, threads_per_block](s, d)</code> 这种语法。本页只是先让你看到"一个 GPU kernel 可以这么短"。</p>
+  <p>对比一下等价的 numpy CPU 版本就是 <code>d[:] = s[:]</code>。GPU kernel 把"对每个下标做一件事"显式写了出来——你写的是"<em>单个</em>线程要做什么"，硬件让 N 个线程并发跑这一份代码。这种 SPMD（Single Program, Multiple Data）模式是所有 CUDA kernel 的共同骨架。</p>
+</div>
+
+<div class="takeaway">
+  💡 numba.cuda 的最小 kernel 模板：<code>@cuda.jit</code> + <code>def func(...)</code> + <code>cuda.grid(N)</code> 拿线程 ID + 用 ID 索引读写数组。一个 GPU kernel 写的是"一个线程要做什么"，硬件让 N 个线程并行跑这份代码。
+</div>
+
+
+<!-- ==================== SLIDE 11–14 ==================== -->
+<h2 class="slide-title">Slide 11–14 — 把 copy kernel 拆开看：四行代码各自的角色</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-011.png" alt="Slide 11: 高亮 @cuda.jit">
+  <img class="slide-img" src="images/slide-012.png" alt="Slide 12: 高亮参数 s, d">
+  <img class="slide-img" src="images/slide-013.png" alt="Slide 13: 高亮 t = cuda.grid(1)">
+  <img class="slide-img" src="images/slide-014.png" alt="Slide 14: 高亮 d[t] = s[t]">
+</div>
+
+<div class="explanation">
+  <h3>四张 slide 是同一段代码的逐行高亮（讲座动画的逐步分解）</h3>
+  <p>讲者用四个动画停顿，把 slide 10 那个 4 行 kernel 的每一行单独点亮一次，再次过一遍含义。复习时只看一遍就够：</p>
+  <ul>
+    <li><strong>Slide 11 高亮 <code>@cuda.jit</code></strong>——告诉 Numba "下面这个 Python 函数是 GPU kernel"。第一次被调用时触发 typing → lowering → PTX → cubin 整条流水线。</li>
+    <li><strong>Slide 12 高亮参数 <code>s, d</code></strong>——传给 kernel 的两个数组。重点：传进来的不是 host 上的 numpy 数组，而是 device 上的数组（cupy 数组或 numba <code>device_array</code>）。否则 Numba 会做隐式 host→device 拷贝，性能会受影响。</li>
+    <li><strong>Slide 13 高亮 <code>t = cuda.grid(1)</code></strong>——当前线程拿到自己的全局 ID，<code>1</code> 表示 1D。N 个线程拿到 N 个不同的 <code>t</code>，这就是并行的来源。</li>
+    <li><strong>Slide 14 高亮 <code>d[t] = s[t]</code></strong>——当前线程读自己那一格、写自己那一格。N 个线程并发执行，整个数组就被复制完了。</li>
+  </ul>
+  <p>这种"先给完整代码再逐行高亮"的呈现是讲座常见手法，它让你能先看到全貌再跟着逐行注意力。复习笔记把它折叠成一节就够了。</p>
+</div>
+
+<div class="takeaway">
+  💡 4 行 copy kernel 的角色分工：装饰器（编译指令）+ 数组参数（必须在 device 上）+ <code>cuda.grid(1)</code>（拿线程 ID）+ 索引读写（每线程做自己那一格）。
+</div>
+
+
+<!-- ==================== SLIDE 15–17 ==================== -->
+<h2 class="slide-title">Slide 15–17 — 线程的三层组织：thread → warp → block</h2>
+
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-015.png" alt="Slide 15: 8 个 thread 并行执行 d[i]=s[i]">
+  <img class="slide-img" src="images/slide-016.png" alt="Slide 16: 8 个 thread 归为 4 个 warp">
+  <img class="slide-img" src="images/slide-017.png" alt="Slide 17: 4 个 warp 归为 2 个 block">
+</div>
+
+<div class="explanation">
+  <h3>Slide 15：先看物理直觉——N 条彩色螺旋线 = N 条同时跑的线程</h3>
+  <p>Slide 15 在代码下面画了 8 条彩色的双螺旋（影射 DNA / 时间线），每条标着 <code>d[0]=s[0]</code>、<code>d[1]=s[1]</code> ... <code>d[7]=s[7]</code>。每条螺旋是一个独立的"执行流"——硬件在同一时间让 8 个线程各跑一份 kernel 代码，每条线只负责自己那个 <code>t</code>。</p>
+  <p>这就是 SIMT（Single Instruction, Multiple Threads）的视觉化：相同的 <code>d[t]=s[t]</code> 指令，被 8 个 <code>t</code> 取了 8 个不同的值同时执行。</p>
+
+  <h3>Slide 16：把 8 个线程归到 4 个 warp（每 2 个一组）</h3>
+  <p>Slide 16 在 8 条螺旋外面画了 4 个圆角矩形，每框 2 条螺旋，框里写"Warp"。这是 GPU 硬件层面的第一层分组：<strong>warp 是 GPU 的最小调度单位</strong>，warp 内的线程总是步调一致地执行同一条指令（lock-step）。</p>
+  <p>注意：图里用 2 线程/warp 是为了视觉简洁，<em>实际 NVIDIA GPU 的 warp size 一直是 32 线程</em>。所以真实场景里"32 个线程必须同时执行同一条指令"——这个事实在 slide 28-44 讨论 memory coalescing 的时候会变成关键约束（warp 内 32 个线程同时发起的 32 个 load 如果地址连续，硬件能合并成一次内存事务）。</p>
+
+  <h3>Slide 17：把 4 个 warp 归到 2 个 block</h3>
+  <p>Slide 17 又在外面套了两个大圆角矩形，分别写"Block 0"（绿色）"Block 1"（红色）。每个 block 包含 2 个 warp（= 4 个 thread）。这是第二层分组：<strong>block 是 kernel launch 时切分工作的单位</strong>，同一个 block 内的所有线程会被调度到同一个 SM（Streaming Multiprocessor）上跑，可以共享 shared memory、可以用 <code>cuda.syncthreads()</code> 做块内同步——跨 block 这些都做不到。</p>
+  <p>所以 GPU 的线程组织是<strong>三层金字塔</strong>：grid（整次 launch 启动的所有线程）⊃ block ⊃ warp ⊃ thread。这个层级在 slide 18-20 讨论 launch 语法时直接对应：<code>copy[blocks_per_grid, threads_per_block]</code> 决定了金字塔的形状。</p>
+</div>
+
+<div class="takeaway">
+  💡 GPU 线程的三层组织：<strong>grid → block → warp → thread</strong>。block 是调度到 SM 的单位（同 block 共享 shared mem + 可同步），warp 是 32 线程的硬件 lock-step 单位（同 warp 步调一致执行同指令），thread 是最小执行单元。
+</div>
+
+
+<!-- ==================== SLIDE 18–20 ==================== -->
+<h2 class="slide-title">Slide 18–20 — Kernel 怎么 launch：<code>copy[blocks, threads](s, d)</code></h2>
+
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-018.png" alt="Slide 18: 加上 launch 代码 s, d, copy[2, 4](s, d)">
+  <img class="slide-img" src="images/slide-019.png" alt="Slide 19: 高亮第一个参数 2 = blocks">
+  <img class="slide-img" src="images/slide-020.png" alt="Slide 20: 高亮第二个参数 4 = threads per block">
+</div>
+
+<div class="explanation">
+  <h3>Slide 18：在 kernel 定义下面加上 host 端的 launch 代码</h3>
+<pre><code>s = cp.arange(N)        # device 上的 [0, 1, ..., N-1]
+d = cp.empty_like(s)    # 同 shape 同 dtype 的未初始化 device 数组
+copy[2, 4](s, d)        # 用 2 个 block × 4 thread/block 启动 kernel</code></pre>
+  <p>前两行用 cupy 创建 device 数组（cp.arange / cp.empty_like 直接在 GPU 上分配显存）。第三行是 numba.cuda 的 <strong>kernel launch 语法</strong>——把方括号 <code>[2, 4]</code> 放在函数名和实参列表之间，对应"启动配置"。这种语法是 numba 模仿 CUDA C++ 的 <code>copy&lt;&lt;&lt;2, 4&gt;&gt;&gt;(s, d)</code> 的等价形式。</p>
+
+  <h3>Slide 19–20：方括号里两个数字的含义</h3>
+  <p>Slide 19 高亮第一个参数 <code>2</code>——<strong>blocks per grid（要起多少个 block）</strong>。对应 slide 17 图里的 Block 0 / Block 1 共两个 block。</p>
+  <p>Slide 20 高亮第二个参数 <code>4</code>——<strong>threads per block（每个 block 里多少线程）</strong>。Slide 17 图里每个 block 有 4 条螺旋（2 warp × 2 thread），共 4 个 thread。</p>
+  <p>所以 <code>copy[2, 4](s, d)</code> = 总共 <code>2 × 4 = 8</code> 个线程，每个线程跑一遍 kernel 代码，<code>cuda.grid(1)</code> 在这 8 个线程里取 <code>0, 1, ..., 7</code>。这正好覆盖 N=8 的数组。</p>
+  <p><em>注意 launch 配置和实际 array size 的对应关系——是程序员的责任，硬件不会替你检查</em>。如果 N=10 但你只起了 8 线程，最后两个元素就不会被处理；反过来如果起了 16 线程但 N=8，多出来的 8 个线程会越界写到非法内存。后面 slide 21+ 会讨论怎么处理"每个线程做多个元素"的情况。</p>
+</div>
+
+<div class="takeaway">
+  💡 numba 的 launch 语法：<code>kernel[blocks, threads](args)</code>。方括号里两个数字定金字塔形状：blocks per grid + threads per block。总线程数 = blocks × threads，需要 ≥ 数组长度。
+</div>
+
+
+<!-- ==================== SLIDE 21–26 ==================== -->
+<h2 class="slide-title">Slide 21–26 — 一个线程做多个元素：引入 <code>items</code> 参数 + 完整 launch 公式</h2>
+
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-021.png" alt="Slide 21: 加 items 参数的新版 copy">
+  <img class="slide-img" src="images/slide-022.png" alt="Slide 22: 高亮 items 参数">
+  <img class="slide-img" src="images/slide-023.png" alt="Slide 23: 高亮 t = cuda.grid(1) * items">
+  <img class="slide-img" src="images/slide-024.png" alt="Slide 24: 高亮 for 循环 + body">
+  <img class="slide-img" src="images/slide-025.png" alt="Slide 25: 添加 N/B/T 含义 + launch 第一参数 int(N/(B*T))">
+  <img class="slide-img" src="images/slide-026.png" alt="Slide 26: 第二参数 = B">
+</div>
+
+<div class="explanation">
+  <h3>Slide 21：从"1 线程 1 元素"升级到"1 线程多元素"</h3>
+<pre><code>@cuda.jit
+def copy(s, d, items):
+    t = cuda.grid(1) * items    # 这线程负责的起始下标
+    for i in range(items):
+        d[t + i] = s[t + i]
+s = cp.arange(N)
+d = cp.empty_like(s)
+copy[..., ...](s, d, T)</code></pre>
+  <p>三个变化：<strong>(1)</strong> 函数多了 <code>items</code> 参数（每线程要做多少个元素）；<strong>(2)</strong> <code>t</code> 变成 <code>cuda.grid(1) * items</code>——比如 thread 0 负责下标 0, 1, ..., items-1；thread 1 负责 items, ..., 2·items-1；<strong>(3)</strong> 函数体里多了 <code>for i in range(items)</code>，每线程串行做 items 次拷贝。</p>
+  <p>为什么要这样？<strong>启动太多线程也有开销</strong>——硬件要为每个线程分配寄存器、调度时间片。如果数据量 N 很大，与其起 N 个线程每人做 1 个，不如起 N/T 个线程每人做 T 个，往往整体更快（更高的指令并行度、更好的访存模式）。这种"每线程多 items"是后面所有讨论的基础。</p>
+
+  <h3>Slide 22–24：逐行高亮 items / t / for</h3>
+  <p>三张连续的动画停顿，分别强调 <code>items</code>（参数）、<code>t = cuda.grid(1) * items</code>（线程负责的起点）、<code>for i in range(items): d[t+i] = s[t+i]</code>（线程的串行循环）。复习时把这三行当一个整体看就行。</p>
+
+  <h3>Slide 25–26：把 launch 配置补完——三个变量 N / B / T</h3>
+  <p>Slide 25 引入符号约定（之后整个 lecture 会反复用）：</p>
+  <ul>
+    <li><strong>N</strong> = 数组总长度（粉色）</li>
+    <li><strong>B</strong> = thread blocks 数（黄色）</li>
+    <li><strong>T</strong> = items per thread（青色）</li>
+  </ul>
+  <p>看代码 <code>copy[int(N/(B*T)), B](s, d, T)</code>——<em>这个语法看起来反直觉，要小心读</em>：</p>
+  <ul>
+    <li><strong>第一个方括号参数 <code>int(N/(B*T))</code></strong>：blocks per grid，等于"每 block 处理的元素数 = B·T；总元素 N，所以需要 N/(B·T) 个 block"。<em>等等，这里讲者用了一个让人困惑的命名</em>——slide 上 <strong>B</strong> 写的是 "Number of thread blocks"，但实际 launch 第一个参数才是 blocks per grid，而 launch 第二个参数是 threads per block。</li>
+    <li><strong>第二个参数 <code>B</code></strong>（slide 26 高亮）：threads per block。</li>
+  </ul>
+  <p>所以讲者这里的 <strong>B = "block 内的线程数"</strong>（不是 grid 内 block 数）。命名稍有歧义，但跟着公式走就对：每个线程做 T 个元素 → 每 block 处理 B·T 个元素 → 共需要 N/(B·T) 个 block，正好让总线程数 × items/线程 = N。</p>
+  <p>记一个公式直觉：<strong>blocks per grid × threads per block × items per thread = 数组长度</strong>。这个等式后面一直成立。</p>
+</div>
+
+<div class="takeaway">
+  💡 让每个线程做多个元素（<code>items</code>）是 GPU 编程的常规优化。launch 公式：<code>blocks × threads_per_block × items = N</code>。注意 slide 上的 <strong>B 指的是 threads per block</strong>（不是 blocks 数量），符号容易误读。
+</div>
+
+
+<!-- ==================== SLIDE 27 ==================== -->
+<h2 class="slide-title">Slide 27 — <code>cuda.*</code> 五个 ID API 速查</h2>
+
+<img class="slide-img" src="images/slide-027.png" alt="Slide 27: cuda.grid / threadIdx / threadDim / blockIdx / blockDim 速查表">
+
+<div class="explanation">
+  <h3>所有线程相关的内建变量一页搞定</h3>
+  <p>Slide 把五个最常用的 <code>cuda.*</code> 内建列在一起：</p>
+  <ul>
+    <li><code>cuda.grid(1)</code> = <strong>Global thread index (unique)</strong>。整个 grid 里这个线程的全局编号，每线程不重复。等价于 <code>blockIdx.x * blockDim.x + threadIdx.x</code>。</li>
+    <li><code>cuda.threadIdx.x</code> = <strong>Block-local thread index</strong>。当前线程在它所在 block 里的编号（0 到 blockDim.x-1）。</li>
+    <li><code>cuda.threadDim.x</code> = <strong># of threads per block</strong>。每 block 多少个线程（即 launch 第二参数）。<em>注意：CUDA C++ 里这个叫 <code>blockDim.x</code>，"threadDim" 是 numba 的别名（slide 上这么写），但实际 numba 也支持 <code>cuda.blockDim.x</code>，slide 后面会用</em>。</li>
+    <li><code>cuda.blockIdx.x</code> = <strong>Global block index (unique)</strong>。这个 block 在 grid 里的编号（0 到 gridDim.x-1）。</li>
+    <li><code>cuda.blockDim.x</code> = <strong># of blocks</strong>——<em>注意 slide 上这个写的是 # of blocks，但按 CUDA 的标准命名 blockDim 是 # of threads per block，gridDim 才是 # of blocks</em>。Slide 这里命名有点混。后面 slide 33 用的 <code>bd = cuda.blockDim.x</code> 实际是 threads per block，要按它实际行为理解。</li>
+  </ul>
+  <p>下方那张图是 slide 17 的复刻——两个 block，每 block 两 warp 两线程，4 个线程编号 Thread 0/1/2/3——用来视觉化 threadIdx 和 blockIdx 的取值范围。</p>
+  <p>实际写代码记两条简明对应：<em>"位置"用 Idx（threadIdx, blockIdx），"总数"用 Dim（blockDim, gridDim）</em>。CUDA C++ 与 numba.cuda 的标准命名一致：<code>blockDim.x</code> = threads per block；<code>gridDim.x</code> = blocks per grid。</p>
+</div>
+
+<div class="takeaway">
+  💡 五个 API 速查：<code>cuda.grid(N)</code>（全局线程 ID）/ <code>threadIdx.x</code>（块内 ID）/ <code>blockIdx.x</code>（块 ID）/ <code>blockDim.x</code>（threads/block）/ <code>gridDim.x</code>（blocks/grid）。"位置用 Idx，总数用 Dim"。
+</div>
+
+
+<!-- ==================== SLIDE 28–32 ==================== -->
+<h2 class="slide-title">Slide 28–32 — 时序表分析 Blocked 访存：不连续，coalescing 差</h2>
+
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-028.png" alt="Slide 28: 时序表 — 每线程在时间维度做 load/store">
+  <img class="slide-img" src="images/slide-029.png" alt="Slide 29: 框住 Thread 0 列展示其负责 d[0:3]">
+  <img class="slide-img" src="images/slide-030.png" alt="Slide 30: 重排成 4 load + 4 store（按依赖顺序）">
+  <img class="slide-img" src="images/slide-031.png" alt="Slide 31: 进一步合并 — 一次 load 多元素">
+  <img class="slide-img" src="images/slide-032.png" alt="Slide 32: 框住单一时间步的 4 个 thread = d[0],d[4],d[8],d[12]（不连续！）">
+</div>
+
+<div class="explanation">
+  <h3>Slide 28：用一张表把"4 个线程在时间上做了什么"全画出来</h3>
+  <p>表格的列是 4 个 thread，行是时间步。读法：第 1 行（load）告诉你"在时间 1，T0 读 d[0]、T1 读 d[4]、T2 读 d[8]、T3 读 d[12]"。第 2 行（store）告诉你"接着 T0 写 s[0]、T1 写 s[4]..."。然后 T0 读 d[1]、T1 读 d[5]......</p>
+  <p>对比 slide 21 的代码（<code>t = cuda.grid(1) * items; for i: d[t+i] = s[t+i]</code>），<strong>每线程负责连续的一段</strong>：T0 处理 d[0..3]，T1 处理 d[4..7]，T2 处理 d[8..11]，T3 处理 d[12..15]——这就是后面 slide 45 命名的 <strong>Blocked Arrangement</strong>。</p>
+
+  <h3>Slide 29：竖框框住 Thread 0 一列，再次强调单个线程在时间上的轨迹</h3>
+  <p>Thread 0 顺序做：load d[0] → store s[0] → load d[1] → store s[1] → ... → load d[3] → store s[3]。<em>从单线程的视角看，访问的是连续地址</em>——这看起来很合理。</p>
+
+  <h3>Slide 30：重排循环——所有 load 提前，所有 store 推后</h3>
+  <p>表格被重排：原来是 load/store 交替，现在变成"先 4 次 load，再 4 次 store"。这是编译器的常规优化——读写之间没有依赖时，把读集中在前、写集中在后，能让更多 load 同时在飞（指令级并行）、覆盖内存延迟。</p>
+  <p>这一步重排不改变正确性（每线程内部的 load/store 仍是配对的、且前后无依赖），但让 GPU 能重叠访存和计算。</p>
+
+  <h3>Slide 31：把每线程的 4 次 load 合并成一次大 load</h3>
+  <p>表格列再压缩：原来 Thread 0 做 4 次 <code>load d[0]/d[1]/d[2]/d[3]</code>，现在合成一次 <code>load d[0:3]</code>（一次性读 4 个连续元素）。这种"vectorized load"在 GPU 上是可以的——单线程从连续地址一次取多个 word（用 <code>ld.global.v4</code> 指令）。</p>
+
+  <h3>Slide 32：但跨线程的 coalescing 怎么样？</h3>
+  <p>Slide 32 用红框框住了 <em>第一行</em>——也就是 4 个线程<strong>同一时间步</strong>的访问：<code>T0 load d[0], T1 load d[4], T2 load d[8], T3 load d[12]</code>。这 4 个地址<strong>跨度 = 4</strong>，<em>不连续</em>。</p>
+  <p>这是<strong>访存合并（memory coalescing）</strong>的核心问题：GPU 的 warp 同时发起 32 个 load 时，如果这 32 个地址是连续的（warp lane 0..31 → 地址 i, i+1, ..., i+31），硬件能合成 1 次 128-byte 的内存事务；如果地址跨了多个 cache line（像 slide 32 这样跨度 4），硬件就要发多次事务，带宽利用率骤降。</p>
+  <p>所以 Blocked Arrangement 的代价已经现形：单线程视角看着连续，<em>但 warp 视角下访问是"跨步"的</em>，coalescing 失败。下面 slide 33 起讲怎么修。</p>
+</div>
+
+<div class="takeaway">
+  💡 用时序表分析 kernel 的访存：行 = 时间，列 = thread。Blocked Arrangement 让<strong>单线程的访问看起来连续</strong>，但<strong>同一时刻 warp 内 32 个线程的访问是跨步的</strong>——这恰好是 GPU 不擅长的访存模式（coalescing 失败）。
+</div>
+
+
+<!-- ==================== SLIDE 33–40 ==================== -->
+<h2 class="slide-title">Slide 33–40 — 重写 copy kernel：用 <code>tx + bx*tile + 步长 bd</code> 让访存连续</h2>
+
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-033.png" alt="Slide 33: 完整新代码 — bd/bx/tx + base = tx + bx*tile + stride bd">
+  <img class="slide-img" src="images/slide-034.png" alt="Slide 34: 高亮 bd/bx/tx 三行">
+  <img class="slide-img" src="images/slide-035.png" alt="Slide 35: 高亮 bd = blockDim.x">
+  <img class="slide-img" src="images/slide-036.png" alt="Slide 36: 高亮 bx = blockIdx.x">
+  <img class="slide-img" src="images/slide-037.png" alt="Slide 37: 高亮 tx = threadIdx.x">
+  <img class="slide-img" src="images/slide-038.png" alt="Slide 38: 高亮 tile = bd * items">
+  <img class="slide-img" src="images/slide-039.png" alt="Slide 39: 高亮 base = tx + bx * tile">
+  <img class="slide-img" src="images/slide-040.png" alt="Slide 40: 高亮 for 循环 + body d[base+i]=s[base+i]">
+</div>
+
+<div class="explanation">
+  <h3>新代码的全貌（Slide 33）</h3>
+<pre><code>@cuda.jit
+def copy(s, d, items):
+    bd = cuda.blockDim.x       # threads per block
+    bx = cuda.blockIdx.x       # 这个 block 的编号
+    tx = cuda.threadIdx.x      # 这线程在 block 内的编号
+    tile = bd * items          # 一个 block 处理多少元素
+
+    base = tx + bx * tile      # 这线程的"起始下标"
+    for i in range(0, tile, bd):     # 步长 = bd
+        d[base + i] = s[base + i]</code></pre>
+  <p>关键变化：循环不再是 <code>for i in range(items)</code> 加 1 步长，而是 <code>for i in range(0, tile, bd)</code>——<strong>步长是 <code>bd</code>（threads per block）</strong>。这一改让访存模式翻转。</p>
+
+  <h3>Slide 34–37：三个新变量的来历</h3>
+  <p>Slide 34 一次性高亮 <code>bd / bx / tx</code> 三行；slide 35-37 分别再单独高亮一行。这三个变量都直接调 <code>cuda.*</code>：</p>
+  <ul>
+    <li><code>bd = cuda.blockDim.x</code>：每 block 多少线程。比如 launch <code>copy[B, T]</code>，bd = T。</li>
+    <li><code>bx = cuda.blockIdx.x</code>：这是哪个 block。grid 里的 0..gridDim.x-1。</li>
+    <li><code>tx = cuda.threadIdx.x</code>：这是 block 内哪个线程。0..bd-1。</li>
+  </ul>
+  <p>之前 slide 21 的代码用 <code>cuda.grid(1)</code> 一个就够了。为什么这次要拆开？因为<strong>新的索引公式需要分别用到 block 内位置和 block 之间位置</strong>，不能再用全局 ID 一笔带过。</p>
+
+  <h3>Slide 38–40：核心算式 base + 步长循环</h3>
+  <p><strong>Slide 38（tile）</strong>：<code>tile = bd * items</code>，一个 block 总共要处理多少元素。如果一个 block 有 bd 个线程，每线程处理 items 个，那这 block 一共做 bd × items 个。</p>
+  <p><strong>Slide 39（base）</strong>：<code>base = tx + bx * tile</code>。先看 <code>bx * tile</code>——这是这个 block 在 d 里的<em>起始偏移</em>（block 0 → 0；block 1 → tile；block 2 → 2·tile）。再加 <code>tx</code>——在这 block 自己的 tile 内偏移到本线程的位置。所以 thread 0 of block 0 → base = 0；thread 1 of block 0 → base = 1；thread 2 of block 0 → base = 2 ...</p>
+  <p><strong>Slide 40（循环 + body）</strong>：<code>for i in range(0, tile, bd): d[base + i] = s[base + i]</code>。i 从 0 跳 bd 步到 tile。所以 thread 0 of block 0 顺次访问 d[0], d[bd], d[2·bd], ...。Thread 1 of block 0 访问 d[1], d[1+bd], d[1+2·bd]...</p>
+  <p><strong>对比之前的 Blocked 代码</strong>：</p>
+  <table>
+    <tr><th>视角</th><th>Blocked（slide 21）</th><th>Striped（slide 33）</th></tr>
+    <tr><td>Thread 0 处理</td><td>d[0], d[1], d[2], d[3]（连续）</td><td>d[0], d[4], d[8], d[12]（跨步）</td></tr>
+    <tr><td>同时刻 warp 4 线程</td><td>d[0], d[4], d[8], d[12]（跨步）</td><td>d[0], d[1], d[2], d[3]（连续！）</td></tr>
+  </table>
+  <p>翻转了——单线程视角变跨步，但 warp 视角变连续。这正是 GPU 想要的访存模式。下一节用时序表证实这件事。</p>
+</div>
+
+<div class="takeaway">
+  💡 新代码核心是 <code>base = tx + bx*tile</code> + <strong>步长 bd 的循环</strong>。每个线程不再处理连续的一段，而是和 block 内其他线程"交错"取——本质是把"线程"和"items"两个维度调换了顺序。
+</div>
+
+
+<!-- ==================== SLIDE 41–44 ==================== -->
+<h2 class="slide-title">Slide 41–44 — Striped 访存表：完美 coalescing + 编译器进一步合并</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-041.png" alt="Slide 41: 时序表 — 同时刻 4 线程访问 d[0:3] 连续">
+  <img class="slide-img" src="images/slide-042.png" alt="Slide 42: 列折叠成 Thread[0:3] = d[0:3]">
+  <img class="slide-img" src="images/slide-043.png" alt="Slide 43: 重排 — 4 load 全提前再 4 store">
+  <img class="slide-img" src="images/slide-044.png" alt="Slide 44: 极限合并 — 一次 load d[0:15] + 一次 store">
+</div>
+
+<div class="explanation">
+  <h3>Slide 41：第一行是关键——同一时刻，4 个线程访问 d[0], d[1], d[2], d[3]</h3>
+  <p>红框框住表格第一行：<code>load: T0=d[0], T1=d[1], T2=d[2], T3=d[3]</code>——<strong>4 个连续地址</strong>！这就是 coalesced access。GPU 硬件可以把这 4 次 load（推广到 warp 是 32 次）合成 1 次 cache line 事务，带宽利用率拉满。</p>
+  <p>第二步是 store s[0..3]，第三步是 load d[4..7] —— 每一步内部都是 4 个连续地址。整个 kernel 的访存效率立刻变好。</p>
+
+  <h3>Slide 42：把 4 列合并成一列 "Thread[0:3]"</h3>
+  <p>因为 4 个线程同时刻做的事就是访问同一段连续区间，slide 42 干脆把 4 列折叠成 1 列，写 <code>Thread[0:3]</code>，每行就是 d[0:3] / s[0:3] / d[4:7] / s[4:7] ...。可读性更高，也直接说明<strong>"同时刻 warp 内的访问 = 一段连续区间"</strong>。</p>
+
+  <h3>Slide 43：load/store 重排——所有 load 提前</h3>
+  <p>跟 Blocked 那边一样，先把 4 次 load 都做完再做 4 次 store。GPU 的 LSU（Load-Store Unit）能让多个 load in-flight，覆盖延迟。</p>
+
+  <h3>Slide 44：极限合并——一次性 load d[0:15] + 一次 store</h3>
+  <p>因为 load 0:3, 4:7, 8:11, 12:15 都是连续的，编译器/硬件可以再合并：<strong>整个 block 的 4 次 load 合成 1 次 d[0:15] 大 load</strong>，4 次 store 合成 1 次大 store。这是 striped + 重排联合带来的极致优化——warp 跑一个 kernel 相当于只发 1 次大读 + 1 次大写。</p>
+  <p>对比 Blocked：单线程视角看着连续，但实际上 warp 同时刻发的 32 次访问跨度大，硬件分裂成多次事务，根本无法合并。<strong>Striped 才是 GPU 想要的写法</strong>——这一点是本章的核心 take-away。</p>
+</div>
+
+<div class="takeaway">
+  💡 Striped 索引让 warp 同时刻的访问落在<strong>同一段连续区间</strong>——硬件能合成 1 次内存事务，带宽利用率最大。配合 load/store 重排，整个 block 的访存最终被压成 1 次大 load + 1 次大 store。
+</div>
+
+
+<!-- ==================== SLIDE 45–46 ==================== -->
+<h2 class="slide-title">Slide 45–46 — 命名两种 layout：Blocked vs Striped Arrangement</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-045.png" alt="Slide 45: Blocked Arrangement — 每 thread 拥有连续 2 格">
+  <img class="slide-img" src="images/slide-046.png" alt="Slide 46: Blocked + Striped 对比图">
+</div>
+
+<div class="explanation">
+  <h3>给前面两套代码起正式名字</h3>
+  <p>Slide 45 单独画 Blocked Arrangement：8 格数组按 4 个 thread 分组，每 thread 拿到连续的 2 格（虚线框圈出）。Slide 46 把 Striped 也画上来：8 格数组按 thread 着色——thread 0 拿第 0 格 + 第 4 格（跨开），thread 1 拿第 1 格 + 第 5 格，依此类推。</p>
+  <table>
+    <tr><th>Layout</th><th>每线程持有的元素</th><th>同时刻 warp 访存</th><th>对应代码（前面 slides）</th></tr>
+    <tr><td><strong>Blocked</strong></td><td>连续一块（contiguous chunk）</td><td>跨步、coalescing 失败</td><td>slide 21：<code>t = cuda.grid(1)*items; for i: d[t+i]</code></td></tr>
+    <tr><td><strong>Striped</strong></td><td>跨开的格子（stride = bd）</td><td>连续、coalescing 完美</td><td>slide 33：<code>base = tx + bx*tile; for i in range(0,tile,bd): d[base+i]</code></td></tr>
+  </table>
+  <p>记住一个直觉判断："想知道哪种 layout 更好？看同一时刻 warp 32 个线程访问的地址连不连续。" 如果连续 → striped（好）；如果跨步 → blocked（差）。</p>
+  <p><em>但 Blocked 不是永远不好</em>。在某些算法里（比如每个线程要对自己那一段做归约/扫描，或者数据要进 shared memory 后再 reorder），blocked 可能更自然。CUB / cuda.coop 提供了 <code>BlockedToStriped</code> / <code>StripedToBlocked</code> 这种 reorder 原语，让你能在两种 layout 之间灵活切换。后面的 slides 会涉及。</p>
+</div>
+
+<div class="takeaway">
+  💡 两种 layout 的命名要记住：<strong>Blocked</strong> = 每线程连续一块（coalescing 差）；<strong>Striped</strong> = 线程跨开取（coalescing 好）。判断标准：同时刻 warp 访问的地址是否连续。
+</div>
+
+
+<!-- ==================== SLIDE 47–50 ==================== -->
+<h2 class="slide-title">Slide 47–50 — <code>cuda.coop</code>：CUB 的 Python 版 + 三个常用 import</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-047.png" alt="Slide 47: CUB 是 Cooperative primitives for CUDA C++ + 复杂代码示例">
+  <img class="slide-img" src="images/slide-048.png" alt="Slide 48: CUB → 箭头 → import cuda.coop（Python 等价）">
+  <img class="slide-img" src="images/slide-049.png" alt="Slide 49: cuda.coop 与 C++ CUB 性能持平的图">
+  <img class="slide-img" src="images/slide-050.png" alt="Slide 50: 三个常用 import — cupy / numba.cuda / cuda.coop">
+</div>
+
+<div class="explanation">
+  <h3>Slide 47：CUB 是什么</h3>
+  <p><strong>CUB（CUDA Unbound）= Cooperative primitives for CUDA C++</strong>。是 NVIDIA 提供的、专门给 kernel 内部用的 C++ 模板库——封装了 block 级 / warp 级的常用并行原语：BlockReduce、BlockScan、BlockRadixSort、BlockLoad/Store（带各种 layout 转换）等。</p>
+  <p>Slide 47 右半边是一段 C++ CUB 代码（不用读懂，只要看结构）：</p>
+<pre><code>using BlockLoadT  = cub::BlockLoad&lt;int, BLOCK_THREADS, ITEMS, cub::BLOCK_LOAD_TRANSPOSE&gt;;
+using BlockStoreT = cub::BlockStore&lt;int, BLOCK_THREADS, ITEMS, cub::BLOCK_STORE_TRANSPOSE&gt;;
+using BlockRadixSortT = cub::BlockRadixSort&lt;int, BLOCK_THREADS, ITEMS&gt;;
+__shared__ union { ... } temp_storage;
+
+BlockLoadT(temp_storage.load).Load(d_in + offset, thread_keys);
+__syncthreads();
+BlockRadixSortT(temp_storage.sort).Sort(thread_keys);
+__syncthreads();
+BlockStoreT(temp_storage.store).Store(d_out + offset, thread_keys);</code></pre>
+  <p>大意：用 BlockLoad 把数据加载到 register / shared memory（顺便从 Blocked 转 Striped），调 BlockRadixSort 对每个 block 内部排序，BlockStore 写回。<strong>用户不必自己写 reduction tree、scan、bitonic sort 这种复杂模式</strong>，调几个原语就够。</p>
+
+  <h3>Slide 48：Python 等价 = <code>import cuda.coop</code></h3>
+  <p>右边的复杂 C++ 代码加上一个向下的箭头，下面是 Python logo + <code>import cuda.coop</code>。意思是：CUB 提供的所有 cooperative 原语，都有对应的 Python 绑定，包名叫 <strong>cuda.coop</strong>。后面的 slides 会展示具体的 cuda.coop API（block_reduce / block_scan / block_radix_sort 等）。</p>
+  <p>"coop" 是 cooperative 的缩写——强调这些原语是<em>多线程协作</em>完成的，不是单线程的串行 API。比如 <code>block_reduce</code> 不是在一个线程里做求和，而是 block 内 N 个线程一起协作做 tree reduction。</p>
+
+  <h3>Slide 49：性能也跟 C++ CUB 持平</h3>
+  <p>跟 slide 7 同款图重现：CUDA Segmented Sort kernel，用 C++ CUB 和 Python cuda.coop 两种实现，跨 5 个数据规模（2¹⁴ 到 2¹⁸）柱子高度几乎完全一样。<strong>Python cooperative 原语没有性能损失</strong>——这次特别证明 cuda.coop 路径也是 LLVM/NVVM 编译，最终生成的 SASS 跟 C++ 同质。</p>
+
+  <h3>Slide 50：本节的"工具箱总结"</h3>
+<pre><code>import cupy as cp
+import numba.cuda as cuda
+import cuda.coop as coop</code></pre>
+  <p>三行 import 是本讲后续所有代码的基础栈。用途分工：</p>
+  <ul>
+    <li><strong>cupy（cp）</strong>：device 上的 numpy。用来分配/操作数组（<code>cp.arange</code>、<code>cp.empty_like</code>、<code>cp.sort</code>、...），属于 Grid-Level（系统替你切块）。</li>
+    <li><strong>numba.cuda（cuda）</strong>：写 kernel 用的 JIT 编译器。<code>@cuda.jit</code>、<code>cuda.grid</code>、<code>cuda.shared.array</code> 都从这来。</li>
+    <li><strong>cuda.coop（coop）</strong>：kernel 内部的 cooperative 原语（block_reduce / block_scan / 各种 BlockLoad layout）。让你不必自己写复杂的协作模式。</li>
+  </ul>
+  <p>三者一起就构成了 CUDA Python 的"工具箱"——本讲后面的所有代码基本都是这三个的组合。</p>
+</div>
+
+<div class="takeaway">
+  💡 <code>cuda.coop</code> = CUB 的 Python 绑定，提供 kernel 内部的协作原语（block_reduce / block_scan / BlockLoad 带 layout 转换 / BlockRadixSort 等）。性能与 C++ CUB 持平。本讲三件套：<code>cupy</code>（数组）+ <code>numba.cuda</code>（写 kernel）+ <code>cuda.coop</code>（块内协作原语）。
+</div>
+
+
+<h2 class="slide-title">Slide 51–65 — 用 <code>cuda.coop</code> 重写 copy kernel（Striped + BlockLoad / BlockStore）</h2>
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-051.png" alt="Slide 51: 高亮 N">
+  <img class="slide-img" src="images/slide-053.png" alt="Slide 53: 高亮 T (items per thread)">
+  <img class="slide-img" src="images/slide-054.png" alt="Slide 54: 引入 coop.block.load / coop.block.store(striped)">
+  <img class="slide-img" src="images/slide-058.png" alt="Slide 58: 高亮 'striped' 字面量">
+  <img class="slide-img" src="images/slide-061.png" alt="Slide 61: base = blockIdx.x * B * T">
+  <img class="slide-img" src="images/slide-064.png" alt="Slide 64: 完整代码（kernel + host launch）">
+</div>
+
+<div class="explanation">
+  <p>这一大段是把前面手写的 Striped copy kernel 用 <code>cuda.coop</code> 提供的<strong>协作原语</strong>重写一遍，每张 slide 只是逐行把代码点亮。最终代码（slide 64）长这样：</p>
+<pre><code>N = 2**28   # 输入/输出元素总数
+B = 256     # 每个 block 内的 thread 数（threads per block）
+T = 64      # 每个 thread 在寄存器里持有多少个 items
+
+block_load  = coop.block.load(cp.int32, B, T, 'striped')
+block_store = coop.block.store(cp.int32, B, T, 'striped')
+
+@cuda.jit(link=block_load.files + block_store.files)
+def copy(src, dst):
+    locals = cuda.local.array(T, dtype=cp.int32)   # 每 thread 私有的 T 元素寄存器数组
+    base   = cuda.blockIdx.x * B * T               # 本 block 负责的全局起点
+
+    block_load (src[base : base + B * T], locals)  # 整块读入（striped layout 自动 coalesce）
+    block_store(dst[base : base + B * T], locals)  # 整块写出
+
+src = np.arange(N, dtype='int32')
+dst = np.empty_like(src)
+copy[int(N / (B * T)), B](src, dst)
+assert np.all(src == dst)</code></pre>
+
+  <p>逐项解释：</p>
+  <ul>
+    <li><code>coop.block.load(dtype, B, T, 'striped')</code>：返回一个<strong>预先生成</strong>的协作 load 函数对象。它知道 dtype、block 大小 B、每线程要 T 个、且使用 striped layout——所以它内部会把"全局连续区间 → 每线程 T 个寄存器"的搬运用最优的合并访存模式做掉。<code>block.store</code> 同理。</li>
+    <li><code>'striped'</code>：layout 关键字。代表读进来后寄存器里是 striped 排布——thread t 的 <code>locals[i]</code> 对应全局的 <code>base + i*B + t</code>。如果传 <code>'blocked'</code> 也合法，但访存就不 coalesce（前面 slide 28-32 已证）。</li>
+    <li><code>@cuda.jit(link=block_load.files + block_store.files)</code>：因为 coop 原语来自外部（C++/CUB 编译产物），需要把它们的 .o/.cubin 文件链接到本 kernel 上。<code>.files</code> 暴露这些链接产物，<code>link=...</code> 把列表交给 JIT。</li>
+    <li><code>locals = cuda.local.array(T, dtype=cp.int32)</code>：声明一个<strong>每线程私有</strong>的小数组，长度为编译期常数 T。NVCC 通常会把它放进寄存器（register file），不真的进 local memory。</li>
+    <li><code>base = cuda.blockIdx.x * B * T</code>：本 block 的起点。每 block 处理 B*T 个元素，所以第 b 个 block 从 b*B*T 开始。</li>
+    <li><code>src[base : base + B*T]</code>：Python 切片对象，告诉 <code>block_load</code> 要从哪段全局内存读 B*T 个元素。</li>
+    <li><code>copy[int(N/(B*T)), B](src, dst)</code>：launch grid。第一个维度是 block 数（N 总共要 N/(B*T) 个 block），第二个维度是 block 大小 B。注意 grid 的 thread 总数 = block 数 × B，每 thread 在循环里处理 T 个，所以总元素 = blocks × B × T = N。</li>
+  </ul>
+
+  <p>对比手写版本的关键收益：以前你要写 <code>for i in range(T): dst[base+tx+i*bd] = src[base+tx+i*bd]</code>，现在两行 <code>block_load</code> + <code>block_store</code> 搞定，并且 layout 切换只改字面量 <code>'striped'</code>↔<code>'blocked'</code>，一行就能切换访存模式。Slide 64 右下方的 host 代码用的是 <code>np.arange</code> / <code>np.empty_like</code>——细节上演讲者用 numpy 数组演示，cupy 数组同理（cp.arange 也行）。</p>
+</div>
+
+<div class="takeaway">
+  💡 <code>coop.block.load/store(dtype, B, T, layout)</code> 替你处理了"全局↔寄存器"的搬运 + layout 转换。两行就完成了一个完整的 coalesced copy。layout 用 <code>'striped'</code> 或 <code>'blocked'</code> 字面量切换。<code>@cuda.jit(link=...)</code> 把外部协作原语链接进来；<code>cuda.local.array</code> 声明每线程私有寄存器数组。
+</div>
+
+
+<h2 class="slide-title">Slide 66–78 — 引入 Histogram：用诗句逐字符建直方图</h2>
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-066.png" alt="Slide 66: 诗句 'Whose woods these are I think I know.'">
+  <img class="slide-img" src="images/slide-067.png" alt="Slide 67: 第一个 W → bin w:1">
+  <img class="slide-img" src="images/slide-068.png" alt="Slide 68: h → bin h:1，原 w:1 变灰">
+  <img class="slide-img" src="images/slide-070.png" alt="Slide 70: o → bin o:3（多次出现累加）">
+  <img class="slide-img" src="images/slide-075.png" alt="Slide 75: 第二个 o → o:3, s:1, w:2 等">
+  <img class="slide-img" src="images/slide-077.png" alt="Slide 77: woods 全部累加完">
+</div>
+
+<div class="explanation">
+  <p>讲者用 Robert Frost 的诗句 <em>"Whose woods these are I think I know."</em> 演示 <strong>character histogram</strong>（字符频次直方图）的概念。每张 slide 高亮当前在数的字符，下方一排"键-值对"表示：上格是字符（key），下格是当前的计数（value）。绿色高亮的格子表示这一步刚被更新。</p>
+
+  <p>核心动作只有一个：</p>
+  <ol>
+    <li>读取下一个字符 <code>c</code>。</li>
+    <li>如果 <code>c</code> 已在直方图中 → 把它的计数 +1；否则 → 新建一个 bin，初始计数 1。</li>
+  </ol>
+
+  <p>这就是经典 <em>read-modify-write</em>（读-改-写）模式：先读 <code>old = bins[c]</code>，再算 <code>new = old + 1</code>，最后写 <code>bins[c] = new</code>。在串行 CPU 上没有任何问题——但在 GPU 上多个线程同时对同一个 bin 做这三步会出大问题，这就是 87-90 race condition 要讲的。</p>
+
+  <p>动画里被"圈起来"的下划线字符就是当前正在被处理的字符；右侧不断长大的"键值对柱"就是逐步建好的直方图。到 slide 77 时整个 "Whose woods" 都已被累加完毕，已经能看出 o 出现 3 次、w 出现 2 次、其他基本各 1 次。</p>
+</div>
+
+<div class="takeaway">
+  💡 Histogram 的核心是 <strong>read-modify-write</strong>：<code>bins[value] = bins[value] + 1</code>。串行 CPU 没事，并行 GPU 上是经典 race-condition 制造机。
+</div>
+
+
+<h2 class="slide-title">Slide 79–83 — Histogram kernel 代码（朴素版本）</h2>
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-079.png" alt="Slide 79: 高亮函数签名 (values, bins, items)">
+  <img class="slide-img" src="images/slide-080.png" alt="Slide 80: 高亮 value = values[grid*items+i]">
+  <img class="slide-img" src="images/slide-081.png" alt="Slide 81: 高亮 old_count = bins[value]">
+  <img class="slide-img" src="images/slide-082.png" alt="Slide 82: 高亮 new_count = old_count + 1">
+  <img class="slide-img" src="images/slide-083.png" alt="Slide 83: 高亮 bins[value] = new_count">
+</div>
+
+<div class="explanation">
+  <p>朴素的 GPU histogram 实现（每张 slide 只是逐行点亮）：</p>
+<pre><code>@cuda.jit
+def histogram(values, bins, items):
+    for i in range(items):                              # 每 thread 处理 items 个元素
+        value = values[cuda.grid(1) * items + i]        # 全局索引取值
+        old_count = bins[value]                         # ① 读
+        new_count = old_count + 1                       # ② 改
+        bins[value] = new_count                         # ③ 写</code></pre>
+
+  <p>逐行解释：</p>
+  <ul>
+    <li><strong>函数签名</strong>：<code>values</code> 是输入数组（比如所有字符），<code>bins</code> 是输出直方图（256 个 bin，对应所有字节值），<code>items</code> 是每线程要处理多少个元素。</li>
+    <li><strong>取值</strong>：<code>cuda.grid(1) * items + i</code>——这里用的是 <strong>blocked layout</strong>（每线程拿 items 个连续元素）。<code>cuda.grid(1)</code> 是全局 thread id。</li>
+    <li><strong>三步 read-modify-write</strong>：从直方图里读出当前计数 → 加 1 → 写回。这三步代码看起来无害，但在 GPU 上是<strong>未受保护</strong>的。</li>
+  </ul>
+
+  <p>这个 kernel 在串行情况下是正确的——但讲者接下来要证明：在多 thread 并发时，它会丢失大量更新。</p>
+</div>
+
+<div class="takeaway">
+  💡 朴素 histogram kernel = 三行 read-modify-write。代码看起来对，但 GPU 上 thousands of threads 同时执行这三行就会丢更新——下两段会用真实数据 + 时序图证明。
+</div>
+
+
+<h2 class="slide-title">Slide 84–86 — 真实数据上跑两次：Top-20 bins 居然不一样</h2>
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-084.png" alt="Slide 84: 第一次跑的 Top 20，最高 ~225，n 居首">
+  <img class="slide-img" src="images/slide-085.png" alt="Slide 85: 第二次跑的 Top 20，最高 ~230，h 居首；不仅顺序变，连入选 bin 也变">
+</div>
+
+<div class="explanation">
+  <p>把上面 kernel 跑在 <strong>15 MB 的 Project Gutenberg 文本</strong>（书库）上，统计字符频次的 Top-20 bins。两张图是<strong>同一个 kernel 跑两次</strong>的结果——本来应该一模一样，但：</p>
+
+  <ul>
+    <li>Slide 84：top bin 是 <code>n</code>，count ≈ 225；第二名 <code>s</code>。</li>
+    <li>Slide 85：top bin 是 <code>h</code>，count ≈ 230；第二名 <code>d</code>。</li>
+    <li>不仅<strong>顺序</strong>不一样，连<strong>入选的 20 个 bin 集合</strong>都不一样（slide 84 有 <code>0x0A</code>=换行，slide 85 有 <code>0x0D</code>=回车，且 84 的最大 count 比 85 小）。</li>
+  </ul>
+
+  <p>更可疑的是：15 MB 文本里光"e"就该有几十万次，但这里所有 bin 的 count 全是 200 左右。这意味着大量更新被"吞"了——大约只有 1‰ 的增量真正落到了直方图上。Slide 86 把代码再展示一遍以便对照，问题就出在这三行 read-modify-write。</p>
+
+  <p>结论：这个 kernel 既<strong>不正确</strong>（结果丢失）又<strong>不确定</strong>（每次跑结果不同）。</p>
+</div>
+
+<div class="takeaway">
+  💡 同一份代码 + 同一份数据，跑两次得到不一样的 Top-20，且 count 数量级远低于真实值——这是经典 <strong>data race</strong> 症状：大量更新互相覆盖。
+</div>
+
+
+<h2 class="slide-title">Slide 87–90 — 时序图：为什么 read-modify-write 会丢更新</h2>
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-087.png" alt="Slide 87: thread 1 和 thread 2 都准备读 bins[0]; 当前 histogram = 0">
+  <img class="slide-img" src="images/slide-088.png" alt="Slide 88: thread 1 读到 0">
+  <img class="slide-img" src="images/slide-089.png" alt="Slide 89: thread 1 把 0 取到自己寄存器，histogram 仍是 0">
+  <img class="slide-img" src="images/slide-090.png" alt="Slide 90: thread 2 也从 histogram 读到 0（不是 1!）—— race 发生">
+</div>
+
+<div class="explanation">
+  <p>讲者画了一个时间线（横轴 = 时间向右流逝），两个 thread 都要执行 <code>old = bins[0]; new = old + 1; bins[0] = new</code>，目标都是让 <code>bins[0]</code> 从 0 变 1（如果只有一个增量；从 0 变 2 如果两个都生效）。</p>
+
+  <p>四张 slide 逐步展开发生了什么：</p>
+  <ol>
+    <li><strong>Slide 87</strong>：两个 thread 都在<strong>同一时刻</strong>准备执行 <code>old = bins[0]</code>。直方图里 <code>bins[0]</code> 当前是 0。</li>
+    <li><strong>Slide 88</strong>：thread 1 完成读，把 0 拷到自己的寄存器（图里那个箭头）。</li>
+    <li><strong>Slide 89</strong>：thread 1 的本地 <code>old</code> = 0，但<strong>它还没来得及写回</strong>。直方图里 <code>bins[0]</code> 仍然是 0。</li>
+    <li><strong>Slide 90</strong>：thread 2 现在去读 <code>bins[0]</code>——它读到的还是 0（因为 thread 1 没写回）。两个 thread 都拿着 old=0，都会算 new=1，都会写 1 回去。最终 <code>bins[0]</code> = 1，不是 2——<strong>一个增量被丢了</strong>。</li>
+  </ol>
+
+  <p>为什么 GPU 上特别严重：一个 SM 里同时跑几十个 warp、每 warp 32 个 thread，几千个 thread 同时执行同一行代码。当大量 thread 都对同一个 bin 做 +1 时，绝大多数读到的都是同一个旧值，绝大多数写回也都覆盖彼此——只有<strong>最后一个写</strong>会保留。这就是为什么 slide 84-85 的 count 全是 200 左右：每个 SM 上同时有 ~200 个 thread 互相竞争，只剩 1 个增量生效。</p>
+
+  <p>修复办法：把 read-modify-write 三步合成一个<strong>原子操作</strong>（atomic add），让硬件保证从读到写之间不会被其他 thread 插入。这是后面 slide 91+ 的内容。</p>
+</div>
+
+<div class="takeaway">
+  💡 Race condition 的本质：thread A 读完旧值还没写回，thread B 也读到同一个旧值，两人各自 +1 写回——只剩 1 个增量。GPU 上几千 thread 同时跑同一行，问题被指数放大。修复 = atomic（原子）操作。
+</div>
+
+
+<h2 class="slide-title">Slide 91–97 — 完整时序：T1 写回 1 的同时 T2 写回 1，最终丢一次</h2>
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-091.png" alt="Slide 91: T1 算 new=1，T2 准备读">
+  <img class="slide-img" src="images/slide-093.png" alt="Slide 93: T2 也读到 0">
+  <img class="slide-img" src="images/slide-095.png" alt="Slide 95: T1 写 bins[0]=1，T2 也算 new=1">
+  <img class="slide-img" src="images/slide-097.png" alt="Slide 97: T2 写 bins[0]=1，覆盖 T1 的 1（应得 2）">
+</div>
+
+<div class="explanation">
+  <p>把上一节的时序继续往后推几步，把 race 的最终结局画完整：</p>
+  <ol>
+    <li><strong>Slide 91</strong>：T1 已把 0 加载到自己寄存器，正在算 <code>new = old + 1 = 1</code>。T2 此时才准备开始读 <code>bins[0]</code>。</li>
+    <li><strong>Slide 93</strong>：T2 读到的 <code>bins[0]</code> 仍是 0（T1 还没写回）。两个 thread 现在都拿着 old=0。</li>
+    <li><strong>Slide 95</strong>：T1 把 1 写回 <code>bins[0]</code>（直方图框里数字从 0 变成 1，"=1" 的标签就是 T1 这一步的结果）。T2 同步在算 <code>new = 0 + 1 = 1</code>。</li>
+    <li><strong>Slide 97</strong>：T2 也写 <code>bins[0] = 1</code>——直接覆盖了 T1 刚写进去的 1。最终 <code>bins[0] = 1</code>，但本来两个 increment 应该让它变成 2。<strong>一次 +1 永远丢失</strong>。</li>
+  </ol>
+
+  <p>换句话说：<strong>读和写之间有空隙</strong>，别的 thread 就能挤进来。这个空隙在串行 CPU 上不存在（只有一个执行单元），但 GPU 上一个 SM 内同一时刻有几十上百个 thread 同时执行同一行，空隙是常态。</p>
+</div>
+
+<div class="takeaway">
+  💡 Race 的最终影像：两个 thread 各自读到 0 → 各自算 1 → 都写 1 → 最终值 = 1（应该是 2）。读和写之间的空隙是问题根源。
+</div>
+
+
+<h2 class="slide-title">Slide 98–101 — 修复：<code>cuda.atomic.add</code>（原子操作）</h2>
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-098.png" alt="Slide 98: 三行代码 vs atomic_ref.fetch_add(1) 对比 + cuda.atomic.add 语法">
+  <img class="slide-img" src="images/slide-100.png" alt="Slide 100: 修好的 histogram = cuda.atomic.add(bins, value, 1)">
+  <img class="slide-img" src="images/slide-101.png" alt="Slide 101: 几千 thread 全部 atomic 写到 4 个 bin，硬件序列化但不丢更新">
+</div>
+
+<div class="explanation">
+  <p><strong>Slide 98 的核心命题</strong>："To fix the data race, the read, modify and write must be a single indivisible operation."（要修复 race，读-改-写必须合成一个不可分割的操作。）右边给出 Python 写法：</p>
+<pre><code>cuda.atomic.add(bins, value, 1)
+# 等价于一次性、无打断地完成：bins[value] += 1</code></pre>
+
+  <p>左边的时序图被压缩进一个绿色圆角格子 <code>atomic_ref.fetch_add(1)</code>——它把读 + 加 + 写合成一个硬件指令；GPU 硬件保证：<strong>当 thread A 在做这个原子加时，没有任何其他 thread 能读或写同一个地址</strong>。其他 thread 必须排队（串行化），但每个 +1 都会被正确累加。</p>
+
+  <p><strong>Slide 99-100</strong>：把 histogram kernel 的三行 read-modify-write 一行替换：</p>
+<pre><code>@cuda.jit
+def histogram(values, bins, items):
+    for i in range(items):
+        value = values[cuda.grid(1) * items + i]
+        cuda.atomic.add(bins, value, 1)   # 单条原子指令</code></pre>
+
+  <p>跑一次就给出正确的 count（每次 reproducible）。</p>
+
+  <p><strong>Slide 101</strong> 是个抽象画面：很多绿色波浪（thread）从上方汇聚到下方 4 个灰色方块（bin）。视觉传达的是——atomic 不会让 race 消失，只是把 race "移到硬件里序列化"。如果几千 thread 都在 atomic_add 同一个 bin（比如统计英文文本里"e"的频次），硬件得排队，吞吐会下降。后续课程会讲优化（先在 shared memory 里建 per-block 直方图，再 atomic 合并到全局），但<strong>正确性</strong>这一步必须先到位。</p>
+</div>
+
+<div class="takeaway">
+  💡 <code>cuda.atomic.add(arr, idx, val)</code> = 硬件保证的原子加。读-改-写在硬件层面合成一条指令，其他 thread 排队等待。性能代价：高 contention 下吞吐下降；正确性收益：100% 不丢更新、确定性。
+</div>
+
+
+<h2 class="slide-title">Slide 102–105 — GPU 的内存层级：Local / Shared / Global</h2>
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-102.png" alt="Slide 102: 两个 block，每 block 两个 thread">
+  <img class="slide-img" src="images/slide-103.png" alt="Slide 103: 加上 Local（每 thread 一份）">
+  <img class="slide-img" src="images/slide-104.png" alt="Slide 104: 加上 Shared（每 block 一份）">
+  <img class="slide-img" src="images/slide-105.png" alt="Slide 105: 加上 Global（所有 block 共享）">
+</div>
+
+<div class="explanation">
+  <p>讲者用渐进式构图画出 CUDA 的<strong>三层内存可见域</strong>。蓝色块代表存储，箭头代表访问通路：</p>
+
+  <table>
+    <thead>
+      <tr><th>层级</th><th>谁能访问</th><th>容量级</th><th>典型用途</th><th>API</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Local</strong></td>
+        <td>仅本 thread</td>
+        <td>几十 ~ 几百字节（大多放在寄存器里）</td>
+        <td>局部变量、循环计数器、寄存器数组</td>
+        <td><code>cuda.local.array(N, dtype)</code></td>
+      </tr>
+      <tr>
+        <td><strong>Shared</strong></td>
+        <td>同一 block 内所有 thread</td>
+        <td>每 block 通常 48–96 KB（硬件相关）</td>
+        <td>block 内的协作（缓存、归约、tile）</td>
+        <td><code>cuda.shared.array(N, dtype)</code></td>
+      </tr>
+      <tr>
+        <td><strong>Global</strong></td>
+        <td>所有 block / 所有 thread / host 也能 memcpy</td>
+        <td>显存级（GB）</td>
+        <td>kernel 输入/输出数组、长寿命数据</td>
+        <td>kernel 参数（自动）、<code>cp.empty</code> 等</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>关键性质：</p>
+  <ul>
+    <li><strong>Local</strong> 是每 thread 私有——thread 0 看不到 thread 1 的 local 数组。最快（基本是寄存器）。</li>
+    <li><strong>Shared</strong> 是每 block 一份——同 block 的 thread 0 和 thread 1 共享，但 block 0 看不到 block 1 的 shared。比 global 快约 100×（on-chip SRAM）。</li>
+    <li><strong>Global</strong> 是显存——所有 thread / 所有 block 都能读写。最慢，但容量最大。kernel 的 <code>src</code>、<code>dst</code> 参数一律是 global memory 的指针。</li>
+  </ul>
+
+  <p>设计 kernel 时常用模式："global → shared → local 计算 → shared → global"——把数据从慢内存搬到快内存做密集运算，结果再写回。下一节的 adjacent_difference 就是这个模式的最小示例。</p>
+</div>
+
+<div class="takeaway">
+  💡 三层可见域：Local（thread 私有）⊂ Shared（block 内共享）⊂ Global（全员可见）。容量逐层放大，速度逐层变慢。Block 之间无法通过 shared 通信——必须经过 global。
+</div>
+
+
+<h2 class="slide-title">Slide 106–111 — Shared memory 实战：<code>adjacent_difference</code> + <code>syncthreads</code></h2>
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-106.png" alt="Slide 106: 完整 adjacent_difference kernel">
+  <img class="slide-img" src="images/slide-108.png" alt="Slide 108: 高亮 cuda.shared.array(32, ...)">
+  <img class="slide-img" src="images/slide-110.png" alt="Slide 110: 高亮 block_store(... shared[tx] - shared[tx-1])">
+  <img class="slide-img" src="images/slide-111.png" alt="Slide 111: 补上 cuda.syncthreads() 在 load 和 store 之间">
+</div>
+
+<div class="explanation">
+  <p>这一段用一个 <strong>"邻差"</strong>（每个元素减去前一个元素）的小 kernel 来演示 shared memory 的真实用法。最终代码（slide 111）：</p>
+<pre><code>block_load  = coop.block.load (cp.int32, 32, 1, 'striped')
+block_store = coop.block.store(cp.int32, 32, 1, 'striped')
+
+@cuda.jit(link=block_load.files + block_store.files)
+def adjacent_difference(input, output):
+    shared = cuda.shared.array(32, dtype=cp.int32)   # 每 block 一份，长度 32
+
+    block_load(input, shared)                        # 把本 block 的 32 个输入读进 shared
+
+    cuda.syncthreads()                               # 等所有 thread 都写完 shared
+
+    if not threadIdx.x == 0:                         # thread 0 没有"前一个"，跳过
+        block_store(input,
+                    shared[threadIdx.x] - shared[threadIdx.x - 1])</code></pre>
+
+  <p>逐项解释（与 slide 高亮顺序一致）：</p>
+  <ul>
+    <li><strong>Slide 107</strong> 高亮顶部两行——<code>block_load/store</code> 还是用 <code>coop.block</code>，但参数从 (B=256, T=64) 变成 (B=32, T=1)：每个 block 32 个 thread，每 thread 只处理 1 个元素。这样 block 内 32 个 thread 正好对应 shared 数组的 32 格。</li>
+    <li><strong>Slide 108</strong> 高亮 <code>shared = cuda.shared.array(32, dtype=cp.int32)</code>：声明一个长度 32、每 block 一份的 shared 数组。这是 block 内通信的载体。</li>
+    <li><strong>Slide 109</strong>（图例同 106 顺序）<code>block_load(input, shared)</code>：32 个 thread 协作把 32 个 input 元素读进 shared。每个 thread 写自己那一格。</li>
+    <li><strong>Slide 110</strong> 高亮最后两行：thread t（除 t=0）计算 <code>shared[t] - shared[t-1]</code>——它<strong>读了别人写进 shared 的值</strong>。这就是 shared memory 的目的：让一个 thread 看到同 block 别的 thread 的数据。<code>block_store</code> 把结果写回 global（注意演讲者代码笔误，应该是 <code>output[...]</code>，不影响理解）。</li>
+    <li><strong>Slide 111</strong> 补上关键的 <code>cuda.syncthreads()</code>：横亘在 load 和 store 之间。<strong>没有它代码就错了</strong>——thread 5 可能在 thread 4 还没把 <code>shared[4]</code> 写进去时就读 <code>shared[4]</code>。<code>syncthreads()</code> 是 block 级 barrier：所有 thread 在这里等齐，然后才一起继续往下。</li>
+  </ul>
+
+  <p>为什么需要这个 barrier？因为 SIMT 里"同 warp 32 thread 同步"是硬件保证的，但<strong>不同 warp 之间</strong>就没保证——thread 0（warp 0）和 thread 31（warp 0）确实同步，但 thread 32（warp 1）就不一定和它们同步。<code>syncthreads()</code> 让整个 block（不论几个 warp）都等齐。</p>
+
+  <p>这段代码是 shared memory 的标准模板：<strong>load → sync → 协作访问 → (sync if 还要写回 shared) → store</strong>。</p>
+</div>
+
+<div class="takeaway">
+  💡 <code>cuda.shared.array(N, dtype)</code> 声明 block 内共享数组。任何 "thread A 写、thread B 读" 同一个 shared 位置的代码，必须在写和读之间加 <code>cuda.syncthreads()</code>，否则 race。adjacent_difference = load → sync → 用邻居数据计算 → store。
+</div>
+
+
+<h2 class="slide-title">Slide 112–115 — 收尾：参考资源 / DLI 课程 / 播客 / 二维码索引</h2>
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-112.png" alt="Slide 112: GTC CUDA 资源链接清单">
+  <img class="slide-img" src="images/slide-113.png" alt="Slide 113: NVIDIA DLI Courses + 二维码">
+  <img class="slide-img" src="images/slide-114.png" alt="Slide 114: ADSP Podcast (Algorithms + Data Structures = Programs)">
+  <img class="slide-img" src="images/slide-115.png" alt="Slide 115: 总封面 + 四个二维码 (Dev Track / Hub / DLI / Podcast)">
+</div>
+
+<div class="explanation">
+  <p>四张总结/资源页，不引入新概念。仅作为查找入口：</p>
+
+  <ul>
+    <li><strong>Slide 112 — GTC CUDA Developer Track</strong>：列出本系列相关 GTC session 的链接。分组为 General CUDA / CUDA Python / CUDA C++ / Multi-GPU Programming / Performance Optimization。如果想深挖某个主题（比如 "How You Should Write a CUDA C++ Kernel"、"1001 Ways to Write CUDA Kernels in Python"、"Tensor Core Programming in Python with CUTLASS 4.0"），从这里进。</li>
+    <li><strong>Slide 113 — NVIDIA DLI Courses</strong>：DLI（Deep Learning Institute）的相关课程清单，包括 Fundamentals of Accelerated Computing with CUDA Python / C++、Accelerate Data Science Workflows、Optimizing CUDA ML Codes With Nsight Profiling Tools。扫码可免费 redeem 一门。</li>
+    <li><strong>Slide 114 — ADSP Podcast</strong>：讲者主持的播客 <em>Algorithms + Data Structures = Programs</em>（adspthepodcast.com）。和本课无直接关系，作者推荐而已。</li>
+    <li><strong>Slide 115 — 总封面 / 二维码合集</strong>：把上面三个资源 + Accelerated Computing Hub 的二维码并排放在一起，作为整套讲座的"出口"。</li>
+  </ul>
+</div>
+
+<div class="takeaway">
+  💡 最后四张是资源页，不是新内容。考点零。要查更深的 CUDA Python session 看 slide 112；想刷免费课程看 113。
+</div>
+
+
+<h2 class="slide-title">总览：本讲的 5 条主线脉络</h2>
+<div class="explanation">
+  <p>把整讲 115 张 slide 抽象成一棵知识树，方便复习时快速定位：</p>
+
+  <ol>
+    <li><strong>Slide 1–10：开篇 + CUDA Python 三种 API 取舍</strong><br>
+    Grid-Level（cupy）vs Thread-Level（@cuda.jit）。何时用哪个。</li>
+
+    <li><strong>Slide 11–46：写第一个 kernel（copy）—— 揭示 coalescing</strong><br>
+    入门 launch 语法 → 每 thread 多 items → Blocked vs Striped 访存模式 → 用时序表证明 Blocked 不 coalesce、Striped 才能合成单次 wide load/store。</li>
+
+    <li><strong>Slide 47–65：用 <code>cuda.coop</code> 重写 copy</strong><br>
+    CUB 的 Python 版。<code>coop.block.load/store(dtype, B, T, layout)</code> 两行替代手写循环。</li>
+
+    <li><strong>Slide 66–101：Histogram + Race Condition + Atomic</strong><br>
+    朴素 read-modify-write → 真实 15MB 文本上跑两次结果不一样 → 时序图解释为何丢更新 → <code>cuda.atomic.add</code> 一行修复。</li>
+
+    <li><strong>Slide 102–111：内存层级 + Shared memory 实战</strong><br>
+    Local / Shared / Global 三层可见域 → adjacent_difference 用 shared 共享 + <code>cuda.syncthreads()</code> 同步。</li>
+  </ol>
+
+  <p>剩下 112–115 是资源/收尾页，无新知识。</p>
+</div>
+
+
+<script>
+(function() {
+  const STORAGE_KEY = 'cs2050-lec10-highlights';
+  const state = {
+    highlightMode: false,
+    eraserMode: false,
+    currentColor: 'yellow',
+    highlights: []
+  };
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      state.highlights = raw ? JSON.parse(raw) : [];
+    } catch (e) { state.highlights = []; }
+  }
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.highlights));
+  }
+  function genId() {
+    return 'hl_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  }
+
+  // ---------- Toolbar ----------
+  function buildToolbar() {
+    const tb = document.createElement('div');
+    tb.id = 'hl-toolbar';
+    tb.innerHTML =
+      '<button id="hl-mode-btn" class="hl-btn">高亮模式: 关</button>' +
+      '<span class="hl-color-picker">' +
+        '<span class="hl-color" data-color="yellow" title="黄"></span>' +
+        '<span class="hl-color" data-color="green"  title="绿"></span>' +
+        '<span class="hl-color" data-color="pink"   title="粉"></span>' +
+        '<span class="hl-color" data-color="blue"   title="蓝"></span>' +
+      '</span>' +
+      '<button id="hl-eraser-btn" class="hl-btn">🧽 橡皮擦: 关</button>' +
+      '<button id="hl-toggle-btn" class="hl-btn">隐藏标记</button>' +
+      '<button id="hl-clear-btn" class="hl-btn">清除全部</button>';
+    document.body.appendChild(tb);
+
+    const modeBtn = document.getElementById('hl-mode-btn');
+    const eraserBtn = document.getElementById('hl-eraser-btn');
+
+    function refreshModeUI() {
+      modeBtn.textContent = '高亮模式: ' + (state.highlightMode ? '开' : '关');
+      modeBtn.classList.toggle('active', state.highlightMode);
+      eraserBtn.textContent = '🧽 橡皮擦: ' + (state.eraserMode ? '开' : '关');
+      eraserBtn.classList.toggle('active', state.eraserMode);
+      document.body.classList.toggle('hl-active', state.highlightMode);
+      document.body.classList.toggle('hl-eraser', state.eraserMode);
+    }
+
+    modeBtn.addEventListener('click', () => {
+      state.highlightMode = !state.highlightMode;
+      if (state.highlightMode) state.eraserMode = false;
+      refreshModeUI();
+    });
+    eraserBtn.addEventListener('click', () => {
+      state.eraserMode = !state.eraserMode;
+      if (state.eraserMode) state.highlightMode = false;
+      refreshModeUI();
+    });
+
+    tb.querySelectorAll('.hl-color').forEach(el => {
+      el.addEventListener('click', () => {
+        state.currentColor = el.dataset.color;
+        tb.querySelectorAll('.hl-color').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+      });
+    });
+    tb.querySelector('.hl-color[data-color="yellow"]').classList.add('selected');
+
+    const toggleBtn = document.getElementById('hl-toggle-btn');
+    toggleBtn.addEventListener('click', () => {
+      const hidden = document.body.classList.toggle('hl-hidden');
+      toggleBtn.textContent = hidden ? '显示标记' : '隐藏标记';
+    });
+
+    document.getElementById('hl-clear-btn').addEventListener('click', () => {
+      if (!confirm('清除全部高亮?')) return;
+      state.highlights = [];
+      save();
+      clearAllVisuals();
+    });
+  }
+
+  // ---------- Image highlights ----------
+  function setupImages() {
+    document.querySelectorAll('.slide-img').forEach(img => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'hl-img-wrapper';
+      img.parentNode.insertBefore(wrapper, img);
+      wrapper.appendChild(img);
+      attachImageDrag(img, wrapper);
+    });
+  }
+
+  function attachImageDrag(img, wrapper) {
+    let dragging = false;
+    let startX = 0, lockedY = 0;
+    let preview = null;
+    let rect = null;
+
+    img.addEventListener('mousedown', (e) => {
+      if (!state.highlightMode) return;
+      e.preventDefault();
+      rect = img.getBoundingClientRect();
+      startX = e.clientX - rect.left;
+      lockedY = e.clientY - rect.top;
+      dragging = true;
+
+      preview = document.createElement('div');
+      preview.className = 'hl-img-mark';
+      preview.dataset.color = state.currentColor;
+      preview.style.left = (startX / rect.width * 100) + '%';
+      preview.style.top  = (lockedY / rect.height * 100) + '%';
+      preview.style.width = '0';
+      preview.style.pointerEvents = 'none';
+      wrapper.appendChild(preview);
+    });
+
+    function onMove(e) {
+      if (!dragging) return;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      preview.style.left  = (xs / rect.width * 100) + '%';
+      preview.style.width = ((xe - xs) / rect.width * 100) + '%';
+    }
+    function onUp(e) {
+      if (!dragging) return;
+      dragging = false;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      const widthPx = xe - xs;
+      if (widthPx < 8) {
+        if (preview) preview.remove();
+        preview = null;
+        return;
+      }
+      const data = {
+        type: 'image',
+        img_src: img.getAttribute('src'),
+        y_pct: lockedY / rect.height * 100,
+        x_start_pct: xs / rect.width * 100,
+        x_end_pct: xe / rect.width * 100,
+        color: state.currentColor,
+        id: genId()
+      };
+      state.highlights.push(data);
+      save();
+      preview.dataset.hlId = data.id;
+      preview.style.pointerEvents = 'auto';
+      preview.title = '橡皮擦模式下点击删除';
+      preview.addEventListener('click', (ev) => {
+        if (!state.eraserMode) return;
+        ev.stopPropagation();
+        removeHighlight(data.id);
+      });
+      preview = null;
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  function applyImageHighlight(data) {
+    const img = document.querySelector('.slide-img[src="' + cssEscape(data.img_src) + '"]');
+    if (!img) return;
+    const wrapper = img.parentElement;
+    if (!wrapper.classList.contains('hl-img-wrapper')) return;
+    const m = document.createElement('div');
+    m.className = 'hl-img-mark';
+    m.dataset.color = data.color;
+    m.dataset.hlId = data.id;
+    m.style.left = data.x_start_pct + '%';
+    m.style.width = (data.x_end_pct - data.x_start_pct) + '%';
+    m.style.top = data.y_pct + '%';
+    m.title = '橡皮擦模式下点击删除';
+    m.addEventListener('click', (ev) => {
+      if (!state.eraserMode) return;
+      ev.stopPropagation();
+      removeHighlight(data.id);
+    });
+    wrapper.appendChild(m);
+  }
+
+  function cssEscape(s) {
+    return s.replace(/"/g, '\\"');
+  }
+
+  // ---------- Text highlights ----------
+  function setupTextSelection() {
+    document.addEventListener('mouseup', (e) => {
+      if (!state.highlightMode) return;
+      if (e.target.closest('#hl-toolbar')) return;
+      if (e.target.classList && e.target.classList.contains('slide-img')) return;
+      if (e.target.classList && e.target.classList.contains('hl-img-mark')) return;
+
+      setTimeout(() => {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        const text = sel.toString();
+        if (text.length === 0) return;
+
+        const range = sel.getRangeAt(0);
+        const ctx = computeContext(range);
+        if (!ctx) return;
+
+        const data = {
+          type: 'text',
+          text: text,
+          contextBefore: ctx.before,
+          contextAfter: ctx.after,
+          color: state.currentColor,
+          id: genId()
+        };
+        wrapRange(range, data);
+        state.highlights.push(data);
+        save();
+        sel.removeAllRanges();
+      }, 0);
+    });
+  }
+
+  function computeContext(range) {
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) root = root.parentElement;
+    while (root && root.tagName && !/^(P|LI|TD|H1|H2|H3|H4|DIV|BODY|PRE|BLOCKQUOTE|SUMMARY)$/.test(root.tagName)) {
+      root = root.parentElement;
+    }
+    if (!root) return null;
+    const fullText = root.textContent;
+    const startOffset = nodeOffset(root, range.startContainer, range.startOffset);
+    const endOffset = nodeOffset(root, range.endContainer, range.endOffset);
+    if (startOffset < 0 || endOffset < 0) return null;
+    const CTX = 25;
+    return {
+      before: fullText.slice(Math.max(0, startOffset - CTX), startOffset),
+      after: fullText.slice(endOffset, endOffset + CTX)
+    };
+  }
+
+  function nodeOffset(root, node, offsetInNode) {
+    let total = 0;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    let n;
+    while ((n = walker.nextNode())) {
+      if (n === node) return total + offsetInNode;
+      total += n.textContent.length;
+    }
+    return -1;
+  }
+
+  function wrapRange(range, data) {
+    const fragments = [];
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) {
+      fragments.push({ node: root, start: range.startOffset, end: range.endOffset });
+    } else {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+      let n;
+      while ((n = walker.nextNode())) {
+        if (!range.intersectsNode(n)) continue;
+        const start = (n === range.startContainer) ? range.startOffset : 0;
+        const end   = (n === range.endContainer)   ? range.endOffset   : n.textContent.length;
+        if (end > start) fragments.push({ node: n, start, end });
+      }
+    }
+    fragments.forEach(f => {
+      const r = document.createRange();
+      try {
+        r.setStart(f.node, f.start);
+        r.setEnd(f.node, f.end);
+        const m = document.createElement('mark');
+        m.className = 'hl-text-mark';
+        m.dataset.color = data.color;
+        m.dataset.hlId = data.id;
+        m.title = '橡皮擦模式下点击删除';
+        m.addEventListener('click', (ev) => {
+          if (!state.eraserMode) return;
+          ev.stopPropagation();
+          removeHighlight(data.id);
+        });
+        r.surroundContents(m);
+      } catch (e) { /* skip fragment */ }
+    });
+  }
+
+  function applyTextHighlight(data) {
+    const target = data.contextBefore + data.text + data.contextAfter;
+    const root = document.body;
+    const nodes = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => {
+        if (n.parentElement && n.parentElement.closest('script, style, #hl-toolbar')) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }, false);
+    let nd;
+    while ((nd = walker.nextNode())) nodes.push(nd);
+    const fullText = nodes.map(n => n.textContent).join('');
+    const idx = fullText.indexOf(target);
+    if (idx === -1) return;
+
+    const startPos = idx + data.contextBefore.length;
+    const endPos = startPos + data.text.length;
+    let cum = 0, startNode = null, startOff = 0, endNode = null, endOff = 0;
+    for (const n of nodes) {
+      const len = n.textContent.length;
+      if (!startNode && startPos >= cum && startPos < cum + len) {
+        startNode = n; startOff = startPos - cum;
+      }
+      if (startNode && endPos > cum && endPos <= cum + len) {
+        endNode = n; endOff = endPos - cum; break;
+      }
+      cum += len;
+    }
+    if (!startNode || !endNode) return;
+    const range = document.createRange();
+    try {
+      range.setStart(startNode, startOff);
+      range.setEnd(endNode, endOff);
+      wrapRange(range, data);
+    } catch (e) {}
+  }
+
+  // ---------- Remove / clear ----------
+  function removeHighlight(id) {
+    state.highlights = state.highlights.filter(h => h.id !== id);
+    save();
+    document.querySelectorAll('[data-hl-id="' + id + '"]').forEach(el => {
+      if (el.tagName === 'MARK') {
+        const p = el.parentNode;
+        while (el.firstChild) p.insertBefore(el.firstChild, el);
+        p.removeChild(el);
+        p.normalize();
+      } else {
+        el.remove();
+      }
+    });
+  }
+  function clearAllVisuals() {
+    document.querySelectorAll('.hl-img-mark').forEach(el => el.remove());
+    document.querySelectorAll('mark.hl-text-mark').forEach(el => {
+      const p = el.parentNode;
+      while (el.firstChild) p.insertBefore(el.firstChild, el);
+      p.removeChild(el);
+      p.normalize();
+    });
+  }
+
+  // ---------- Init ----------
+  function init() {
+    load();
+    buildToolbar();
+    setupImages();
+    setupTextSelection();
+    window.addEventListener('load', () => {
+      state.highlights.forEach(h => {
+        if (h.type === 'image') applyImageHighlight(h);
+        else if (h.type === 'text') applyTextHighlight(h);
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+</body>
+</html>
