@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>CS 2050 — Lecture Notes 索引</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+
+  body {
+    display: flex;
+    height: 100vh;
+  }
+
+  /* ===== Sidebar ===== */
+  #sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: #1e293b;
+    color: #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.2s ease;
+    overflow: hidden;
+  }
+  #sidebar.collapsed { width: 48px; }
+
+  .sidebar-header {
+    padding: 16px 18px;
+    border-bottom: 1px solid #334155;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .sidebar-header .title {
+    font-weight: 600;
+    font-size: 15px;
+    color: #f1f5f9;
+    white-space: nowrap;
+  }
+  #sidebar.collapsed .sidebar-header .title { display: none; }
+
+  .toggle-btn {
+    background: transparent;
+    border: 1px solid #475569;
+    color: #cbd5e1;
+    border-radius: 4px;
+    padding: 4px 9px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .toggle-btn:hover { background: #334155; }
+
+  .sidebar-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+  #sidebar.collapsed .sidebar-list { display: none; }
+
+  .lec-btn {
+    display: block;
+    width: 100%;
+    padding: 10px 18px;
+    background: transparent;
+    border: none;
+    border-left: 3px solid transparent;
+    color: #cbd5e1;
+    text-align: left;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: inherit;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .lec-btn:hover {
+    background: #334155;
+    color: #f8fafc;
+  }
+  .lec-btn.active {
+    background: #1e40af;
+    color: #fff;
+    border-left-color: #60a5fa;
+  }
+  .lec-btn .lec-num {
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .lec-btn .lec-topic {
+    display: block;
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+  .lec-btn.active .lec-topic { color: #cbd5e1; }
+  .lec-btn[disabled] {
+    color: #64748b;
+    cursor: not-allowed;
+  }
+  .lec-btn[disabled]:hover { background: transparent; }
+  .lec-btn[disabled] .lec-topic { color: #475569; }
+
+  .sidebar-footer {
+    padding: 10px 18px;
+    border-top: 1px solid #334155;
+    font-size: 11px;
+    color: #64748b;
+    white-space: nowrap;
+  }
+  #sidebar.collapsed .sidebar-footer { display: none; }
+
+  /* ===== Main content ===== */
+  #content {
+    flex: 1;
+    height: 100vh;
+    background: #fafafa;
+    overflow: hidden;
+    position: relative;
+  }
+  #frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+  }
+  #placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    flex-direction: column;
+    color: #64748b;
+    text-align: center;
+    padding: 40px;
+  }
+  #placeholder h2 {
+    color: #1e293b;
+    margin: 0 0 12px 0;
+  }
+  #placeholder p { margin: 6px 0; font-size: 14px; }
+
+  /* ===== Mobile / narrow viewport ===== */
+  @media (max-width: 640px) {
+    #sidebar { width: 200px; }
+  }
+</style>
+</head>
+<body>
+
+<aside id="sidebar">
+  <div class="sidebar-header">
+    <span class="title">CS 2050 笔记</span>
+    <button class="toggle-btn" id="toggle" title="收起 / 展开侧边栏">≡</button>
+  </div>
+
+  <nav class="sidebar-list" id="lec-list">
+    <!-- Buttons injected by JS -->
+  </nav>
+
+  <div class="sidebar-footer">
+    点击切换 · 不会刷新窗口
+  </div>
+</aside>
+
+<main id="content">
+  <div id="placeholder">
+    <h2>选择左侧任意 Lecture 开始</h2>
+    <p>所有笔记在右侧加载，左栏切换，互不干扰。</p>
+    <p style="font-size: 12px; margin-top: 16px;">📌 上次浏览的 lecture 会自动记住</p>
+  </div>
+  <iframe id="frame" style="display:none;" title="lecture notes"></iframe>
+</main>
+
+<script>
+  // 编辑这里来增减或修改 lecture 列表
+  const LECTURES = [
+    { num: 5,  topic: 'Multicore Architecture',           file: 'Lecture5/notes.html'  },
+    { num: 6,  topic: 'OpenMP 基础',                      file: 'Lecture6/notes.html'  },
+    { num: 7,  topic: '分布式并行入门',                   file: 'Lecture7/notes.html'  },
+    { num: 8,  topic: 'MPI: 硬件 / SLURM / 集合通信',     file: 'Lecture8/notes.html'  },
+    { num: 9,  topic: 'CUDA / GPU (NVIDIA 客座)',         file: 'Lecture9/notes.html'  },
+    { num: 10, topic: 'GPU 编程：库 vs 自写 Kernel',      file: 'Lecture10/notes.html' },
+    { num: 11, topic: 'SLURM batch follow-up',            file: 'Lecture11/notes.html' },
+    { num: 12, topic: '(in progress)',                    file: 'Lecture12/notes.html' },
+  ];
+
+  const STORAGE_KEY = 'cs2050-last-lecture';
+  const list = document.getElementById('lec-list');
+  const frame = document.getElementById('frame');
+  const placeholder = document.getElementById('placeholder');
+
+  function showLecture(file, btn) {
+    document.querySelectorAll('.lec-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    placeholder.style.display = 'none';
+    frame.style.display = 'block';
+    frame.src = file;
+    localStorage.setItem(STORAGE_KEY, file);
+  }
+
+  // Build sidebar buttons
+  LECTURES.forEach(({ num, topic, file }) => {
+    const btn = document.createElement('button');
+    btn.className = 'lec-btn';
+    btn.dataset.file = file;
+    btn.innerHTML = `<span class="lec-num">Lecture ${num}</span><span class="lec-topic">${topic}</span>`;
+    btn.addEventListener('click', () => showLecture(file, btn));
+    list.appendChild(btn);
+  });
+
+  // Restore last-viewed lecture
+  const last = localStorage.getItem(STORAGE_KEY);
+  if (last) {
+    const btn = list.querySelector(`.lec-btn[data-file="${last}"]`);
+    if (btn) showLecture(last, btn);
+  }
+
+  // Toggle sidebar collapse
+  const toggle = document.getElementById('toggle');
+  const sidebar = document.getElementById('sidebar');
+  toggle.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
+</script>
+
+</body>
+</html>

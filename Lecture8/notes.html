@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <title>CS 2050 Lecture 8 - 复习笔记</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <style>
   body {
     font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -88,6 +93,48 @@
     color: inherit;
     padding: 0;
     font-size: inherit;
+  }
+
+  /* ============================================
+     Line-by-line code walkthrough
+     ============================================ */
+  .code-walk {
+    margin: 18px 0;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #d0d7de;
+  }
+  .code-walk .walk-pair {
+    display: grid;
+    grid-template-columns: 1fr;
+    border-bottom: 1px solid #e1e4e8;
+  }
+  .code-walk .walk-pair:last-child { border-bottom: none; }
+  .code-walk .walk-code {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 8px 14px;
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.92em;
+    white-space: pre;
+    overflow-x: auto;
+    margin: 0;
+    border-radius: 0;
+  }
+  .code-walk .walk-doc {
+    background: #f6f8fa;
+    padding: 10px 16px;
+    font-size: 0.95em;
+    line-height: 1.55;
+    border-left: 3px solid #1f6feb;
+  }
+  .code-walk .walk-doc p { margin: 4px 0; }
+  .code-walk .walk-doc ul { margin: 6px 0; padding-left: 20px; }
+  .code-walk .walk-doc li { margin: 2px 0; }
+  .code-walk .walk-doc code {
+    background: #eef1f4;
+    padding: 1px 5px;
+    font-size: 0.94em;
   }
   table {
     border-collapse: collapse;
@@ -872,11 +919,48 @@ MPI_Allgather(&amp;local, 1, MPI_INT,
   <p>FFT 需要先对每行做 1D FFT、再对每列做 1D FFT。在分布式存储下，第二步前需要把"按行分布"重排成"按列分布"——这正是 Alltoall。FFTW 的并行版几乎瓶颈就在 Alltoall 上，所以这个原语在 HPC 里非常重要。</p>
 
   <h3>注意：MPI_IN_PLACE</h3>
-  <p>slide 提到 "<em>This operation supports the MPI_IN_PLACE handle for same-memory operations.</em>" —— 如果你不在乎 sendbuf 被覆盖，可以传 <code>MPI_IN_PLACE</code> 作为 sendbuf，省一份 buffer。</p>
+  <p>slide 提到 "<em>This operation supports the MPI_IN_PLACE handle for same-memory operations.</em>" —— 如果你不在乎 sendbuf 被覆盖，可以传 <code>MPI_IN_PLACE</code> 作为 sendbuf，省一份 buffer。具体语义和心智模型见下方 Q&A。</p>
 
   <div class="takeaway">
     💡 <strong>开销很重</strong>：Alltoall 的总通信量是 O(N² × sendcount)，是 collective 里最贵的。能避免就避免；非用不可时，库会做最优算法（butterfly、bruck、scatter-gather 等）。
   </div>
+
+  <details class="qa">
+    <summary><code>MPI_IN_PLACE</code> 到底是什么？是不是"自己不用发自己"？为什么对 Alltoall 特别有用？</summary>
+    <p><strong>核心语义</strong>：让 sendbuf 和 recvbuf 共用同一块内存，省一份单独的 buffer。<em>不是</em>"省去自己发自己"——后者只是底层实现的副作用。</p>
+    <p><strong>心智模型</strong>：同一块 buffer 在调用前后承担不同的语义角色。调用前装"要发的数据"，MPI 库执行通信，调用后这块内存里就是"收到的数据"。从用户视角：<strong>buffer 时分复用</strong>。MPI 库内部负责保证语义切换时数据不丢（小数据先内部备份再交换；大数据用精心设计的算法按通信顺序逐段就地刷写）。</p>
+
+    <p><strong>Alltoall 上的具体用法</strong>：</p>
+    <pre><code>int *buf = malloc(size * count * sizeof(int));
+// 调用前：buf[i × count] 装"要发给 rank i 的数据"
+for (int i = 0; i &lt; size; i++) fill_data_for(buf + i*count, /*dst=*/i);
+
+MPI_Alltoall(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,   // sendbuf 三参数被忽略
+             buf, count, MPI_INT, MPI_COMM_WORLD);
+
+// 调用后：buf[i × count] 现在装"从 rank i 收到的数据"
+// 自己那格 buf[rank × count] 没动（自己→自己 = 自己）</code></pre>
+    <p><strong>调用前后语义反转</strong>：buf 各 slot 的索引含义从"按 destination"变成"按 source"——相当于一次就地分布式转置。</p>
+
+    <p><strong>为什么 Alltoall 上 IN_PLACE 特别有用</strong>：因为 Alltoall 的 sendbuf 和 recvbuf <em>大小完全相等</em>（都是 <code>size × count</code>），合并成一块直接省一半内存。其他 collective 上 IN_PLACE 省的比例没这么夸张：</p>
+    <table>
+      <tr><th>Collective</th><th>sendbuf</th><th>recvbuf</th><th>IN_PLACE 省的比例</th></tr>
+      <tr><td><code>Allgather</code></td><td><code>count</code></td><td><code>size × count</code></td><td>~1/(size+1)，少</td></tr>
+      <tr><td><strong><code>Alltoall</code></strong></td><td><strong><code>size × count</code></strong></td><td><strong><code>size × count</code></strong></td><td><strong>~1/2，巨大</strong></td></tr>
+      <tr><td><code>Allreduce</code></td><td><code>count</code></td><td><code>count</code></td><td>~1/2</td></tr>
+    </table>
+
+    <p><strong>各 collective 中 IN_PLACE 的"前后语义"</strong>：</p>
+    <table>
+      <tr><th>Collective</th><th>调用前 buffer 装什么</th><th>调用后 buffer 装什么</th></tr>
+      <tr><td><code>Alltoall</code></td><td>给各 dst 的数据（按 dst 索引）</td><td>从各 src 收的数据（按 src 索引）</td></tr>
+      <tr><td><code>Allgather</code></td><td>自己那格已填，其他空</td><td>全部填满</td></tr>
+      <tr><td><code>Allreduce</code></td><td>自己的输入</td><td>归约结果（覆盖输入）</td></tr>
+      <tr><td><code>Reduce</code>（root 上）</td><td>root 自己的输入</td><td>归约结果（覆盖输入）</td></tr>
+    </table>
+
+    <p><strong>唯一代价</strong>：调用后原始要发的数据被覆盖了，无法再回头看"我之前发了啥"。如果后续算法要用，得自己事先备份。</p>
+  </details>
 </div>
 
 
@@ -965,6 +1049,38 @@ Step 3: 2  3  7  12  15  16        ← 每个 rank 加上 rank-4 的值
   <div class="takeaway">
     💡 <strong>典型用途</strong>：(1) 给每个 rank 算"全局编号"（前面所有 rank 的元素总数 = 当前 rank 起始下标）；(2) 计算并行算法里的"截止索引"。
   </div>
+
+  <details class="qa">
+    <summary>Scan 的 <code>MPI_IN_PLACE</code> 怎么用？它省的是 MPI 内部 buffer 还是用户层 buffer？</summary>
+
+    <p><strong>普通版 vs IN_PLACE 版的差别只在用户写代码时的变量数</strong>：</p>
+    <pre><code>// 普通版：两块独立内存
+int my_input = rank + 1;
+int my_result;
+MPI_Scan(&amp;my_input, &amp;my_result, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+// IN_PLACE 版：一块内存兼任输入和输出
+int my_data = rank + 1;
+MPI_Scan(MPI_IN_PLACE, &amp;my_data, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+// 调用前 my_data = 输入；调用后 my_data 被覆盖成结果</code></pre>
+
+    <p><strong>slide 那句话的拆解</strong>：</p>
+    <ul>
+      <li>"input is taken from the recvbuf argument" —— sendbuf 被忽略，输入<em>从 recvbuf 那个参数读</em>。所以你必须事先把输入写到 recvbuf 里。</li>
+      <li>"output replaces this value" —— 计算结果<em>覆盖</em>掉 recvbuf 里原来的输入。所以原始输入会丢失。</li>
+    </ul>
+
+    <p><strong>关键澄清：IN_PLACE 节省的是哪一层的 buffer？</strong></p>
+    <table>
+      <tr><th>层级</th><th>受 IN_PLACE 影响吗</th><th>说明</th></tr>
+      <tr><td><strong>用户层 API</strong></td><td>✅ 这里才是 IN_PLACE 起作用的地方</td><td>用户需要分配的变量数：从 2 块（sendbuf + recvbuf）变成 1 块</td></tr>
+      <tr><td>MPI 库内部算法（如 recursive doubling 的中间临时 buffer、网络收发暂存）</td><td>❌ 无关</td><td>由 MPI 库自己 malloc/free，不管用不用 IN_PLACE，该用多少照样用多少</td></tr>
+    </table>
+
+    <p>所以 slide 右下那个"input → step 1 → step 2 → step 3 → output"的演化图描述的是 <strong>MPI 库内部算法步骤</strong>，那些中间值的存放和 <code>MPI_IN_PLACE</code> <em>无关</em>。<code>MPI_IN_PLACE</code> 只让你在写调用代码时少声明一个变量，仅此而已。</p>
+
+    <p><strong>记忆模型</strong>：和 <code>Allreduce</code> / <code>Alltoall</code> 的 IN_PLACE 是同一套——同一块内存在调用前后承担不同语义角色（前为输入，后为结果），用户层"buffer 时分复用"。代价：调用后原始输入被覆盖，后续要用得自己事先备份。</p>
+  </details>
 </div>
 
 
@@ -1054,17 +1170,130 @@ MPI_Recv(buf, msg_len, MPI_CHAR, src, 1, comm, MPI_STATUS_IGNORE);</code></pre>
               MPI_Status *status);</code></pre>
   <p>它阻塞直到匹配的消息<em>到达接收方</em>，但<strong>不读取消息体</strong>。返回时 <code>status</code> 已被填上消息的元数据。</p>
 
-  <h3>用法模板</h3>
-  <pre><code>MPI_Status status;
-MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &amp;status);
+  <h3>slide 上的完整代码（逐行讲解）</h3>
+  <p>场景：rank 0 生成一段<strong>随机长度</strong>的 double 数组发给 rank 1，rank 1 事先不知道有多长，用 Probe 探查后再分配 buffer 接收。</p>
 
-int count;
-MPI_Get_count(&amp;status, MPI_DOUBLE, &amp;count);   // 从 status 拿出 element 数
+  <div class="code-walk">
 
-double *buf = malloc(count * sizeof(double));
-MPI_Recv(buf, count, MPI_DOUBLE,
-         status.MPI_SOURCE, status.MPI_TAG,    // 用 probe 拿到的 source/tag 精确匹配
-         MPI_COMM_WORLD, MPI_STATUS_IGNORE);</code></pre>
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;mpi.h&gt;
+#include &lt;vector&gt;</code></pre>
+      <div class="walk-doc">
+        头文件：<code>stdio.h</code>（printf）、<code>stdlib.h</code>（rand/malloc）、<code>mpi.h</code>（MPI API）、<code>&lt;vector&gt;</code>（用 <code>std::vector</code> 自动管理 buffer，<strong>避免手动 malloc/free</strong>）。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">int main(int argc, char *argv[]) {
+    int rank;
+    MPI_Init(&amp;argc, &amp;argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &amp;rank);
+    srand(rank);</code></pre>
+      <div class="walk-doc">
+        MPI 标配开场：<code>MPI_Init</code> 进入 MPI 世界、<code>MPI_Comm_rank</code> 取自己的 rank。<code>srand(rank)</code> 用 rank 当随机种子—— 这样 <strong>rank 0 和 rank 1 会得到不同的随机数序列</strong>（如果都用同一个种子，下面的 <code>rand()</code> 在两边返回值一样，长度就一致了，体现不出"接收方不知道长度"这个测试场景）。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    std::vector&lt;double&gt; msg;</code></pre>
+      <div class="walk-doc">
+        声明一个空 <code>vector&lt;double&gt;</code>，两个 rank 都执行这一行。后面发送方往里填数据，接收方先空着、收到 Probe 结果再 resize。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    if (0 == rank) {
+        msg.resize(rand() % 1024, 0.0);</code></pre>
+      <div class="walk-doc">
+        rank 0 进入发送分支。<strong>Yoda 条件 <code>0 == rank</code></strong>（常量在前）防止手滑写成 <code>0 = rank</code>——编译器会立刻报错而不是悄悄赋值。<code>rand() % 1024</code> 生成 0~1023 之间的随机长度，<code>resize(N, 0.0)</code> 把 vector 改成 N 个 double、初始值全 <code>0.0</code>。<strong>关键</strong>：rank 1 完全不知道这个 N 是多少。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">        MPI_Send(msg.data(), msg.size(),
+                 MPI_DOUBLE, 1, 0, MPI_COMM_WORLD);</code></pre>
+      <div class="walk-doc">
+        发送给 rank 1。逐参数：
+        <ul>
+          <li><code>msg.data()</code> —— vector 内部数组的首地址（C++11 起的标准方法）。MPI 要原始指针。</li>
+          <li><code>msg.size()</code> —— 元素个数（= 上一行 resize 的 N）。</li>
+          <li><code>MPI_DOUBLE</code> —— 数据类型。</li>
+          <li><code>1</code> —— destination rank。</li>
+          <li><code>0</code> —— tag。</li>
+          <li><code>MPI_COMM_WORLD</code> —— 通信器。</li>
+        </ul>
+        rank 0 的活到此结束，下面 <code>else if</code> 不会进。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    } else if (1 == rank) {
+        int len;
+        MPI_Status status;</code></pre>
+      <div class="walk-doc">
+        rank 1 进入接收分支。声明两个变量：<code>len</code> 待会儿装"消息有多少元素"，<code>status</code> 待会儿装 Probe 解出的 envelope。此刻都是垃圾值。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">        MPI_Probe(0, 0, MPI_COMM_WORLD, &amp;status);</code></pre>
+      <div class="walk-doc">
+        阻塞探查：等一条来自 rank 0、tag 0 的消息到达。<strong>注意</strong>：这里用的是<em>具体 source/tag</em>（<code>0, 0</code>），不是通配符——因为这个例子里 rank 1 明确知道是谁发的。返回时：<code>status</code> 被填好（含实际 source、tag、内部消息长度），但消息体<strong>没被消费</strong>，仍在缓冲区里等下面的 Recv。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">        MPI_Get_count(&amp;status, MPI_DOUBLE, &amp;len);</code></pre>
+      <div class="walk-doc">
+        从 <code>status</code> 解出元素数：MPI 内部存的是字节数，这里告诉它"按 <code>MPI_DOUBLE</code>（8 字节）一个元素算"，结果写回 <code>len</code>。这一行后 <code>len</code> = rank 0 那边 <code>rand() % 1024</code> 当时实际生成的那个数。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">        msg.resize(len);</code></pre>
+      <div class="walk-doc">
+        现在知道长度了，把 vector resize 到 <code>len</code> 个元素，准备装数据。比手写 <code>malloc(len * sizeof(double))</code> 优雅——退出 scope 时 vector 自动释放，没有忘记 free 的风险。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">        MPI_Recv(msg.data(), msg.size(), MPI_DOUBLE,
+                 status.MPI_SOURCE, status.MPI_TAG,
+                 MPI_COMM_WORLD, MPI_STATUS_IGNORE);</code></pre>
+      <div class="walk-doc">
+        真正接收消息体。逐参数：
+        <ul>
+          <li><code>msg.data()</code> —— 接收 buffer 首地址（resize 之后已分配好）。</li>
+          <li><code>msg.size()</code> —— 容量（= len，刚好够装）。</li>
+          <li><code>MPI_DOUBLE</code> —— 数据类型，和发送方一致。</li>
+          <li><code>status.MPI_SOURCE</code> / <code>status.MPI_TAG</code> —— <strong>用 Probe 报告的具体值</strong>。这个例子里其实就是 0/0，但写成 <code>status.</code> 字段是<em>通用模式</em>——即使 Probe 当时用了 <code>MPI_ANY_SOURCE</code>/<code>MPI_ANY_TAG</code>，这里也能精确锁定到刚才探到的那条消息，不会被另一条同时到达的混淆。</li>
+          <li><code>MPI_STATUS_IGNORE</code> —— 这次 status 不需要再填了（Probe 时已拿全），传 IGNORE 省一点点开销。</li>
+        </ul>
+        Recv 返回后 <code>msg</code> 里就是从 rank 0 收到的完整数据。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">        std::cout &lt;&lt; "rank " &lt;&lt; rank &lt;&lt; " received "
+                  &lt;&lt; msg.size() &lt;&lt; " double elements\n";
+    }</code></pre>
+      <div class="walk-doc">
+        rank 1 打印一行确认。<code>else if</code> 块结束。其他 rank（如果用 <code>mpirun -n 4</code> 跑）不进任何分支，直接走到下面的 Finalize。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    MPI_Finalize();
+    return 0;
+}</code></pre>
+      <div class="walk-doc">
+        清理 MPI 上下文，正常退出。
+      </div>
+    </div>
+
+  </div>
 
   <h3>关键 API：<code>MPI_Get_count</code></h3>
   <p>从 <code>MPI_Status</code> 抽取消息长度的辅助函数：</p>
