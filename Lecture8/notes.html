@@ -1478,6 +1478,48 @@ Wait 等 boundary 收完
   <div class="takeaway">
     💡 <strong>核心转变</strong>：阻塞版 = "调用 = 完成"；非阻塞版 = "调用 = 启动，<code>MPI_Wait</code> = 完成"。这种分离是计算 / 通信重叠的基础，也是高性能 MPI 代码的核心模式。
   </div>
+
+  <details class="qa">
+    <summary>"漏 Wait 会泄漏 request 句柄、最终耗尽资源"是什么意思？</summary>
+
+    <p><strong><code>MPI_Request</code> 是 MPI 库借给你的资源</strong>，类似 C 里的 <code>malloc</code> 或 <code>open</code> 返回的句柄——你不归还，库就一直占着。</p>
+
+    <p><strong>背后的机制</strong>：每次调 <code>MPI_Isend</code> / <code>MPI_Irecv</code>，MPI 库会在内部分配一块状态（消息指针、目的 rank、传输进度、是否完成等），然后把"指向这块状态的句柄"写到你的 <code>MPI_Request</code> 变量里。MPI 库内部的 request 池是<em>有限</em>的（实现里通常是预分配数组或带上限的动态池）。</p>
+
+    <p><strong><code>MPI_Wait</code> / <code>MPI_Test</code>(flag=1) 是归还操作</strong>：只有当 Wait 返回（或 Test 报告 flag=1），MPI 库才知道"这次通信用户处理完了"，然后释放内部状态、把 request 改写成 <code>MPI_REQUEST_NULL</code>、归还 slot 给池。</p>
+
+    <pre><code>MPI_Request req;
+MPI_Isend(buf, ..., &amp;req);            // 内部分配一个 request slot
+MPI_Wait(&amp;req, MPI_STATUS_IGNORE);     // req 变 MPI_REQUEST_NULL，资源归还</code></pre>
+
+    <p><strong>漏 Wait 就是泄漏</strong>。库不知道你处理完了没，必须保留那块状态：</p>
+    <pre><code>for (int i = 0; i &lt; 1000000; i++) {
+    MPI_Request req;
+    MPI_Isend(buf, ..., &amp;req);     // 每轮新分配一个
+    // ❌ 没有 MPI_Wait
+    // 局部 req 被覆盖 → 句柄丢了 → 库里那块状态永远在
+}
+// 100 万轮后 → 内部池撑爆 → Isend/Irecv 失败 / 程序卡死 / OOM</code></pre>
+
+    <p><strong>类比表</strong>：</p>
+    <table>
+      <tr><th>忘记调用</th><th>泄漏的资源</th><th>后果</th></tr>
+      <tr><td><code>free(ptr)</code></td><td>堆内存</td><td>OOM</td></tr>
+      <tr><td><code>close(fd)</code></td><td>文件描述符</td><td>达到 ulimit 后 open 失败</td></tr>
+      <tr><td><code>close(socket)</code></td><td>socket 句柄</td><td>connect 失败</td></tr>
+      <tr><td><strong><code>MPI_Wait(&amp;req)</code></strong></td><td><strong>request 句柄</strong></td><td><strong>池耗尽，后续 Isend/Irecv 失败</strong></td></tr>
+    </table>
+
+    <p><strong>"Test 直到完成"的含义</strong>：<code>MPI_Test(&amp;req, &amp;flag, ...)</code> 只轮询一次，<em>只有 flag == 1 那一次调用才真的清理 request</em>。如果 flag == 0（没完成）就放弃，request 仍在那儿——同样泄漏。所以用 Test 时必须循环到 flag 变 1：</p>
+    <pre><code>int flag = 0;
+while (!flag) {
+    MPI_Test(&amp;req, &amp;flag, ...);
+    do_other_useful_work();        // 顺便干别的
+}
+// flag 终于变 1，request 已被清理</code></pre>
+
+    <p><strong>容易踩坑的场景</strong>：循环里发了一堆只 Wait 部分；异常退出路径 <code>return</code> 漏 Wait；只调一次 Test 就放弃。防御方法：用 <code>MPI_Waitall(n, requests, statuses)</code> 一次性等一组，少遗漏。</p>
+  </details>
 </div>
 
 
@@ -1559,6 +1601,113 @@ int MPI_Test(MPI_Request *request, int *flag, MPI_Status *status);</code></pre>
 <div class="takeaway">
   💡 Wait = 阻塞、non-local；Test = 立即返回 + flag、local。语义都是"等到 / 查到完成"，差别只在调用方愿不愿意被卡住。
 </div>
+
+<details class="qa">
+  <summary><code>MPI_Test</code> 已经用 <code>flag</code> 报告完成与否，那 <code>status</code> 还有什么用？</summary>
+
+  <p><strong><code>flag</code> 和 <code>status</code> 报告的是两类完全不同的信息</strong>：</p>
+  <table>
+    <tr><th>参数</th><th>类型</th><th>信息</th><th>作用</th></tr>
+    <tr><td><code>flag</code></td><td>int (0/1)</td><td>"完成 / 未完成"</td><td>决定下一步是继续等还是动 buffer</td></tr>
+    <tr><td><code>status</code></td><td>struct</td><td>"完成的具体细节"</td><td>实际发件 rank、tag、收到多少元素、错误码</td></tr>
+  </table>
+
+  <p><strong>行为细则</strong>：<code>flag == 0</code> 时 status 内容未定义，别去读；<code>flag == 1</code> 时 status 才被填好，跟 <code>MPI_Recv</code> 返回时一样可用——含 <code>MPI_SOURCE</code>、<code>MPI_TAG</code>、<code>MPI_ERROR</code> 三个公开字段，加上内部消息字节数（用 <code>MPI_Get_count</code> 取）。</p>
+
+  <p><strong>什么时候真的需要 status</strong>：</p>
+  <ul>
+    <li><strong><code>Irecv</code> 用了通配符</strong>——<code>flag</code> 只告诉你"有消息到了"，但<em>谁发的、tag 几、有多少元素</em>这些只有 status 能给：
+<pre><code>MPI_Irecv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, comm, &amp;req);
+// ...
+MPI_Test(&amp;req, &amp;flag, &amp;status);
+if (flag) {
+    int from = status.MPI_SOURCE;        // 没 status 就不知道是谁发的
+    int tag  = status.MPI_TAG;
+    int n;   MPI_Get_count(&amp;status, MPI_INT, &amp;n);
+}</code></pre></li>
+    <li><strong>错误处理</strong>——通信出错时错误码在 <code>status.MPI_ERROR</code>。多 request 一次性测（<code>MPI_Testany</code>/<code>MPI_Testall</code>）时尤其重要，每个 request 的成败要逐个查 status 数组。</li>
+  </ul>
+
+  <p><strong>什么时候 status 没用</strong>：<code>Isend</code> 完成后 status 几乎没有有用信息（无非"发出去了、没出错"），约定俗成传 <code>MPI_STATUS_IGNORE</code> 跳过：
+<pre><code>MPI_Test(&amp;req, &amp;flag, MPI_STATUS_IGNORE);</code></pre></p>
+
+  <p><strong>记法</strong>：<code>flag</code> 是门铃——告诉你有没有人到；<code>status</code> 是信封——告诉你来的是谁、带了什么。两件事独立但互补。</p>
+</details>
+
+<details class="qa">
+  <summary><code>MPI_Waitall</code> 的调用长什么样？还有哪些"Wait 家族"成员？</summary>
+
+  <p><strong>函数签名</strong>：阻塞直到<em>所有</em> request 都完成，结束后全部设为 <code>MPI_REQUEST_NULL</code>。</p>
+
+  <div class="code-walk">
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">int MPI_Waitall(int count,
+                MPI_Request array_of_requests[],
+                MPI_Status  array_of_statuses[]);</code></pre>
+      <div class="walk-doc">
+        <ul>
+          <li><code>count</code> —— 数组里有几个 request</li>
+          <li><code>array_of_requests[]</code> —— 要等的 request 数组</li>
+          <li><code>array_of_statuses[]</code> —— 对应的 status 数组；不在乎传 <code>MPI_STATUSES_IGNORE</code>（注意是<em>复数</em> STATUSES）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <p><strong>典型场景：邻居 boundary 交换（stencil）</strong>。一次同时和左右邻居各 send + recv，4 个 request 一起等：</p>
+  <div class="code-walk">
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">MPI_Request reqs[4];
+MPI_Status  stats[4];
+
+MPI_Isend(left_send,  N, MPI_DOUBLE, rank-1, 0, comm, &amp;reqs[0]);
+MPI_Isend(right_send, N, MPI_DOUBLE, rank+1, 0, comm, &amp;reqs[1]);
+MPI_Irecv(left_recv,  N, MPI_DOUBLE, rank-1, 0, comm, &amp;reqs[2]);
+MPI_Irecv(right_recv, N, MPI_DOUBLE, rank+1, 0, comm, &amp;reqs[3]);
+
+compute_interior_points();        // 通信飞着的同时算内部点
+
+MPI_Waitall(4, reqs, stats);      // 一次等齐 4 个
+compute_boundary_points();        // 邻居数据已就绪</code></pre>
+      <div class="walk-doc">
+        4 个非阻塞通信先全部启动 → 中间穿插不依赖邻居数据的"内部点"计算 → 最后 <code>Waitall</code> 一次等齐。这就是计算/通信重叠的标准模式。<code>Waitall</code> 比写 4 个 <code>Wait</code> 更安全（一次错位都不会漏）、且 MPI 库可以做内部优化（比如哪个先到先处理哪个）。
+      </div>
+    </div>
+  </div>
+
+  <p><strong>动态数量场景：用 <code>std::vector</code> 批量管理</strong>：</p>
+  <div class="code-walk">
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">int n = neighbors.size();
+std::vector&lt;MPI_Request&gt; reqs(n * 2);
+std::vector&lt;MPI_Status&gt;  stats(n * 2);
+
+for (int i = 0; i &lt; n; i++) {
+    MPI_Isend(send_bufs[i].data(), N, MPI_DOUBLE,
+              neighbors[i], 0, comm, &amp;reqs[i]);
+    MPI_Irecv(recv_bufs[i].data(), N, MPI_DOUBLE,
+              neighbors[i], 0, comm, &amp;reqs[n + i]);
+}
+compute_interior();
+MPI_Waitall(reqs.size(), reqs.data(), stats.data());</code></pre>
+      <div class="walk-doc">
+        邻居数量编译期未知时常见的写法。<code>reqs.data()</code> 取出底层指针给 MPI（C API）。前 n 个是 send 请求，后 n 个是 recv 请求，按约定排好顺序方便后续访问对应 status。
+      </div>
+    </div>
+  </div>
+
+  <p><strong>Wait / Test 家族对照</strong>：</p>
+  <table>
+    <tr><th>函数</th><th>行为</th></tr>
+    <tr><td><code>MPI_Wait</code></td><td>阻塞等 1 个 request 完成</td></tr>
+    <tr><td><code>MPI_Waitall</code></td><td>阻塞等齐所有</td></tr>
+    <tr><td><code>MPI_Waitany</code></td><td>阻塞等任意一个完成就返回，<code>idx</code> 告诉你是数组里第几个</td></tr>
+    <tr><td><code>MPI_Waitsome</code></td><td>阻塞等"至少一个完成"就返回，<code>out_count</code> 告诉这批返回了几个</td></tr>
+    <tr><td><code>MPI_Test*</code></td><td>对应的<em>立即返回</em>版本（用 <code>flag</code> 报告，不阻塞）</td></tr>
+  </table>
+
+  <p><strong>选择哪个</strong>：等齐再统一处理 → <code>Waitall</code>；先到先处理（如 master/worker） → <code>Waitany</code>；"已经到的批量处理掉，剩下的接着等" → <code>Waitsome</code>。</p>
+</details>
 </div>
 
 
@@ -1670,6 +1819,59 @@ int MPI_Ialltoall(...);  int MPI_Iscan(...);    int MPI_Iexscan(...);</code></pr
 <div class="takeaway">
   💡 3D FFT 的重叠流水线 = 把整个立方体按 slice 切分，让 <em>计算 slice k</em> 和 <em>通信 slice k-1</em> 同时跑。<code>MPI_Ialltoall</code> 是这种重叠的关键工具。
 </div>
+
+<details class="qa">
+  <summary>FFT 是什么？slide 的立方体里 3 种颜色、9 个方块、3 个 slice 各自代表什么？</summary>
+
+  <p><strong>FFT (Fast Fourier Transform)</strong> = 把数据从空间域 / 时域转换成频域的数学算法。N 个采样点 → N 个频率分量。复杂度 O(N log N)（朴素 DFT 是 O(N²)）。用途：音频压缩、图像滤波、解 PDE、MRI 成像、流体模拟等。</p>
+
+  <p><strong>3D FFT 怎么算</strong>：沿 3 个轴各做一次 1D FFT。先沿 y 轴做（slide 假设这步已完成），再沿 z 轴，最后沿 x 轴。<strong>硬约束</strong>：做某个轴的 1D FFT 时，那条轴的整条"铅笔"（pencil，固定其他两轴、该轴取全部值）必须在<em>同一个 rank</em> 内本地。</p>
+
+  <p><strong>所以为什么需要 Alltoall</strong>：换一个轴做 FFT 之前，必须把数据重新分布，让"下一个要 FFT 的轴"变成本地——这种重分布就是分布式矩阵转置 = <code>MPI_Alltoall</code>。</p>
+
+  <p><strong>立方体几何</strong>：3×3×3 = 27 个小方块（沿 X、Y、Z 各 3 个）。可以三种切法：</p>
+  <table>
+    <tr><th>切法</th><th>结果</th></tr>
+    <tr><td>沿 X</td><td>3 列</td></tr>
+    <tr><td>沿 Z</td><td>3 行</td></tr>
+    <tr><td>沿 Y</td><td><strong>3 个 slice</strong>，每个 slice 是一张 XZ 截面，共 3×3 = <strong>9 个方块</strong></td></tr>
+  </table>
+
+  <p><strong>3 种颜色 = 3 个 rank</strong>。"Initial state" 里数据按 X 切给 3 个 rank：</p>
+  <ul>
+    <li>红色 = rank 0 拥有 x=0 那一坨（覆盖全部 y、全部 z，9 个方块）</li>
+    <li>绿色 = rank 1 拥有 x=1 那一坨</li>
+    <li>蓝色 = rank 2 拥有 x=2 那一坨</li>
+  </ul>
+  <p>这种"按 X 切片"的分布在 FFT 文献里叫 <strong>slab decomposition</strong>。它对 z-transform 友好——z-铅笔（固定 x, y，取全部 z）的 3 个点都在同一个 rank 内。</p>
+
+  <p><strong>"3 个 slice" 是流水线的粒度</strong>：每个 rank 不一次把所有 z-FFT 算完，而是按 y 切成 3 批（slice 1 = y=0 那片、slice 2 = y=1、slice 3 = y=2），每批独立调度。这样：</p>
+
+  <pre>时间 →
+slice 1:  z-FFT │ Ialltoall (后台传)│ Wait │ x-FFT
+slice 2:        │ z-FFT             │ Ialltoall │ Wait │ x-FFT
+slice 3:        │                   │ z-FFT     │ Ialltoall │ Wait │ x-FFT</pre>
+
+  <p>任何时刻 CPU 和网络都同时在工作。这就是流水线的意义。</p>
+
+  <p><strong>下排颜色变成水平条纹的原因</strong>：第一片 Alltoall 完成后，rank 拥有的不再是 YZ 平面而是 XY 平面。新分布下：</p>
+  <ul>
+    <li>红色 = rank 0 拥有 z=0 这一行（横向，覆盖全部 x、全部 y）</li>
+    <li>绿色 = rank 1 拥有 z=1 行</li>
+    <li>蓝色 = rank 2 拥有 z=2 行</li>
+  </ul>
+  <p>新分布下 x-铅笔（固定 y, z，取全部 x）变成本地——可以做 x-FFT 了。这正是 Alltoall 转置的目的。</p>
+
+  <p><strong>速查表</strong>：</p>
+  <table>
+    <tr><th>数字</th><th>含义</th></tr>
+    <tr><td>3 种颜色</td><td>3 个 rank（数据被分给 3 个进程）</td></tr>
+    <tr><td>9 个方块 / slice</td><td>一张 XZ 截面是 3×3 网格</td></tr>
+    <tr><td>3 个 slice</td><td>沿 Y 方向有 3 张截面 → 切成 3 批工作 → 流水线</td></tr>
+    <tr><td>橙色</td><td>"已变完，进入频域"的标记色</td></tr>
+    <tr><td>转置前 / 后颜色方向</td><td>转置前 = 竖条纹（按 X 切）；转置后 = 横条纹（按 Z 切）</td></tr>
+  </table>
+</details>
 </div>
 
 
@@ -1697,6 +1899,38 @@ int MPI_Ialltoall(...);  int MPI_Iscan(...);    int MPI_Iexscan(...);</code></pr
 <div class="takeaway">
   💡 I/O 在 HPC 里不是附加品而是头等公民：checkpoint / 后处理 / 大数据分析全靠它。当 I/O 比计算还慢，<em>efficient I/O 才是优化的关键</em>。
 </div>
+
+<details class="qa">
+  <summary>"in-situ" 是什么意思？全称是什么？</summary>
+
+  <p><strong><code>in situ</code> 是拉丁语原文</strong>（不是缩写）：<code>in</code> = 在，<code>situ</code> = <code>situs</code>（位置 / 状态）的夺格形式。整体意思 <strong>"在原位 / 在原本的地方"</strong>。读音通常是 <code>/ɪn ˈsaɪtuː/</code>（in SY-too）。</p>
+
+  <p><strong>HPC 里的 in-situ analysis</strong> = 不把模拟结果写到磁盘，直接在模拟运行的<em>同一个 MPI 程序、同一份内存</em>里就把分析做掉。</p>
+
+  <table>
+    <tr><th>方式</th><th>流程</th></tr>
+    <tr><td>传统 post-hoc 分析</td><td>模拟跑 → dump TB 级数据到磁盘 → 模拟结束 → 起分析程序 → 从磁盘读回 → 算统计 / 可视化</td></tr>
+    <tr><td><strong>In-situ 分析</strong></td><td>模拟跑 → 每隔 N 步直接在内存里调用分析 → 算统计 / 出图 → 丢掉原始数据 → 模拟继续</td></tr>
+  </table>
+
+  <p>省了什么：双向磁盘 I/O 开销（先写 TB、再读 TB）。当数据量大到磁盘吞不下时这是唯一可行方案。</p>
+
+  <p><strong>这个词在别的领域</strong>都是同一个主题——"事情就在它原来的容器里，不搬走"：</p>
+  <ul>
+    <li>医学 — "carcinoma in situ" = 原位癌，肿瘤还没扩散</li>
+    <li>建筑 — "cast in situ concrete" = 现场浇筑混凝土，不是预制</li>
+    <li>地质 — "in situ measurement" = 在岩石原本位置测量，不带回实验室</li>
+    <li>生物 — "in situ hybridization" = 在细胞原位做基因杂交</li>
+  </ul>
+
+  <p><strong>反义对照</strong>：</p>
+  <ul>
+    <li><strong>In situ</strong> = 原位（数据不离开模拟进程）</li>
+    <li><strong>Ex situ</strong> = 离位（数据搬出去再处理） —— 传统先写文件再分析就是 ex-situ 模式</li>
+  </ul>
+
+  <p>HPC 实战常用的 in-situ 框架：<strong>ParaView Catalyst</strong>、<strong>Ascent</strong>、<strong>SENSEI</strong>。这些库挂到 MPI 模拟程序里，让可视化和分析在模拟过程中实时进行。</p>
+</details>
 </div>
 
 
@@ -1708,23 +1942,106 @@ int MPI_Ialltoall(...);  int MPI_Iscan(...);    int MPI_Iexscan(...);</code></pr
 <div class="explanation">
   <p>最朴素的并行 I/O 方案：所有 rank 把自己那块数据 <code>MPI_Gather</code> 到 root，<strong>只让 root rank 打开文件做串行写入</strong>。</p>
 
-  <pre><code>void dump_posix(const std::vector&lt;double&gt; &amp;v) {
-    int rank, size;
+  <h3>slide 上的完整代码（逐行讲解）</h3>
+  <p>场景：每个 rank 持有一段 1D 模拟数据（包含两端的 ghost / halo cell），需要把所有 rank 的"真实数据"拼起来写到磁盘。</p>
+
+  <div class="code-walk">
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">void dump_posix(const std::vector&lt;double&gt; &amp;v)
+{</code></pre>
+      <div class="walk-doc">
+        函数签名。参数是 <code>const std::vector&lt;double&gt; &amp;v</code> —— <strong>const 引用</strong>：const 表明本函数不修改 v；引用避免拷贝整个 vector（vector 可能很大，按值传 = 复制一份代价很大）。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &amp;rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &amp;size);
-    const int N = static_cast&lt;int&gt;(v.size()) - 2;
-    std::vector&lt;double&gt; u(size * N);
-    MPI_Gather(&amp;v[1], N, MPI_DOUBLE,
-               u.data(), N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    if (0 == rank) {
-        std::ofstream out("u.dat", std::ios::app);
-        out &lt;&lt; std::scientific;
-        for (size_t i = 0; i &lt; u.size(); ++i) {
+    MPI_Comm_size(MPI_COMM_WORLD, &amp;size);</code></pre>
+      <div class="walk-doc">
+        MPI 标配开场：取自己的 rank（0..size-1）和 communicator 总进程数 size。这两个值后面都要用——rank 决定"我是不是 root"，size 决定 root 上汇总缓冲区的总长度。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    const int N = static_cast&lt;int&gt;(v.size()) - 2;</code></pre>
+      <div class="walk-doc">
+        计算"真实数据"的元素数。<strong><code>-2</code> 表示 v 两端各有一个 ghost cell（halo）</strong>——这是 stencil / 邻居通信常见的布局：<code>v[0]</code> 是左邻居发来的边界值，<code>v[v.size()-1]</code> 是右邻居发来的，中间 <code>v[1..v.size()-2]</code> 才是本 rank 自己负责的真实点。<br>
+        <code>static_cast&lt;int&gt;</code>：<code>v.size()</code> 返回 <code>size_t</code>（无符号），但 MPI 函数和后面的减法都要 <code>int</code>（有符号），显式转一下。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    std::vector&lt;double&gt; u(size * N);</code></pre>
+      <div class="walk-doc">
+        预分配汇总缓冲区，长度 = <strong>所有 rank 真实数据总和</strong>（size 个 rank × 每个 N 元素）。<strong>注意</strong>：这一步在<em>每个 rank 上都执行</em>，但只有 root 上的 u 会真正被填——非 root 的 u 是浪费的内存。这是 send-to-root 方案"不可扩展"的第一个迹象：rank 越多每个 rank 都要分配越大的 buffer。更优写法是 <code>if (rank == 0) u.resize(size * N);</code>，这里图省事写一起了。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    MPI_Gather(&amp;v[1], N, MPI_DOUBLE,
+               u.data(), N, MPI_DOUBLE, 0, MPI_COMM_WORLD);</code></pre>
+      <div class="walk-doc">
+        所有 rank 把"真实数据" gather 到 root。逐参数：
+        <ul>
+          <li><code>&amp;v[1]</code> —— sendbuf 从 v[1] 开始，<strong>跳过左 halo</strong></li>
+          <li><code>N</code> —— 每个 rank 发 N 个元素（也跳过右 halo，因为只发 N 个）</li>
+          <li><code>MPI_DOUBLE</code> —— sendtype</li>
+          <li><code>u.data()</code> —— recvbuf 首地址（只有 root 用）</li>
+          <li><code>N</code> —— recvcount，<strong>从每个 rank 收 N 个</strong>（不是总长度）</li>
+          <li><code>MPI_DOUBLE</code> —— recvtype</li>
+          <li><code>0</code> —— root rank 编号</li>
+          <li><code>MPI_COMM_WORLD</code> —— 通信器</li>
+        </ul>
+        调用结束后，root 上 <code>u[0..N-1]</code> 是 rank 0 的数据，<code>u[N..2N-1]</code> 是 rank 1 的，依此类推，按 rank 顺序拼接。其他 rank 的 u 内容未定义（是垃圾，但反正下面只有 root 用）。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    if (0 == rank) {</code></pre>
+      <div class="walk-doc">
+        <strong>Yoda 条件</strong>（常量在前）防止手滑写成 <code>0 = rank</code>——编译器会立刻报错，不会变成偷偷的赋值。只有 root 进入下面的写文件分支。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">        std::ofstream out("u.dat", std::ios::app);</code></pre>
+      <div class="walk-doc">
+        以 <strong>append 模式</strong>打开文件 <code>u.dat</code>。append（<code>std::ios::app</code>）= 每次写都加到文件末尾，不覆盖。这样每次调 <code>dump_posix</code>（比如每个时间步一次）就追加一行新数据，最终得到一个时间序列。<br>
+        <code>out</code> 是一个 <code>ofstream</code> 对象，函数结束 scope 时自动析构 → 自动 close 文件，不用手动 <code>close()</code>。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">        out &lt;&lt; std::scientific;</code></pre>
+      <div class="walk-doc">
+        设置 stream 的浮点格式为<strong>科学计数法</strong>（如 <code>1.234567e-05</code>）。后续所有 <code>&lt;&lt;</code> 写 double 都用这个格式。优点：固定有效数字位数，适合数值数据；缺点：每个数值字符串<em>长度仍然不定</em>（指数部分 e-5 vs e+12 长度不一样），所以这种 ASCII 输出无法支持"按 byte offset 并发写"。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">        for (size_t i = 0; i &lt; u.size(); ++i) {
             out &lt;&lt; ' ' &lt;&lt; u[i];
-        }
-        out &lt;&lt; '\n';
+        }</code></pre>
+      <div class="walk-doc">
+        遍历整个 u（<code>size * N</code> 个元素），<strong>每个元素前面加一个空格再写</strong>。这是简单的 space-separated 文本格式，下游用 numpy/Pandas 一行 <code>loadtxt</code> 就能读。<br>
+        循环变量用 <code>size_t</code>（无符号）匹配 <code>u.size()</code> 的返回类型，避免 signed/unsigned 比较警告。<code>++i</code> 比 <code>i++</code> 略快（避免临时变量），写循环时是惯例。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">        out &lt;&lt; '\n';
     }
 }</code></pre>
+      <div class="walk-doc">
+        所有数据写完后加一个换行，让这次 dump 的输出占一整行（一行 = 一个时间步的全场快照）。<br>
+        外层 <code>}</code> 闭合 if 分支；内层函数体的最后 <code>}</code> 触发 <code>out</code> 析构 → 自动 flush + close 文件。<br>
+        非 root 进程：直接跳过 if 分支走到这里，函数返回，<code>u</code> 的内存被释放——它们什么都没干，纯陪跑。
+      </div>
+    </div>
+
+  </div>
 
   <h3>评分</h3>
   <p><strong>Pros</strong>：实现简单，输出 <em>就是一个文件</em>，下游工具直接读。</p>
@@ -1734,6 +2051,120 @@ int MPI_Ialltoall(...);  int MPI_Iscan(...);    int MPI_Iexscan(...);</code></pr
 <div class="takeaway">
   💡 Send-to-root 是"把并行问题变回串行 I/O"。简单、单文件友好，但 root 是硬瓶颈，<em>规模一上来就崩</em>。
 </div>
+
+<details class="qa">
+  <summary>"Pros: one single file" 为什么算优点？为什么不让每个 rank 算偏移并发写同一个文件？</summary>
+
+  <p><strong>"Pros: one single file" 的对比对象不是这页本身，而是后面要讲的"每 rank 一个文件"方案</strong>。这页是把最朴素的基线摆出来，方便后面对比。三个方案排开看：</p>
+  <table>
+    <tr><th>方案</th><th>输出</th><th>评价</th></tr>
+    <tr><td>A. 每 rank 写自己的文件</td><td><code>data_0.dat, data_1.dat, ...</code></td><td>写得快但留下 N 个碎文件，下游要先拼，文件系统 metadata 也吃不消</td></tr>
+    <tr><td>B. send-to-root（这页）</td><td><code>data.dat</code> 一个文件</td><td>Pros：单文件易用；Cons：root 是瓶颈</td></tr>
+    <tr><td>C. 每 rank 算偏移并发写同一文件</td><td><code>data.dat</code> 一个文件</td><td>正确方向，但要用 MPI-IO 实现，裸 POSIX 反而比 B 还慢</td></tr>
+  </table>
+
+  <p><strong>"每 rank 算偏移直接 pwrite" 用裸 POSIX 实现的几个坑</strong>：</p>
+  <ul>
+    <li><strong>文本格式天然不支持</strong> —— 这页代码用的是 <code>scientific</code> 文本输出，每个 double 转字符串后长度不固定（<code>1.234e-5</code> vs <code>1.234e+12</code>），算不出每 rank 的字节起始位置。要按 offset 并发写必须改 binary 格式（每 double 固定 8 字节）。</li>
+    <li><strong>POSIX 在并行文件系统（Lustre / GPFS）上有锁竞争</strong> —— 多个 rank 同时 <code>pwrite</code> 时，文件系统为保证 read-after-write 一致性会加文件锁，N 大时锁等待严重。</li>
+    <li><strong>元数据服务器（MDS）瓶颈</strong> —— 每个 rank 各自 <code>open</code> 文件会反复打到 MDS。</li>
+    <li><strong>小写入聚合不上</strong> —— 文件系统看不到整体写入模式，没法做条带对齐 / write-back / read-ahead 优化。</li>
+  </ul>
+
+  <p><strong>MPI-IO 解决上述所有问题</strong>（slide 35 会展开）：</p>
+  <pre><code>MPI_File_open(MPI_COMM_WORLD, "data.dat", MPI_MODE_CREATE | MPI_MODE_WRONLY,
+              MPI_INFO_NULL, &amp;fh);
+MPI_File_write_at_all(fh, my_offset, my_buf, my_count, MPI_DOUBLE, MPI_STATUS_IGNORE);
+MPI_File_close(&amp;fh);</code></pre>
+  <p>关键：<code>_at_all</code> 是 collective 调用——所有 rank 同时调，MPI 库知道整体写入模式，可以做 <strong>two-phase I/O</strong>：先用网络把小写入聚合成大块、再交给少数几个 "I/O aggregator" rank 写，避开锁竞争和 MDS 压力。</p>
+
+  <p><strong>结论</strong>：你的直觉"每 rank 算偏移并发写"是对的方向，但要靠 MPI-IO 实现。slide 33 摆 send-to-root 是当反面教材 / 起点，下一两页会推到正确方案。</p>
+</details>
+
+<details class="qa">
+  <summary>声明 <code>std::vector&lt;double&gt; u(size * N);</code> 真的就分配了内存吗？只是占个名字也算浪费？</summary>
+
+  <p>是的——<strong><code>vector(n)</code> 这种带 size 的构造在那一行就立刻 malloc 出 <code>n * sizeof(T)</code> 字节</strong>，并把每个元素 default-construct 一遍（double 的 default 是 <code>0.0</code>）。不是惰性分配，不是占位符，是真分配。</p>
+
+  <p><strong>vector 的 4 种声明对比</strong>：</p>
+  <table>
+    <tr><th>写法</th><th>malloc 了吗</th><th>size()</th><th>capacity()</th><th>元素初始化</th></tr>
+    <tr><td><code>vector&lt;double&gt; u;</code></td><td>❌（仅几十字节 header）</td><td>0</td><td>0</td><td>—</td></tr>
+    <tr><td><code>vector&lt;double&gt; u(100);</code></td><td>✅ 800 字节</td><td>100</td><td>100</td><td>全 0.0</td></tr>
+    <tr><td><code>vector&lt;double&gt; u(100, 3.14);</code></td><td>✅ 800 字节</td><td>100</td><td>100</td><td>全 3.14</td></tr>
+    <tr><td><code>vector&lt;double&gt; u; u.reserve(100);</code></td><td>✅ 800 字节</td><td>0</td><td>100</td><td>未初始化</td></tr>
+  </table>
+
+  <p>slide 33 这行 <code>vector&lt;double&gt; u(size * N);</code> 属于第 2 种。</p>
+
+  <p><strong>为什么这是 send-to-root 不可扩展的第一个征兆</strong>：</p>
+  <pre>size = 1024 个 rank，N = 1M 个 double / rank
+→ size * N = 1G 个 double
+→ 每个 rank 上 u 的大小 = 8 GB
+→ 1024 个 rank 总共分配 8 TB 内存
+→ 其中 1023 个非 root rank 的 8 GB 完全不被读不被写，纯白占</pre>
+
+  <p><strong>更优写法</strong>：</p>
+  <pre><code>std::vector&lt;double&gt; u;
+if (0 == rank) {
+    u.resize(size * N);   // 只 root 分配
+}
+MPI_Gather(&amp;v[1], N, MPI_DOUBLE,
+           u.data(), N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+//         ↑ 非 root 上 u.data() = nullptr，但 MPI_Gather
+//           标准规定 recvbuf 在非 root 上不被使用，传 nullptr 合法</code></pre>
+
+  <p><strong>从 Python / JS 来的常见误解</strong>：以为"声明只是给变量起个名字，真用时才分配"。C++ 不这样——<code>vector(n)</code> 构造就立刻 malloc + 初始化，没有惰性。等价于 <code>new double[n]()</code>（带括号触发 value-init）。如果只想"先有个名字，以后再用大内存"，写空构造 <code>vector&lt;double&gt; u;</code>，到真要用时再 <code>u.resize(big_size)</code>。</p>
+</details>
+
+<details class="qa">
+  <summary><code>MPI_Gather(&amp;v[1], ...)</code> 里的 <code>v</code> 在每个 rank 上看到的不一样吗？为什么 <code>dump_posix</code> 里没有 <code>MPI_Init</code>？</summary>
+
+  <p>这两个问题指向同一个本质——<strong>MPI 的 SPMD 模型和程序生命周期</strong>。</p>
+
+  <p><strong>SPMD = Same Program, Multiple Data</strong>。<code>mpirun -n 4</code> 启动后，OS 起 <strong>4 个完全独立的进程</strong>：</p>
+  <ul>
+    <li>各自有独立的虚拟地址空间——rank 0 的 <code>0x7ffe1234</code> 和 rank 1 的 <code>0x7ffe1234</code> 指向<em>毫无关系</em>的物理内存</li>
+    <li>各自跑同一份 <code>prog</code> 二进制</li>
+    <li>各自调用 <code>dump_posix(v)</code>，但传进来的 v 是<em>各 rank 自己的 v</em></li>
+  </ul>
+
+  <p><strong>同名 ≠ 同份内存</strong>。代码里都叫 <code>v</code>，但每个进程的 v 是独立的：</p>
+  <pre>rank 0 进程: v = [halo_L, 1.0,  2.0,  3.0,  halo_R]
+rank 1 进程: v = [halo_L, 4.0,  5.0,  6.0,  halo_R]
+rank 2 进程: v = [halo_L, 7.0,  8.0,  9.0,  halo_R]
+rank 3 进程: v = [halo_L,10.0, 11.0, 12.0,  halo_R]</pre>
+
+  <p>每个 rank 执行 <code>&amp;v[1]</code>，解析出的指针指向<em>自己进程的</em> <code>v[1]</code>。代码长得一样，但 <code>MPI_Gather</code> 实际收到的数据不同——这<em>正是</em> Gather 存在的意义：把分散在各 rank 的不同数据通过网络汇总到 root。如果 v 真的"每个 rank 都一样"，Gather 就没必要了。</p>
+
+  <p><strong>完整 MPI 程序结构</strong>：<code>MPI_Init</code> 是全局事件，整个程序<em>只调一次</em>，必须放在 <code>main()</code> 最外层。<code>dump_posix</code> 不需要也不能再 Init：</p>
+
+  <pre><code>int main(int argc, char *argv[]) {
+    MPI_Init(&amp;argc, &amp;argv);              // ① 整个程序的 MPI 上下文
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &amp;rank);
+
+    std::vector&lt;double&gt; v = build_my_local_data(rank);  // ② 各 rank 独立构造
+
+    for (int step = 0; step &lt; num_steps; ++step) {
+        evolve(v);                         // 物理计算（独立）
+        exchange_halo(v, rank);            // halo 交换（用 MPI_Send/Recv）
+        if (step % 100 == 0) dump_posix(v);  // ③ 周期 dump
+    }
+
+    MPI_Finalize();                        // ④ 清理
+    return 0;
+}</code></pre>
+
+  <p><strong>关键澄清</strong>：</p>
+  <ul>
+    <li><code>v</code> 是<em>用户代码构造的普通 C++ 对象</em>，MPI 不知道也不关心。"v 在每个 rank 上不同"是因为各 rank 的 main 各自调 <code>build_my_local_data(rank)</code> 用自己的 rank 算出来的——和 MPI 无关。</li>
+    <li><code>dump_posix</code> 里调 <code>MPI_Comm_rank</code> 不是"重新初始化"，而是<em>查询</em>。MPI 库内部缓存了 rank/size，查询调用很便宜，可以在任何函数里反复调。</li>
+    <li><code>dump_posix</code> 假设两件事：(1) <code>MPI_Init</code> 已经在外层调过；(2) 调用方传进来的 v 已经是该 rank 自己的局部数据。它只负责"汇总数据 + 写盘"。</li>
+  </ul>
+
+  <p><strong>类比</strong>：把 MPI_Init 想成"插上电源 + 把 4 台分散的电脑接到同一个网络"，把 dump_posix 想成"用插好电的电话给 root 打电话汇报数据"。打电话之前必须先插电，但每次打电话本身不重新插电。</p>
+</details>
 </div>
 
 
@@ -1772,12 +2203,107 @@ int MPI_Ialltoall(...);  int MPI_Iscan(...);    int MPI_Iexscan(...);</code></pr
   <h3>核心心智模型</h3>
   <p>把文件看作"一条字节流"，每个 rank 负责其中的一段（slide 原话："a stream of bytes; bytes-offsets for different ranks are now important"）。各 rank <em>同时</em> 通过 <code>MPI_File_*</code> API 写到同一文件的不同 offset。</p>
 
-  <p>关键 API（slide 代码中出现）：</p>
-  <ul>
-    <li><code>MPI_File_open</code> / <code>MPI_File_close</code> —— 打开 / 关闭文件（注意是 collective）。</li>
-    <li><code>MPI_File_get_size</code> —— 查文件当前大小（用于决定 append offset）。</li>
-    <li><code>MPI_File_write_at</code> —— 在指定 byte offset 写入（每 rank 算自己的 offset）。</li>
-  </ul>
+  <h3>slide 上的完整代码（逐行讲解）</h3>
+  <p>场景：所有 rank 协同往同一个二进制文件 <code>u.bin</code> append——每次调用，每个 rank 把自己 N 个 double 的局部数据写到该写的 byte offset 上。</p>
+
+  <div class="code-walk">
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">void dump_mpi_binary(const std::vector&lt;double&gt; &amp;v)
+{
+    int rank, size;
+    MPI_File fh;
+    MPI_Comm_rank(MPI_COMM_WORLD, &amp;rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &amp;size);</code></pre>
+      <div class="walk-doc">
+        参数 <code>const std::vector&lt;double&gt; &amp;v</code>：和 slide 33 一样是只读引用，避免拷贝。<br>
+        <code>MPI_File fh</code> 是 <strong>MPI 的文件句柄类型</strong>，类似 POSIX 的 <code>int fd</code>，但它由 MPI 库管理（不是 OS 文件描述符）。所有 <code>MPI_File_*</code> 函数都通过它操作文件。<br>
+        <code>rank</code>、<code>size</code> 后面要用——rank 决定本进程在文件里的偏移位置，size 决定文件总共要扩多大。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    MPI_File_open(MPI_COMM_WORLD, "u.bin",
+                  MPI_MODE_CREATE | MPI_MODE_WRONLY,
+                  MPI_INFO_NULL, &amp;fh);</code></pre>
+      <div class="walk-doc">
+        <strong>collective 打开文件</strong>。逐参数：
+        <ul>
+          <li><code>MPI_COMM_WORLD</code> —— 所有 rank 一起开（不是各自单独 open）。这是 collective 操作，所有 rank 必须同步调到这里才能往下走。</li>
+          <li><code>"u.bin"</code> —— 文件名。注意是 <code>.bin</code>，不是 slide 33 的 <code>.dat</code> 文本文件——这次写的是<strong>二进制格式</strong>。</li>
+          <li><code>MPI_MODE_CREATE | MPI_MODE_WRONLY</code> —— 文件标志位，按位或拼起来。<code>CREATE</code> = 不存在则创建；<code>WRONLY</code> = 只写（不读）。其他常用 flag 还有 <code>RDONLY</code>、<code>RDWR</code>、<code>APPEND</code> 等。</li>
+          <li><code>MPI_INFO_NULL</code> —— "info hints"，可以传性能调优提示（条带大小、aggregator 数量等），这里传 NULL 用默认。</li>
+          <li><code>&amp;fh</code> —— 输出参数，MPI 把分配好的句柄写到这里。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    MPI_Offset bytes, file_offset;
+    const int N = static_cast&lt;int&gt;(v.size()) - 2;
+    bytes = N * sizeof(double);</code></pre>
+      <div class="walk-doc">
+        <code>MPI_Offset</code> 是 <strong>MPI 专用的偏移整型</strong>，保证至少 64-bit（即使在 32-bit 系统上）—— 因为科学计算的文件经常超过 4 GB，普通 int / long 装不下。所有"文件位置"和"文件大小"参数都用 <code>MPI_Offset</code>。<br>
+        <code>N</code> 同 slide 33：跳过两端 halo，只算"真实数据"个数。<br>
+        <strong><code>bytes = N * sizeof(double)</code></strong>：每个 rank 这次要写多少字节。这是 binary 格式的关键优势——<strong>每个 double 固定 8 字节，长度可预先精确算出</strong>。slide 33 那种 <code>scientific</code> 文本则不行（数值字符串长度不定）。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    MPI_File_get_size(fh, &amp;file_offset);</code></pre>
+      <div class="walk-doc">
+        查询文件<strong>当前大小（字节数）</strong>，写到 <code>file_offset</code>。<br>
+        为什么取名叫 file_offset 而不是 file_size？因为它的<em>用途</em>是"我这次要从哪里开始 append"——文件当前末尾就是新一轮 dump 的起点。<br>
+        第一次调用（文件刚 CREATE 时）file_offset = 0；第二次调用（已有上一轮数据）file_offset = 上一轮写入的总字节数。这样多次调用 <code>dump_mpi_binary</code> 会一段段 append，不覆盖。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    MPI_File_set_size(fh, file_offset + size * bytes);</code></pre>
+      <div class="walk-doc">
+        <strong>预扩展文件大小</strong>到本轮写完后的最终大小。新增的字节 = <code>size * bytes</code>（每个 rank 都要写 bytes 字节，共 size 个 rank）。<br>
+        <strong>为什么要 set_size</strong>：如果不预扩展，每个 rank 写到自己 offset 时，并行文件系统（Lustre/GPFS）需要"动态扩展文件"——这涉及加锁、更新元数据、可能多个 rank 的写都触发扩展形成竞争。预先一次性设好大小，所有写操作都落在<em>已分配区域</em>里，就避开了这些开销。这是 MPI-IO 性能的小技巧。<br>
+        注意 <code>set_size</code> 也是 collective——所有 rank 必须同时调，传同样的大小。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    MPI_File_write_at(fh, file_offset + rank * bytes, &amp;v[1],
+                      N, MPI_DOUBLE, MPI_STATUS_IGNORE);</code></pre>
+      <div class="walk-doc">
+        <strong>每个 rank 把自己的数据写到自己计算出来的 offset</strong>。逐参数：
+        <ul>
+          <li><code>fh</code> —— 文件句柄。</li>
+          <li><code>file_offset + rank * bytes</code> —— <strong>本 rank 的写入起点</strong>（绝对 byte offset）。<code>file_offset</code> 是这一轮 dump 的起点；<code>rank * bytes</code> 是本 rank 在这一轮里相对于起点的偏移：rank 0 从 0 开始、rank 1 从 bytes 开始、rank 2 从 2*bytes 开始……依此类推。每个 rank 算出自己的 offset，互不重叠。</li>
+          <li><code>&amp;v[1]</code> —— 数据起点，跳过左 halo。</li>
+          <li><code>N</code> —— 写多少个元素（不是字节数）。</li>
+          <li><code>MPI_DOUBLE</code> —— 元素类型，告诉 MPI 每个元素 8 字节。</li>
+          <li><code>MPI_STATUS_IGNORE</code> —— 不在乎 status 信息（写操作的 status 通常没啥用）。</li>
+        </ul>
+        关键：<code>MPI_File_write_at</code> 是 <strong>independent / non-collective</strong> 调用——每个 rank 独立调，不要求所有 rank 同步。它的 collective 版本叫 <code>MPI_File_write_at_all</code>，性能更好（MPI 库可以做 two-phase I/O 优化），但要求所有 rank 同时调。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    MPI_File_close(&amp;fh);
+}</code></pre>
+      <div class="walk-doc">
+        关闭文件——也是 <strong>collective</strong> 调用，所有 rank 必须一起关。close 触发底层 flush（保证所有 rank 的数据真的落盘）、释放 MPI 库内部的句柄资源、把 <code>fh</code> 设为 <code>MPI_FILE_NULL</code>。
+      </div>
+    </div>
+
+  </div>
+
+  <h3>关键 API 速查</h3>
+  <table>
+    <tr><th>API</th><th>性质</th><th>作用</th></tr>
+    <tr><td><code>MPI_File_open</code></td><td>collective</td><td>所有 rank 一起开，传 <code>MODE_*</code> 标志位、可选 hints</td></tr>
+    <tr><td><code>MPI_File_close</code></td><td>collective</td><td>所有 rank 一起关，触发 flush</td></tr>
+    <tr><td><code>MPI_File_get_size</code></td><td>local</td><td>查询当前文件字节数</td></tr>
+    <tr><td><code>MPI_File_set_size</code></td><td>collective</td><td>预扩展或截断文件，避开动态扩展锁竞争</td></tr>
+    <tr><td><code>MPI_File_write_at</code></td><td>independent</td><td>每 rank 独立按 offset 写，不要求同步</td></tr>
+    <tr><td><code>MPI_File_write_at_all</code></td><td>collective</td><td>同上，但所有 rank 同步调用，库可做 two-phase 聚合优化（性能更好）</td></tr>
+  </table>
 
   <h3>评分</h3>
   <p><strong>Pros</strong>：<em>parallel and scalable</em> —— 一个文件、所有 rank 并行写。</p>
@@ -1886,11 +2412,216 @@ spack env activate -p CS-2050</code></pre>
   </ul>
 
   <p>这正是上一节学的 collective 应用：每 rank 独立计算 → Allreduce 合并。挑战在于 <em>避免每 rank 重复算 (start)! 的代价</em>，方法是从局部 base 起递推。</p>
+
+  <h3>完整实现（slide 没贴代码，按上面思路落地）</h3>
+  <p>场景：<code>mpirun -n p ./euler</code> 启动 p 个 rank，每个 rank 算 <code>[start, end)</code> 这段 1/n! 之和，最后 reduce 到 rank 0 输出。</p>
+
+  <div class="code-walk">
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">#include &lt;mpi.h&gt;
+#include &lt;iostream&gt;
+#include &lt;iomanip&gt;
+
+int main(int argc, char *argv[]) {
+    MPI_Init(&amp;argc, &amp;argv);
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &amp;rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &amp;size);</code></pre>
+      <div class="walk-doc">
+        MPI 标配开场。<code>&lt;iomanip&gt;</code> 是为了后面 <code>std::setprecision</code>。p 个 rank 各自跑这同一段代码，但 <code>rank</code> 取到不同值（0..p-1），<code>size</code> 在所有 rank 上都是 p。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    const int N = 100;</code></pre>
+      <div class="walk-doc">
+        总共算 N 项 1/n!（n = 0..N-1）。N=100 已经远超 double 能区分的精度（n=20 之后每项 < 1e-19，加上去 e 不变），实际只是为了演示。所有 rank 都拿到同一个 N。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    int start = (N * rank) / size;
+    int end   = (N * (rank + 1)) / size;</code></pre>
+      <div class="walk-doc">
+        <strong>区间划分</strong>：把 [0, N) 平均切给 size 个 rank，本 rank 负责 [start, end)。这种"乘后除"的写法比 <code>N / size</code> 商加余数处理更简洁，且自动负载均衡——即使 N 不能整除 size，余数会被自然分摊到前几个 rank 上。<br>
+        例：N=10, size=3 → rank 0 拿 [0,3)，rank 1 拿 [3,6)，rank 2 拿 [6,10)（多一个）。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    double term = 1.0;
+    for (int k = 1; k &lt;= start; k++) term /= k;</code></pre>
+      <div class="walk-doc">
+        <strong>关键步骤</strong>：每个 rank 算出自己起点的 1/start!。从 1/0! = 1 开始，逐步除以 1, 2, ..., start，得到 1/start!。<br>
+        rank 0 时 start=0，循环不执行，term 留 1.0（= 1/0!）。<br>
+        rank k (k>0) 时 start>0，循环把 term 一路除到 1/start!。<br>
+        <strong>这就是"每 rank 一次性付的代价"</strong>——避免了递推依赖：得到 1/start! 后，本 rank 就可以独立用递推往后算，不需要其他 rank 帮忙。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    double local_sum = (start &lt; end) ? term : 0.0;</code></pre>
+      <div class="walk-doc">
+        累加器初始值 = 自己第一项（即 1/start!），前提是区间非空。<br>
+        <strong>边界处理</strong>：如果 N &lt; size（rank 比项数还多），有些 rank 的 start == end，区间为空，local_sum 设为 0 表示"我啥也没算"。这样后面 Reduce 时它贡献 0，不影响结果。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    for (int n = start + 1; n &lt; end; n++) {
+        term /= n;
+        local_sum += term;
+    }</code></pre>
+      <div class="walk-doc">
+        <strong>递推主循环</strong>：用 <code>1/n! = 1/(n-1)! / n</code> 这个递推关系，每一步只做一次浮点除法 + 一次加法，O(end - start) 时间走完本 rank 的区间。<br>
+        关键看：<code>term</code> 在循环开始时是 1/start!（上一段算好的），每次 <code>term /= n</code> 后变成 1/n!，加进 local_sum。循环结束时 local_sum = Σ_{n=start..end-1} 1/n!。<br>
+        如果用朴素方式（每个 n 都重新算 n!），每一项是 O(n)，总共 O(end²)；递推后是 O(end - start)，每 rank 工作量基本均衡。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    double e_approx;
+    MPI_Reduce(&amp;local_sum, &amp;e_approx, 1, MPI_DOUBLE,
+               MPI_SUM, 0, MPI_COMM_WORLD);</code></pre>
+      <div class="walk-doc">
+        <strong>把所有 rank 的 local_sum 加起来给 root</strong>。逐参数：
+        <ul>
+          <li><code>&amp;local_sum</code> —— sendbuf，每 rank 自己的局部和</li>
+          <li><code>&amp;e_approx</code> —— recvbuf，<em>只有 root 上有意义</em>（其他 rank 这个变量未被填）</li>
+          <li><code>1</code> —— 元素个数（就一个 double）</li>
+          <li><code>MPI_DOUBLE</code> —— 类型</li>
+          <li><code>MPI_SUM</code> —— 归约操作（其他选项有 MAX/MIN/PROD/MAX_LOC 等）</li>
+          <li><code>0</code> —— root 是 rank 0</li>
+          <li><code>MPI_COMM_WORLD</code> —— 通信器</li>
+        </ul>
+        如果<em>所有 rank</em>都需要结果（不只 root），改用 <code>MPI_Allreduce</code>，参数列表去掉 root。这里只让 rank 0 打印，所以 Reduce 就够了。
+      </div>
+    </div>
+
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-cpp">    if (rank == 0) {
+        std::cout &lt;&lt; std::setprecision(15)
+                  &lt;&lt; "e ≈ " &lt;&lt; e_approx &lt;&lt; "\n";
+    }
+    MPI_Finalize();
+    return 0;
+}</code></pre>
+      <div class="walk-doc">
+        只让 rank 0 打印，避免 size 个进程同时打印产生重复行。<code>setprecision(15)</code> 让 cout 显示 double 全精度（约 15-17 位有效数字）；正确输出应类似 <code>e ≈ 2.71828182845905</code>。<br>
+        <code>MPI_Finalize()</code> 清理 MPI 上下文——必须放在所有 MPI 调用之后、return 之前。
+      </div>
+    </div>
+
+  </div>
+
+  <h3>跑起来验证</h3>
+  <pre><code>mpicxx -O2 -o euler euler.cpp
+mpirun -n 4 ./euler
+# 输出: e ≈ 2.71828182845905</code></pre>
+  <p>无论 <code>-n 1</code>、<code>-n 4</code> 还是 <code>-n 100</code> 都应该输出同一个 e 的值（浮点精度内）——证明并行结果和串行一致。</p>
+
+  <h3>为什么"每 rank 重新算 1/start!" 不算严重浪费</h3>
+  <p>表面看，rank k 一开始算 1/start! 用了 O(start) = O(k·N/p) 次除法，加起来所有 rank 的"重复工作"是 O(N²/p)。但是：</p>
+  <ul>
+    <li>朴素串行用递推也只要 O(N) —— 看起来并行版反而<em>多干了</em>活</li>
+    <li>但实际 N 通常很小（&lt; 30 后每项已小到加不进 double）—— 再多除几下不影响</li>
+    <li>真正大的级数（比如 N=10⁹ 的求和）这种"每 rank 从 base 起递推"的代价相对总工作可以忽略</li>
+  </ul>
+  <p>所以这是<strong>用一点冗余计算换掉串行依赖</strong>的经典 trick——HPC 里常见模式。</p>
 </div>
 
 <div class="takeaway">
-  💡 串行依赖（递推）的级数也能并行化：让每 rank 从自己的起点重新递推，最后 <code>MPI_Allreduce</code> 求和。
+  💡 串行依赖（递推）的级数能并行化：让每 rank 从自己的起点重新递推 → <code>MPI_Reduce</code> 求和。代价是 warm-up 冗余计算；实际加速比要看 per-term 计算是否远重于 warm-up（Euler's number 这种每项极便宜的反而加速比 ≈ 1，详见下方 Q&A）。
 </div>
+
+<details class="qa">
+  <summary>这段并行实现是不是真的快？rank 3 工作最多吗？rank 0 干完了能干别的吗？有没有更好的划分方式？</summary>
+
+  <p>这几个追问指向同一个本质：<strong>"连续切 + 每 rank 自己 warm-up"模式自带负载不均衡，对 Euler's number 这种每项工作量极小的问题，加速比接近 1</strong>。下面把分析串成一条线。</p>
+
+  <h3>每个 rank 的工作量（N=20, p=4 为例）</h3>
+
+  <table>
+    <tr><th></th><th>rank 0</th><th>rank 1</th><th>rank 2</th><th>rank 3</th></tr>
+    <tr><td>start</td><td>0</td><td>5</td><td>10</td><td>15</td></tr>
+    <tr><td>end</td><td>5</td><td>10</td><td>15</td><td>20</td></tr>
+    <tr><td>warm-up 除法次数</td><td>0</td><td>5</td><td>10</td><td>15</td></tr>
+    <tr><td>主循环除法次数</td><td>4</td><td>4</td><td>4</td><td>4</td></tr>
+    <tr><td><strong>总计</strong></td><td><strong>4</strong></td><td><strong>9</strong></td><td><strong>14</strong></td><td><strong>19</strong></td></tr>
+  </table>
+
+  <p>规律：<strong>warm-up 长度 ∝ rank 编号</strong>。所以 rank 越靠后越慢——<strong>rank 3 一定是最慢的</strong>。</p>
+
+  <h3>时间线：rank 0 干完后只能在 Reduce 处干等</h3>
+
+  <p>warm-up 和主循环不是分开的"阶段"，是连续指令流。每个 rank 一启动就一路跑到 <code>MPI_Reduce</code>，到达后必须等其他 rank 也到（collective 同步）：</p>
+
+  <pre>时刻:    0        10            20
+         │         │             │
+rank 0:  ▓▓▓▓ ░░░░░░░░░░░░░░░░░░░  Reduce  ← 干完后空等 15 单位
+rank 1:  ▓▓▓▓▓▓▓▓▓ ░░░░░░░░░░░     Reduce  ← 等 10
+rank 2:  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ░░░░░      Reduce  ← 等 5
+rank 3:  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓       Reduce  ← 跑满，触发 Reduce 启动
+         ↑ ▓ = 算 │ ░ = 干等</pre>
+
+  <p><strong>整体 wall time = rank 3 的工作时间</strong>。CPU 资源利用率：</p>
+  <ul>
+    <li>实际工作 = 4+9+14+19 = 46 单位</li>
+    <li>分配资源 = 4 rank × 19 单位 = 76 单位</li>
+    <li>浪费 = 30 单位（39%）</li>
+    <li>并行效率 = 46/76 ≈ <strong>60%</strong>（理想是 100%）</li>
+  </ul>
+
+  <p>HPC 术语叫 <strong>straggler effect / long tail</strong>：少数几个慢 rank 拖累整体。在大规模并行（数千 rank）里这是头号性能杀手。</p>
+
+  <h3>这段代码就是产生不均衡的版本吗？</h3>
+  <p>是。slide 39 给的代码完全是上面分析的"连续切 + 每 rank 自己 warm-up"模式：</p>
+  <pre><code>int start = (N * rank) / size;   // ← 连续切：rank k 拿 [kN/p, (k+1)N/p)
+int end   = (N * (rank + 1)) / size;
+double term = 1.0;
+for (int k = 1; k &lt;= start; k++)  // ← warm-up：长度 ∝ rank 编号
+    term /= k;
+for (int n = start + 1; n &lt; end; n++) {  // ← 主循环：每 rank 都 N/p
+    term /= n;
+    local_sum += term;
+}</code></pre>
+  <p>不均衡来自<strong>方案本身的内在属性</strong>，不是代码写得不好——只要选了"连续切 + 每 rank warm-up"，就一定这样。</p>
+
+  <h3>更好的划分方式</h3>
+
+  <p><strong>方案 1：Block + 闭式公式（最简单的修正）</strong> —— 不用递推，用 <code>1/n! = exp(-lgamma(n+1))</code>，每项独立 O(1) 算：</p>
+  <pre><code>for (int n = start; n &lt; end; n++) {
+    local_sum += std::exp(-std::lgamma(n + 1));
+}</code></pre>
+  <p>每 rank 工作量都是 N/p 次 lgamma 调用，无 warm-up，完全均衡。加速接近线性 p。</p>
+
+  <p><strong>方案 2：Cyclic 划分 + 闭式</strong> —— 不连续切，<em>轮流分配</em>：</p>
+  <pre><code>for (int n = rank; n &lt; N; n += size) {        // ← 步长 = size
+    local_sum += std::exp(-std::lgamma(n + 1));
+}</code></pre>
+  <p>分配方式：</p>
+  <ul>
+    <li>rank 0: n = 0, 4, 8, 12, 16</li>
+    <li>rank 1: n = 1, 5, 9, 13, 17</li>
+    <li>rank 2: n = 2, 6, 10, 14, 18</li>
+    <li>rank 3: n = 3, 7, 11, 15, 19</li>
+  </ul>
+  <p>注意 cyclic <strong>不能配递推</strong>——索引不连续，<code>term /= n</code> 推不过去——所以必须配闭式。</p>
+
+  <h3>三种划分方式对比</h3>
+  <table>
+    <tr><th>划分方式</th><th>怎么切</th><th>何时最佳</th></tr>
+    <tr><td><strong>Block</strong>（连续）</td><td><code>n = start..end-1</code></td><td>工作量恒定时简单高效；有 cache locality 优势</td></tr>
+    <tr><td><strong>Cyclic</strong>（轮流）</td><td><code>n = rank, rank+size, ...</code></td><td>工作量随 n 变化（大头集中在尾部）时自动均衡</td></tr>
+    <tr><td><strong>Block-Cyclic</strong>（块+轮）</td><td>每 rank 拿 K 个连续项，按 K 的间隔轮</td><td>折中：保留 cache locality + 一定均衡。ScaLAPACK 用这套</td></tr>
+  </table>
+
+  <p>Cyclic 真正的<strong>战场</strong>不是 Euler's number（每项都 O(1) 等价），而是<strong>每项工作量随 n 增长</strong>的问题。例：f(n) 复杂度 O(n) 时，Block 让 rank 3 算最重的尾部，工作量是 rank 0 的 8 倍多；Cyclic 把长短任务交错分配，每 rank 拿到的总工作量接近。</p>
+
+  <h3>本例最终结论</h3>
+  <p>slide 上那段"用 warm-up 换破除依赖"的代码，<strong>对 Euler's number 加速比接近 1</strong>（warm-up 抵消了并行收益），它的真实价值是<strong>教学演示如何处理串行递推依赖</strong>。真正高效的做法是改用闭式公式让每项独立计算（Block + 闭式 或 Cyclic + 闭式 都行），这才能拿到接近线性的加速。这种"用一点冗余 / 换一种公式打破依赖"的思路 → "面对依赖必然损失加速"是 HPC 算法设计里最重要的权衡之一。</p>
+</details>
 </div>
 
 
@@ -1970,6 +2701,31 @@ comm.Allreduce(local.sum(keepdims=True), total, op=MPI.SUM)</code></pre>
 <div class="takeaway">
   💡 Speedup = T<sub>串</sub>/T<sub>并</sub>。理想 S=p，现实 S&lt;p，偶尔 S&gt;p（cache 红利的 super-linear）。
 </div>
+
+<details class="qa">
+  <summary>W/T 公式里 W 怎么量化？通信算 work 吗？不算通信，W<sub>p</sub> 和 W<sub>s</sub> 还会不同吗？</summary>
+
+  <p><strong>HPC 默认约定：W = FLOPs，通信不算 work，只算 time。</strong>通信开销藏在 T<sub>p</sub> 里让它变大，自动把 S 拉低，不需要单独量化"通信工作量"。同算法 W<sub>p</sub> = W<sub>s</sub> 时，公式退化成 <em>S = T<sub>s</sub> / T<sub>p</sub></em>。</p>
+
+  <p><strong>不算通信，W<sub>p</sub> ≠ W<sub>s</sub> 的几种常见情形</strong>（都是纯本地计算的额外开销，跟字节传输无关）：</p>
+  <table>
+    <tr><th>情形</th><th>W<sub>p</sub> 变化</th><th>例子</th></tr>
+    <tr><td>冗余计算换通信</td><td>W<sub>p</sub> &gt; W<sub>s</sub>（中幅）</td><td>slide 39 Euler warm-up：每 rank 重新算 1/start!，总除法 ≈ pN/2</td></tr>
+    <tr><td>Halo / ghost cell 重算</td><td>W<sub>p</sub> &gt; W<sub>s</sub>（小幅）</td><td>5-point stencil，边界点两边都算一遍</td></tr>
+    <tr><td>并行友好算法 op 数本就多</td><td>W<sub>p</sub> &gt; W<sub>s</sub>（理论上）</td><td>Hillis-Steele scan：N log N vs 串行的 N-1</td></tr>
+    <tr><td>查表 / 配置复制</td><td>W<sub>p</sub> = p · W<sub>s</sub></td><td>每 rank 各自构造同一份 lookup table</td></tr>
+    <tr><td>更聪明的数学方法</td><td>W<sub>p</sub> &lt; W<sub>s</sub>（罕见）</td><td>Multigrid 替代 Jacobi 迭代</td></tr>
+  </table>
+  <p>绝大多数情况 W<sub>p</sub> ≥ W<sub>s</sub>——"并行有开销"是通则。这就是 W/T 形式的意义：单看 wall time 不公平，把"多做的活"算进效率衡量。</p>
+
+  <p><strong>真要量化通信</strong>用两套模型（注意它们给的是 T<sub>comm</sub> 不是 W<sub>comm</sub>）：</p>
+  <ul>
+    <li><strong>α-β 模型</strong>：T<sub>comm</sub> = α + β·n。α = 延迟（μs 级），β = 带宽倒数，n = 字节数。</li>
+    <li><strong>算术强度 I = FLOPs / bytes</strong>：Roofline model 核心。I 高 = 计算密集（适合并行），I 低 = 通信瓶颈。</li>
+  </ul>
+
+  <p>结论：除非做 Roofline 分析或比较通信模式，平时只测 T<sub>p</sub>，不需要把通信转成 work 数字。</p>
+</details>
 </div>
 
 
