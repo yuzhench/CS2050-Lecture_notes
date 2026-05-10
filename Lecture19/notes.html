@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>CS 2050 Lecture 19 - 复习笔记</title>
+<link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.css" rel="stylesheet">
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    max-width: 980px;
+    margin: 40px auto;
+    padding: 0 24px;
+    line-height: 1.7;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 {
+    border-bottom: 3px solid #1f6feb;
+    padding-bottom: 10px;
+  }
+  h2.slide-title {
+    color: #1f6feb;
+    margin-top: 50px;
+    border-left: 5px solid #1f6feb;
+    padding-left: 12px;
+  }
+  h3 {
+    color: #333;
+    margin-top: 28px;
+  }
+  .slide-img {
+    display: block;
+    max-width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin: 16px 0 24px 0;
+  }
+  .explanation {
+    background: #fff;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
+  }
+  .qa {
+    background: #fff8e1;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border-left: 4px solid #f0a500;
+    margin-top: 20px;
+  }
+  details.qa > summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #b8730e;
+    font-size: 1.08em;
+    padding: 6px 0;
+    user-select: none;
+    list-style: none;
+  }
+  details.qa > summary::before {
+    content: "▶ ";
+  }
+  details.qa[open] > summary::before {
+    content: "▼ ";
+  }
+  code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.92em;
+  }
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th { background: #1f6feb; color: white; }
+  blockquote {
+    border-left: 4px solid #1f6feb;
+    margin: 16px 0;
+    padding: 4px 16px;
+    color: #555;
+    background: #eef4ff;
+  }
+  .takeaway {
+    background: #e8f5e9;
+    border-left: 4px solid #2e7d32;
+    padding: 14px 20px;
+    margin-top: 20px;
+    border-radius: 4px;
+  }
+  .formula {
+    background: #f6f8fa;
+    padding: 10px 16px;
+    border-radius: 4px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    margin: 10px 0;
+  }
+  .slide-grid {
+    display: grid;
+    gap: 12px;
+    margin: 16px 0 24px 0;
+  }
+  .slide-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .slide-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .slide-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .slide-grid .slide-img { margin: 0; max-width: 100%; }
+
+  /* code-walk layout */
+  .code-walk {
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 18px 0;
+  }
+  .walk-pair { border-bottom: 1px solid #e1e4e8; }
+  .walk-pair:last-child { border-bottom: none; }
+  .walk-code {
+    margin: 0;
+    border-radius: 0;
+  }
+  .walk-doc {
+    background: #f6f8fa;
+    padding: 12px 18px;
+    border-left: 4px solid #1f6feb;
+    font-size: 0.96em;
+  }
+
+  .section-divider {
+    margin-top: 60px;
+    padding: 14px 22px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #eaf3ff, #fafafa);
+    border-left: 6px solid #1f6feb;
+    font-size: 1.15em;
+    font-weight: bold;
+    color: #1f3d7a;
+  }
+</style>
+</head>
+<body>
+
+<h1>CS 2050 Lecture 19 - 复习笔记</h1>
+<p><em>主题：Molecular Dynamics Simulation —— Introduction, Algorithms &amp; Physics, Parallelization Techniques</em></p>
+
+<blockquote>
+  Lecture 19 是 Week 10 "Extended Example: Molecular Dynamics" 的第一节，进入本周的扩展示例。整节课的脉络分三段：(1) <strong>Motivation</strong> —— 为什么 MD 是 HPC 问题（10²⁵ 个原子 × 10⁻¹⁴ 秒的时间分辨率，硬上不可行）；(2) <strong>Algorithms &amp; Physics</strong> —— 用什么方程（Newton + Velocity-Verlet）、力从哪来（Stillinger-Weber 二体 + 三体势）、怎么把 O(N²) 砍到 O(N)（cutoff + neighbor list + periodic boundary），最后用 thermostat 控温；(3) <strong>Parallelization</strong> —— 哪些循环天然并行（pointwise update），哪些有 race condition（force reduction），各自怎么处理。Slide 1 标题页、slide 2 是 Week 9 Gaussian Processes 的回顾占位、slide 3–6 是 Quiz 9 / 课程 schedule / Code Server / 拉代码这种行政页，按惯例跳过；slide 7 / 13 / 30 是讲者自己分的三个章节标题页，被转写为下面的章节横幅；slide 27 / 29 / 34 是 "Exercise 2/3/4" 现场练习占位页，也跳过；slide 35 是预告下次课，放在最后。
+</blockquote>
+
+
+<div class="section-divider">第一部分 — Motivation：为什么模拟原子是 HPC 问题（slides 8–12）</div>
+
+
+<!-- ==================== SLIDE 8–9 ==================== -->
+<h2 class="slide-title">Slide 8–9 — 一瓶水里发生了什么？</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-008.png" alt="Slide 8: Hand holding water bottle">
+  <img class="slide-img" src="images/slide-009.png" alt="Slide 9: How do we understand why">
+</div>
+
+<div class="explanation">
+  <h3>从宏观现象到原子尺度的视角切换</h3>
+  <p>讲者用一瓶矿泉水开场，目的不是讲水，而是抛出一个研究范式的问题：当我们想理解一个宏观行为（水为什么会流动？冰为什么会融化？某种材料为什么会断裂？）时，<strong>"放大到原子尺度，直接看每个原子怎么动"</strong> 就是一种合法的解释路径。</p>
+  <p>Slide 9 那个放大圈里画的就是水里其实是 ~10²⁵ 个 H₂O 分子在不停撞来撞去。课程里这一周要做的，就是把这套"直接模拟原子运动"的方法（Molecular Dynamics, MD）从头实现一遍。</p>
+  <p><em>"We will study the atoms directly!"</em> 是这一段的核心口号——不解析地求解，不平均场近似，就是真的把每个原子的位置、速度、受力一个个算出来，让它一步步演化。</p>
+</div>
+
+
+<!-- ==================== SLIDE 10 ==================== -->
+<h2 class="slide-title">Slide 10 — 本周的目标：模拟冰融化</h2>
+
+<img class="slide-img" src="images/slide-010.png" alt="Slide 10: Simulate melting of water">
+
+<div class="explanation">
+  <h3>Atomistic Insights 是 MD 的目标</h3>
+  <p>这页给出本周的具体题目：<strong>模拟冰（晶体水）融化成液态水的过程</strong>。图里那个红色小球阵列就是 ice 的初始构型——分子排成规则的晶格。整个 MD 的任务就是给这套体系一个温度，让它按物理规律演化，看晶格何时崩溃、变成液体。</p>
+  <p>"Atomistic insight" 这个词的意思是：我们不只想看"冰熔点是 0°C"这个宏观数字，而是想看到<em>原子层面</em>发生了什么——哪个键先断、分子怎么从有序变无序、温度起伏如何传播。这正是 MD 比纯实验或纯统计力学多出来的那一层。</p>
+</div>
+
+
+<!-- ==================== SLIDE 11 ==================== -->
+<h2 class="slide-title">Slide 11 — 为什么这是 HPC 问题</h2>
+
+<img class="slide-img" src="images/slide-011.png" alt="Slide 11: Why is this HPC">
+
+<div class="explanation">
+  <h3>两个维度都"大"：空间 + 时间</h3>
+  <p>这页是整门课用来解释"为什么 MD 必须靠 HPC"的核心一页。左右两栏分别讲<em>空间尺度</em>和<em>时间尺度</em>，两个数字都吓人。</p>
+
+  <h3>Spatial Scale —— 一瓶水 ≈ 10²⁵ 原子</h3>
+  <p>500 mL 的水大约有 10²⁵ 个原子。即使每个原子只存 (位置 x,y,z + 速度 vx,vy,vz) 共 6 个 double，光内存就要 10²⁵ × 48 字节 = 4.8 × 10²⁶ 字节，是任何机器都装不下的。所以"模拟一整瓶水"在原子层面是物理上不可能的——必须只模拟很小的一块（比如一万个分子的 ice cube）。</p>
+
+  <h3>Temporal Scale —— Nyquist 频率限制 Δt</h3>
+  <p>右边那个 H₂O 分子里，O–H 键的振动周期 ω ≈ 10⁻¹⁴ s（10 飞秒级）。要数值地"看清"这个振动，根据 <em>Nyquist 采样定理</em>（采样率必须至少是信号频率的 2 倍），时间步长 Δt 只能取到 ~5 fs 上下。换句话说，模拟 1 秒的真实物理时间，需要 ~2 × 10¹⁴ 步迭代。</p>
+
+  <h3>底部那行 10³² 年是怎么算出来的</h3>
+  <p>把空间和时间一乘：要在 exascale（10¹⁸ FLOP/s）机器上模拟"1 秒钟一瓶水"，估算下来要跑 <strong>&gt;10³² 年</strong>——比宇宙年龄还多 22 个数量级。这不是优化能解决的，是物理上必须做近似。</p>
+  <p>所以 HPC 在 MD 里要做两件事：(1) 算法层面砍复杂度（cutoff、neighbor list 等，后面会讲）；(2) 实现层面榨硬件（共享内存、MPI、GPU，第三部分讲）。</p>
+</div>
+
+
+<!-- ==================== SLIDE 12 ==================== -->
+<h2 class="slide-title">Slide 12 — 两条解决路线：好近似 + 好实现</h2>
+
+<img class="slide-img" src="images/slide-012.png" alt="Slide 12: Smart physics and algorithmic choices">
+
+<div class="explanation">
+  <h3>把 slide 11 的"算不动"问题拆成两条路</h3>
+  <p>这页只是把后面几节的脉络铺开：</p>
+  <p><strong>(1) Atomic systems are complicated → 需要好的近似。</strong> 严格的量子化学（解 Schrödinger 方程）是 O(N!) 量级的，对几百个原子都很吃力。MD 选择把原子当成<em>经典点粒子</em>，用经验势函数（Stillinger-Weber 等）替代电子结构计算——精度换速度。Slide 14 之后会展开。</p>
+  <p><strong>(2) 重复操作多 → 必须并行。</strong> 哪怕每步算得再快，时间步要走 10⁹ ~ 10¹² 步，每步又要遍历 10⁴ ~ 10⁹ 个原子。这是个嵌套大循环，天然适合并行。第三部分会讨论哪些循环并行起来 trivial（pointwise）、哪些有 race condition（force/energy reduction）。</p>
+</div>
+
+
+<div class="section-divider">第二部分 — Algorithms &amp; Physics（slides 14–26, 28）</div>
+
+
+<!-- ==================== SLIDE 14 ==================== -->
+<h2 class="slide-title">Slide 14 — 怎么表示原子系统：经典近似</h2>
+
+<img class="slide-img" src="images/slide-014.png" alt="Slide 14: How do we represent our system">
+
+<div class="explanation">
+  <h3>从量子到经典的近似选择</h3>
+  <p>这页定义了 MD 最根本的一刀切近似：<strong>把原子核当成经典刚体小球</strong>。三个 bullet 一个一个看：</p>
+
+  <p><strong>"Molecules and materials at the atomic scale are quantum mechanical systems."</strong> 严格讲，原子里电子和原子核都受 Schrödinger 方程支配，有波函数、有概率云。但电子结构计算（DFT、Hartree-Fock 等）每步都极贵。</p>
+
+  <p><strong>"While one could perform simulations with electronic resolution, this is too expensive for our goals: O(N³) + large pre-factor."</strong> 即使最便宜的 DFT，标度大约是 O(N³) 且常数极大——做几百个原子的小体系还行，做上百万个原子就不可能。</p>
+
+  <p><strong>"We approximate that atom nuclei will act like classical objects."</strong> MD 的核心妥协：忽略量子效应，只保留原子核的位置和速度。每个原子是一个 (mass, position, velocity) 的三元组，相互作用用一个手工拟合的<em>经验势函数</em>来代替真实电子结构（slide 17–22）。</p>
+
+  <p>右侧三个图依次表达了这层抽象：上面是真实金属里电子云的复杂结构（量子图景），中间是把原子离散成红球阵列（经典近似），右下角是把单个 H₂O 分子简化成"一个绿球带一个红球"的<em>粗粒化</em>表示。后面用的就是这种粗粒化模型。</p>
+</div>
+
+
+<!-- ==================== SLIDE 15 ==================== -->
+<h2 class="slide-title">Slide 15 — 经典系统服从牛顿方程</h2>
+
+<img class="slide-img" src="images/slide-015.png" alt="Slide 15: Classical systems follow Newton's equations">
+
+<div class="explanation">
+  <h3>三个公式逐个看</h3>
+
+  <p><strong>E_total = E_kinetic(p) + E_potential(r)</strong> —— 系统总能量分成两块：动能（依赖动量 p，也就是质量×速度）和势能（依赖位置 r）。MD 演化过程中希望<em>总能量守恒</em>，这是检验积分器对不对的金标准。</p>
+
+  <p><strong>F = ma</strong> —— 牛顿第二定律。原子受到的力 F 决定加速度 a，进而决定速度和位置如何变。势能和力的关系是 <code>F = −∇E_potential</code>（力是势能梯度的负方向，slide 17 会用到）。</p>
+
+  <p><strong>r(t+Δt) = r(t) + v(t)Δt + ½ a(t) Δt²</strong> 和 <strong>v(t+Δt) = v(t) + ½ (a(t) + a(t+Δt)) Δt</strong> —— 这是 Velocity-Verlet 的解析形式，对位置用了二阶 Taylor 展开（带加速度修正项），对速度用了梯形法（取两端加速度的平均）。</p>
+
+  <p>为什么不用更熟悉的 Euler 法 <code>r ← r + v·Δt</code>？因为 Euler 法是一阶精度，能量会随步数线性漂移；而 Velocity-Verlet 是二阶精度且<em>辛积分</em>（symplectic，在长时间下能量震荡但不漂移）——这正是 MD 想要的性质。下一页会写出它的算法形式。</p>
+</div>
+
+
+<!-- ==================== SLIDE 16 ==================== -->
+<h2 class="slide-title">Slide 16 — Velocity-Verlet 算法本身</h2>
+
+<img class="slide-img" src="images/slide-016.png" alt="Slide 16: Velocity-Verlet algorithm">
+
+<div class="explanation">
+  <h3>把 slide 15 的公式拆成"半步速度 + 整步位置 + 重算力 + 半步速度"</h3>
+  <p>Slide 15 给的是连续公式，slide 16 给的是<em>实现版</em>——每个时间步 4 行操作，循环执行。逐行读：</p>
+
+  <p><strong>Line 2 ：v(t + Δt/2) ← v(t) + a(t)·Δt/2</strong> —— "半步速度更新"。先用<em>当前</em>加速度把速度推半步。注意推的是 Δt/2，不是 Δt。</p>
+
+  <p><strong>Line 3 ：r(t + Δt) ← r(t) + v(t + Δt/2)·Δt</strong> —— 用刚才那个"半步速度"把位置推整步。这一步走完，每个原子都搬到了新位置。</p>
+
+  <p><strong>Line 4 ：a(t + Δt) ← (1/m) F(r(t + Δt))</strong> —— <em>这是整个 MD 引擎里最贵的一步</em>。要根据新位置重新算每对（甚至每三个）原子之间的力，再除以质量得到新加速度。Slide 上画的那个箭头从 line 4 指出去，正是因为下面那行 "We need to define E_potential(r) and its gradient" 是这一步的<em>前置条件</em>——没有 E_potential 就算不出 F，没有 F 就出不了 a。后续 slide 17–22 整段都是在定义 E_potential。</p>
+
+  <p><strong>Line 5 ：v(t + Δt) ← v(t + Δt/2) + a(t + Δt)·Δt/2</strong> —— 用"新加速度"再把速度推后半步。这就是为什么叫 "velocity-Verlet"——速度被分两半更新，把<em>旧加速度</em>和<em>新加速度</em>各承担一半。</p>
+
+  <p>整个循环里，对单个原子来说每步只要 4 次浮点操作；真正昂贵的是 line 4 那个 F(r) 计算——它是 O(N²) 的（每对原子都要算），后面 slide 23–25 就是讲怎么把它降到 O(N)。</p>
+</div>
+
+
+<!-- ==================== SLIDE 17–20 ==================== -->
+<h2 class="slide-title">Slide 17–20 — Forces and Atomic Interactions：势能曲线的四个区域</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-017.png" alt="Slide 17: r = r0">
+  <img class="slide-img" src="images/slide-018.png" alt="Slide 18: r > r0">
+  <img class="slide-img" src="images/slide-019.png" alt="Slide 19: r < r0">
+  <img class="slide-img" src="images/slide-020.png" alt="Slide 20: r >> r0">
+</div>
+
+<div class="explanation">
+  <h3>四张图其实在画同一条势能曲线的四个采样点</h3>
+  <p>讲者用四张连续 slide 把 <em>Stillinger-Weber 二体势</em>（pair potential）的形状一段段建出来。每张 slide 左边那个柱子是 "在距离 r 处，势能 φ₂(r) 的值（高度）"；右边是相应距离下两个原子的受力情况。把它们拼起来就是经典的 LJ-like 双井势曲线。</p>
+
+  <p><strong>Slide 17 ：r = r₀（平衡距离）</strong> —— 势能在最低点 → 梯度 −∇E = 0 → 没有力。这是两个原子最"舒服"的距离，物理上对应化学键的键长。</p>
+
+  <p><strong>Slide 18 ：r &gt; r₀（稍微拉远）</strong> —— 势能上升（曲线右边在涨，柱子变成蓝色），梯度方向指向<em>更远</em>，所以 −∇E 指向<em>更近</em> → 出现<strong>吸引力</strong> F_i, F_j 互相指向对方，把它们拉回 r₀。物理直觉：化学键的"弹性回复力"。</p>
+
+  <p><strong>Slide 19 ：r &lt; r₀（挤得太近）</strong> —— 势能急剧上升（红色柱子拔高），梯度方向指向<em>更近</em>，所以 −∇E 指向<em>更远</em> → 出现<strong>强排斥力</strong>把两个原子推开。物理上对应电子云重叠产生的 Pauli 排斥，曲线在 r → 0 时几乎是垂直墙。</p>
+
+  <p><strong>Slide 20 ：r ≫ r₀（拉得很远）</strong> —— 势能渐近趋向 0（绿色柱子很矮），梯度也接近 0 → 几乎没有力。这是后面"截断 cutoff"成立的物理基础（slide 23）：远处的对子可以忽略。</p>
+
+  <p>把四个采样点连起来，就是一条<em>左侧陡升 → 中间凹陷 → 右侧缓慢趋零</em>的曲线。Slide 21 会把这个形状写成具体公式。</p>
+</div>
+
+
+<!-- ==================== SLIDE 21 ==================== -->
+<h2 class="slide-title">Slide 21 — Stillinger-Weber 二体势的解析形式</h2>
+
+<img class="slide-img" src="images/slide-021.png" alt="Slide 21: Stillinger-Weber pair potential formula">
+
+<div class="explanation">
+  <h3>三色块对应曲线的三段</h3>
+  <p>公式：</p>
+  <div class="formula">
+    φ₂(r_ij) = εA [ B (σ/r_ij)<sup>p</sup> − (σ/r_ij)<sup>q</sup> ] · exp( σ / (r_ij − aσ) )
+  </div>
+  <p>讲者把它涂成三色，每一色对应曲线的一段：</p>
+
+  <p><strong>红色 B(σ/r)<sup>p</sup>（排斥项）</strong> —— 当 r 很小，σ/r 很大，这一项被高次幂放大，主导排斥行为，对应 slide 19 那根红柱子。</p>
+
+  <p><strong>蓝色 −(σ/r)<sup>q</sup>（吸引项）</strong> —— 负号表示降低势能，幂次比 p 小，所以中等距离时它把势能拉到最低（井底），对应 slide 17 的平衡点。</p>
+
+  <p><strong>绿色 exp(σ/(r − aσ))（cutoff 因子）</strong> —— 这是 SW 势比经典 Lennard-Jones 多出来的一项。当 r 趋近 aσ 时分母趋零、指数爆负无穷，整个 φ₂ 被乘成 0；当 r &gt; aσ 时干脆<em>定义为</em> 0。所以 aσ 就是<strong>解析的硬截断</strong>：超过这个距离的对子贡献严格为 0，可以跳过计算。这正好对应 slide 20 的"远处力衰减为零"。</p>
+
+  <p>左下那张色条图把这三段画成空间叠加：σ 是距离尺度（井宽），ε 是能量尺度（井深），aσ 是截断半径。<em>这三个参数就是 SW 势的核心拟合参数</em>，针对不同物质（硅、水）会有不同取值。</p>
+</div>
+
+
+<!-- ==================== SLIDE 22 ==================== -->
+<h2 class="slide-title">Slide 22 — Beyond Pair Potentials：三体角势</h2>
+
+<img class="slide-img" src="images/slide-022.png" alt="Slide 22: Stillinger-Weber angular potential">
+
+<div class="explanation">
+  <h3>为什么二体势不够用</h3>
+  <p>左下角的图：把整个 H₂O 分子<em>粗粒化</em>成"一个绿球（O）带一个小红球（H）"的非对称单元。<em>"This is not a spherically symmetric molecule!"</em> ——水分子的方向性意味着它喜欢摆出特定的<strong>角度</strong>（液态水 109.5° 的四面体结构、ice 的氢键网络），仅靠"两两距离"无法描述这种偏好。</p>
+
+  <h3>三体角势 φ₃</h3>
+  <div class="formula">
+    φ₃(r_i, r_j, r_k) = ελ · exp(γσ/(r_ij − aσ)) · exp(γσ/(r_ik − aσ)) · (cos θ_jik + 1/3)²
+  </div>
+  <p>逐块看：</p>
+  <ul>
+    <li><strong>两个 exp 因子</strong>（绿色高亮）—— 跟 φ₂ 里的 cutoff 同款，确保只有当 j、k 都在中心 i 的 cutoff 内才有贡献。</li>
+    <li><strong>(cos θ_jik + 1/3)²</strong> —— 三体项的核心。当 θ_jik = 109.5°（四面体角）时 cos 109.5° = −1/3，整个括号为 0，势能取最小。<em>这就是 SW 势"偏爱四面体结构"的来源</em>。右侧那个蓝色四面体图就是在画这个最低能量的几何构型——一个中心原子 + 四个等距邻居张开 109.5°。</li>
+  </ul>
+  <p>所以 SW 三体势的物理意思是："如果三个原子摆得不像四面体，我就罚你能量"，从而在数值上重现水/硅的真实结构。</p>
+
+  <h3>总势能</h3>
+  <div class="formula">
+    E_potential = Σ_{i&lt;j} φ₂(r_ij) + Σ_{i&lt;j&lt;k} φ₃(r_i, r_j, r_k)
+  </div>
+  <p>枚举所有<em>原子对</em>（i&lt;j 避免重复）和所有<em>原子三元组</em>（i&lt;j&lt;k）。注意三体项的复杂度天然是 O(N³)，比二体的 O(N²) 还差——后面 slide 23–25 的 cutoff/neighbor list 优化对它尤其重要。</p>
+</div>
+
+
+<!-- ==================== SLIDE 23 ==================== -->
+<h2 class="slide-title">Slide 23 — A Critical Approximation：用 cutoff 把 O(N²) 砍到 O(N)</h2>
+
+<img class="slide-img" src="images/slide-023.png" alt="Slide 23: A critical approximation - cutoff">
+
+<div class="explanation">
+  <h3>核心论断</h3>
+  <p>"<em>Our potential energy decays towards zero as molecules separate</em>" —— 既然 slide 20–21 已经告诉我们远处贡献是 0，那对每个原子 i，只要枚举它<em>近处</em>的邻居，不需要遍历所有 N 个原子。</p>
+
+  <p>原本对每个 i 要算 N−1 个对子，总共 O(N²)。引入 cutoff 半径 r_c 后，<em>每个原子的邻居数量 k</em> 是<strong>常数</strong>（只跟密度和 r_c 有关，跟系统总大小 N 无关），所以总开销变成 O(N·k) = O(N)。这是 MD 能 scale 到百万原子级的关键。</p>
+
+  <h3>"locality should be as strong as possible (small cutoff)"</h3>
+  <p>讲者强调 cutoff 越小越好。底部那两个球的对比是想直观地讲：球体积 V = (4/3)π r³，<strong>邻居数量正比于 r³</strong>。把 r_c 加倍，每个原子需要遍历的邻居数会变成 8 倍。</p>
+
+  <p>所以 r_c 是个 trade-off：</p>
+  <ul>
+    <li>太大 → 浪费算力，包了一堆贡献 ≈ 0 的远邻居；</li>
+    <li>太小 → 漏掉真实的相互作用，物理上失真（势能、力都会偏）。</li>
+  </ul>
+  <p>实际工程里，r_c 通常取 SW 势那个 aσ 解析截断（势能严格为 0，没有任何精度损失）。</p>
+</div>
+
+
+<!-- ==================== SLIDE 24–25 ==================== -->
+<h2 class="slide-title">Slide 24–25 — Neighbor Lists：把"邻居是谁"缓存起来</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-024.png" alt="Slide 24: Time-correlated structure">
+  <img class="slide-img" src="images/slide-025.png" alt="Slide 25: Neighbor list cutoff radius">
+</div>
+
+<div class="explanation">
+  <h3>问题：cutoff 帮我们少算势能，但没帮我们少算"距离检查"</h3>
+  <p>有了 cutoff 后，<em>真正算势能</em>的对子变少了。但要判断"j 是不是 i 的邻居"，朴素做法还是要算一次距离 ‖r_i − r_j‖——所以每步还是有 O(N²) 次距离检查。Neighbor list 就是为了把这部分也降下去。</p>
+
+  <h3>关键观察（slide 24）：相邻时间步的结构变化很慢</h3>
+  <p>三张连续构型截图（time = 0 → 100 fs → 200 fs）几乎看不出区别。原因：每步 Δt = 5 fs，每个原子最多挪 v·Δt ≈ 0.05 Å，远小于原子间距。所以"原子 i 的邻居集合"在<em>很多步内基本不变</em>，可以缓存复用。</p>
+
+  <h3>解决方案（slide 25）：用两个半径 + 邻居表</h3>
+  <p>引入两个半径：</p>
+  <ul>
+    <li><strong>Interaction Cutoff Radius r_c</strong>（内圈）—— slide 23 那个真正影响势能的截断。</li>
+    <li><strong>Neighbor List Cutoff Radius r_l</strong>（外圈，r_l &gt; r_c）—— 稍微大一点的"安全圈"。</li>
+  </ul>
+
+  <p>每隔若干步（比如 100 步）做一次<em>大遍历</em>：对每个原子 i 找出 r_l 范围内所有邻居，存进 neighbor list（右边那张表，<code>原子 1: [2, 3, 5, 37, 42, ...]</code>）。中间这若干步内，力计算只在这张表里查，<em>不再做全局距离检查</em>。</p>
+
+  <p>为什么 r_l 要比 r_c 大？因为这若干步内原子会漂移一点点，可能本来在 r_c 外的原子飘进 r_c 内。多出来的安全边界 r_l − r_c 就是"漂移预算"。当某个原子漂移超过 (r_l − r_c)/2 时，就需要重建 neighbor list。</p>
+
+  <p>"<em>We now have fewer atoms to check each timestep!</em>" —— 距离检查从 O(N²) 降到 O(N · k_l)（k_l 是 r_l 内的平均邻居数，常数），重建开销摊到 100 步上几乎可以忽略。</p>
+</div>
+
+
+<!-- ==================== SLIDE 26 ==================== -->
+<h2 class="slide-title">Slide 26 — Periodic Boundaries：用一小盒子模拟"无限系统"</h2>
+
+<img class="slide-img" src="images/slide-026.png" alt="Slide 26: Periodic boundaries">
+
+<div class="explanation">
+  <h3>边界的麻烦</h3>
+  <p>之前讲 cutoff 时假设每个原子<em>四周都有邻居</em>。但真实模拟盒子是有限大的，盒子边缘的原子一侧没邻居，受力不平衡，会飘出去——这就是<em>表面效应</em>。物理上，我们想模拟的是 bulk water/ice，不想要表面效应。</p>
+
+  <h3>解决方案：把盒子复制到周围</h3>
+  <p>图上把同一个盒子在 x 方向左右各拷贝一份（实际三维要 26 份邻居），让边缘原子在外面也"看到"邻居。但<em>实际只存中间那个盒子</em>——计算邻居距离时，如果发现 j 在盒子外面，就把它<em>映射回盒内的镜像</em>（minimum image convention）：取所有镜像里距离最小的那个。</p>
+
+  <p>这样在内存上只多花 O(1) 的开销（一份盒子大小、几个边长参数），却把"小盒子"伪装成了"无限大体系"，消掉了所有人工边界效应。MD 教材里这是几乎所有体相模拟的标配技巧。</p>
+
+  <h3>对 cutoff 的约束</h3>
+  <p>用 minimum image 时，cutoff r_c 必须 &lt; L/2（L 是盒子边长），否则一个原子会同时跟另一个原子<em>本体和镜像</em>都发生作用，物理上自相矛盾。也就是说<em>盒子至少要比 2·r_c 大</em>——这是 MD 体系最小尺寸的下限。</p>
+</div>
+
+
+<!-- ==================== SLIDE 28 ==================== -->
+<h2 class="slide-title">Slide 28 — Thermostats：直接控温的小手段</h2>
+
+<img class="slide-img" src="images/slide-028.png" alt="Slide 28: Thermostats">
+
+<div class="explanation">
+  <h3>问题：Velocity-Verlet 守恒的是能量，不是温度</h3>
+  <p>第一行公式 <code>E_total = E_kinetic(p) + E_potential(r)</code> 守恒，说明 NVE 系综（粒子数 N、体积 V、能量 E 都守恒）。但实验里我们一般想模拟<strong>恒温</strong>条件（NVT，比如把系统放在 298 K 的浴池里），不是恒能。</p>
+
+  <p>右边那个公式 <code>T = (1/3Nk_B) Σ m_i v_i²</code> 给出温度的<em>定义</em>：温度等于动能的统计度量（每个自由度 ½k_B·T，3N 个自由度）。所以"恒温"等价于"动能保持在某个目标值附近"。</p>
+
+  <h3>Velocity-rescaling thermostat</h3>
+  <div class="formula">
+    v_i ← √(1 + (Δt/τ) · (T₀/T − 1)) · v_i
+  </div>
+  <p>每步在 Velocity-Verlet 之外，<strong>额外</strong>对每个速度乘一个标量因子。直觉很简单：如果当前温度 T 比目标 T₀ 低（T₀/T &gt; 1），系数 &gt; 1，把速度<em>放大</em>，注入动能；反之则缩小，抽走动能。</p>
+
+  <p>τ 是<strong>响应时间常数</strong>——τ 大表示慢慢调，τ 小表示一步到位。τ → ∞ 时退化为 NVE（不调温）；τ = Δt 时每步直接把 T 重置成 T₀（很 aggressive，会扰动动力学）。实践中 τ 取 10·Δt ~ 100·Δt 之间。</p>
+
+  <p>这是最简单的 thermostat（叫 Berendsen 类）。更严格的 Nose-Hoover、Langevin 等会在统计意义上更正确，但 SW 势 + 这种简单 rescaling 已经能让 ice 系统融化到目标温度，这门课用它就够了。</p>
+</div>
+
+
+<div class="section-divider">第三部分 — Parallelization Techniques（slides 31–33）</div>
+
+
+<!-- ==================== SLIDE 31 ==================== -->
+<h2 class="slide-title">Slide 31 — Shared Memory Parallelism：哪些循环并行 + race condition</h2>
+
+<img class="slide-img" src="images/slide-031.png" alt="Slide 31: Shared memory parallelism">
+
+<div class="explanation">
+  <h3>MD 引擎里的循环结构</h3>
+  <p>整个 MD 主循环里，每步要做的事情几乎都是<em>对每个原子做一遍</em>：</p>
+  <ul>
+    <li><strong>State updates</strong>：更新位置、速度、加速度数组（slide 32 详细看）。</li>
+    <li><strong>Force calculations</strong>：枚举每对、每三元组原子，算 φ₂、φ₃ 的贡献（slide 33 详细看）。</li>
+  </ul>
+  <p>这种"独立处理每个元素"的循环天然可以 OpenMP <code>#pragma omp parallel for</code>，每个线程认领一段原子，无需同步。这是<em>第二节</em>（slide 32）要讲的"trivially parallel"的部分。</p>
+
+  <h3>问题：force/energy 的累加有 race condition</h3>
+  <p>右边那个公式 <code>F_j = φ₂(r_ij) + φ₂(r_ji) + φ₃(r_i, r_j, r_k) + ...</code> 是关键：原子 j 的总受力，要把<em>它参与的每对、每三元组</em>的贡献加起来。换句话说：</p>
+  <ul>
+    <li>线程 A 在算 (i, j) 对子，要把贡献写到 F[i] 和 F[j]；</li>
+    <li>同一时刻，线程 B 在算 (j, k) 对子，也要把贡献写到 F[j] 和 F[k]；</li>
+    <li>两个线程<em>同时往 F[j] 写</em> → 经典 race condition。</li>
+  </ul>
+  <p>右边的三原子图 (i, j, k) 就是在画这种共享：j 同时是 (i, j) 对子的成员、也是 (j, k) 对子的成员、还是 (i, j, k) 三元组的成员，多个并行任务会争抢 F[j]。</p>
+  <p>解决方案有几种：原子操作（<code>#pragma omp atomic</code>，简单但慢）、线程私有累加器后归并（per-thread buffer + reduction，快但耗内存）、按"原子owner"分块（每个原子只由一个线程负责写它的力）。这是<em>第三节</em>（slide 33）要讲的 reduction 模式。</p>
+</div>
+
+
+<!-- ==================== SLIDE 32 ==================== -->
+<h2 class="slide-title">Slide 32 — Pointwise Updates：天然并行的循环</h2>
+
+<img class="slide-img" src="images/slide-032.png" alt="Slide 32: Pointwise updates">
+
+<div class="explanation">
+  <h3>这一类循环：每个原子只读写自己的数据</h3>
+  <p>Slide 列了两个例子：</p>
+
+  <p><strong>Integration Loop</strong></p>
+  <pre><code class="language-cpp">for i in (all atoms):
+    Update position array values
+    Update velocity array values</code></pre>
+  <p>对应 Velocity-Verlet 的 line 2、line 3、line 5——每个原子根据它<em>自己</em>的 v、a、r 算出新的 v、r，<em>不读其他原子的数据</em>。所以 N 个原子完全独立，开 N 个线程同时算也没冲突。</p>
+
+  <p><strong>Thermostat Loop</strong></p>
+  <pre><code class="language-cpp">for i in (all atoms):
+    Apply velocity scaling factor</code></pre>
+  <p>对应 slide 28 的 v_i ← α·v_i。这个 α 是个全局标量（用整体 T 算出来的），每个线程读这个标量、改自己的 v_i，仍然零冲突。</p>
+
+  <h3>实现上能写多 trivial</h3>
+  <p>OpenMP 里就一行：</p>
+  <pre><code class="language-cpp">#pragma omp parallel for
+for (int i = 0; i &lt; N; ++i) {
+    pos[i] += vel[i] * dt + 0.5 * acc[i] * dt * dt;
+    vel[i] += 0.5 * acc[i] * dt;
+}</code></pre>
+  <p>没有锁、没有 reduction、没有 ordering 要求。能拿到的加速比基本就是<em>线性</em>到核数。这种"embarrassingly parallel"的部分是 MD 中最舒服的一段。</p>
+</div>
+
+
+<!-- ==================== SLIDE 33 ==================== -->
+<h2 class="slide-title">Slide 33 — Energy/Force Reductions：嵌套循环 + 归并</h2>
+
+<img class="slide-img" src="images/slide-033.png" alt="Slide 33: Energy/force reductions">
+
+<div class="explanation">
+  <h3>这一类循环：内层要把贡献累加到共享数组</h3>
+  <p>两个例子结构相同——外层遍历每个原子，内层遍历它的邻居：</p>
+
+  <p><strong>Energy Loop</strong></p>
+  <pre><code class="language-cpp">for i in (all atoms):
+    for j in (neighbor atoms):
+        Compute pair, triplet energy
+        E_i += energy</code></pre>
+
+  <p><strong>Force Loop</strong></p>
+  <pre><code class="language-cpp">for i in (all atoms):
+    for j in (neighbor atoms):
+        Compute pair, triplet force
+        F_i += force</code></pre>
+
+  <h3>为什么这是"reduction"而不是"pointwise"</h3>
+  <p>外层的 i 看似独立，但<em>内层在累加 F_i / E_i</em>——多个线程如果各自循环不同的 i，并不会冲突；但如果按 (i, j) 对子分配工作（比如把所有对子分给线程），多个线程会同时往同一个 F_i 写，就回到 slide 31 的 race condition。</p>
+
+  <p>典型实现技巧：</p>
+  <ul>
+    <li><strong>按 i 分配（owner-computes）</strong>：让每个线程负责"以 i 为中心"的所有邻居 j 的贡献，自己累加 F_i。代价是 (i, j) 和 (j, i) 都会算一次（等于丢弃了 Newton 第三定律的对称性），多算 2×。</li>
+    <li><strong>对称 + per-thread 累加器</strong>：每对 (i, j) 只算一次，把贡献分别加到本线程的 F_local[i]、F_local[j]，最后做一次跨线程 reduction。省一半计算，但要 N × n_threads 大小的临时数组。</li>
+    <li><strong>OpenMP <code>reduction(+:...)</code> 子句</strong>：让编译器帮做上面那套累加器逻辑——但要求归并的是标量或定长数组，对动态结构（neighbor list）需要手写。</li>
+  </ul>
+
+  <p>这类 loop 是 MD 性能的<em>瓶颈</em>：内层每次迭代要做距离平方根、指数、power 等昂贵浮点操作，又要小心同步。后面的课会讲 MPI 把它分到多节点、CUDA 把它丢给 GPU 上的几千个 thread，是真正"高性能"那一节的核心战场。</p>
+</div>
+
+
+<!-- ==================== SLIDE 35 ==================== -->
+<h2 class="slide-title">Slide 35 — 下次课预告</h2>
+
+<img class="slide-img" src="images/slide-035.png" alt="Slide 35: Thursday preview">
+
+<div class="explanation">
+  <p>周四（下一次 Lecture 20）会把今天的 Velocity-Verlet + SW 势 + neighbor list + thermostat 的"<em>串行</em>实现"再加一层复杂度，并真正用 <strong>MPI + CUDA</strong> 来加速：MPI 把盒子按空间切分到多节点（domain decomposition），CUDA 把每个原子的力计算丢到 GPU 上数千个线程并行——把"~1 分钟跑不到几步"的限制打破，看 ice cube 真的融化。</p>
+</div>
+
+
+<div class="takeaway">
+  <h3>本节核心 takeaway</h3>
+  <ul>
+    <li><strong>MD 的 HPC 必要性</strong>：原子数 ~10²⁵、时间步 ~10⁻¹⁴ s，完整模拟在物理上不可能 → 必须算法 + 实现两端同时下手。</li>
+    <li><strong>核心算法</strong>：Velocity-Verlet（辛积分，能量长期稳定）；力来自 Stillinger-Weber 二体 + 三体经验势。</li>
+    <li><strong>三大复杂度优化</strong>：cutoff 把 O(N²) 降到 O(N)；neighbor list 把每步距离检查再降一档；periodic boundary 用 O(1) 内存模拟无限体系。</li>
+    <li><strong>系综控制</strong>：velocity-rescaling thermostat 把守恒能量的 NVE 改造成接近 NVT。</li>
+    <li><strong>并行结构</strong>：pointwise updates（位置/速度/温控）trivially parallel；force/energy reductions 是真正的瓶颈，需要原子操作或 per-thread 累加器解决 race condition。</li>
+  </ul>
+</div>
+
+</body>
+</html>

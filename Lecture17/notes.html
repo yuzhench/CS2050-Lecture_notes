@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>CS 2050 Lecture 17 - 复习笔记</title>
+<link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.css" rel="stylesheet">
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    max-width: 980px;
+    margin: 40px auto;
+    padding: 0 24px;
+    line-height: 1.7;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 {
+    border-bottom: 3px solid #1f6feb;
+    padding-bottom: 10px;
+  }
+  h2.slide-title {
+    color: #1f6feb;
+    margin-top: 50px;
+    border-left: 5px solid #1f6feb;
+    padding-left: 12px;
+  }
+  h3 {
+    color: #333;
+    margin-top: 28px;
+  }
+  .slide-img {
+    display: block;
+    max-width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin: 16px 0 24px 0;
+  }
+  .explanation {
+    background: #fff;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
+  }
+  .qa {
+    background: #fff8e1;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border-left: 4px solid #f0a500;
+    margin-top: 20px;
+  }
+  details.qa > summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #b8730e;
+    font-size: 1.08em;
+    padding: 6px 0;
+    user-select: none;
+    list-style: none;
+  }
+  details.qa > summary::before {
+    content: "▶ ";
+  }
+  details.qa[open] > summary::before {
+    content: "▼ ";
+  }
+  code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.92em;
+  }
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th { background: #1f6feb; color: white; }
+  blockquote {
+    border-left: 4px solid #1f6feb;
+    margin: 16px 0;
+    padding: 4px 16px;
+    color: #555;
+    background: #eef4ff;
+  }
+  .takeaway {
+    background: #e8f5e9;
+    border-left: 4px solid #2e7d32;
+    padding: 14px 20px;
+    margin-top: 20px;
+    border-radius: 4px;
+  }
+  .formula {
+    background: #f6f8fa;
+    padding: 10px 16px;
+    border-radius: 4px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    margin: 10px 0;
+  }
+  .slide-grid {
+    display: grid;
+    gap: 12px;
+    margin: 16px 0 24px 0;
+  }
+  .slide-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .slide-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .slide-grid .slide-img { margin: 0; max-width: 100%; }
+
+  /* code-walk layout */
+  .code-walk {
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 18px 0;
+  }
+  .walk-pair { border-bottom: 1px solid #e1e4e8; }
+  .walk-pair:last-child { border-bottom: none; }
+  .walk-code {
+    margin: 0;
+    border-radius: 0;
+  }
+  .walk-doc {
+    background: #f6f8fa;
+    padding: 12px 18px;
+    border-left: 4px solid #1f6feb;
+    font-size: 0.96em;
+  }
+
+  .section-divider {
+    margin-top: 60px;
+    padding: 14px 22px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #eaf3ff, #fafafa);
+    border-left: 6px solid #1f6feb;
+    font-size: 1.15em;
+    font-weight: bold;
+    color: #1f3d7a;
+  }
+</style>
+</head>
+<body>
+
+<h1>CS 2050 Lecture 17 - 复习笔记</h1>
+<p><em>主题：Guest Lecture by Jennifer Coulter (Flatiron Institute) —— An Introduction to Parallel Distributed Memory Linear Algebra Software</em></p>
+
+<blockquote>
+  Lecture 17 是一节客座课，讲者来自 Flatiron Institute 的 CCQ（Center for Computational Quantum physics），平时用 <strong>Phoebe</strong> 这个 HPC 代码做热电材料的玻尔兹曼输运计算——所以一上来用 thermoelectric 材料做"为什么需要分布式内存线性代数"的动机。主线是：<strong>分布式矩阵 → block-cyclic 分布 → BLACS + ScaLAPACK 这一套传统软件 → modern landscape (ELPA / SLATE / cuSOLVERMp / ELEMENTAL)</strong>。Slide 1–3 是讲者自我介绍 / 大纲 / 致谢，按惯例跳过；slide 50 是参考链接列表，也跳过；slide 51 / 53 / 54 只是 "EXAMPLE 1/2/3" 占位页（讲者现场跑代码 demo），笔记里只在 slide 52 ParallelMatrix wrapper 处提一下。
+</blockquote>
+
+
+<div class="section-divider">第一部分 — Motivation：thermoelectric 材料和 Phoebe（slides 4–10）</div>
+
+
+<!-- ==================== SLIDE 4–7 ==================== -->
+<h2 class="slide-title">Slide 4–7 — 为什么关心热电？从废热到 Seebeck / ZT</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-004.png" alt="Slide 4: 废热 + Seebeck">
+  <img class="slide-img" src="images/slide-005.png" alt="Slide 5: 应用">
+  <img class="slide-img" src="images/slide-006.png" alt="Slide 6: ZT 公式">
+  <img class="slide-img" src="images/slide-007.png" alt="Slide 7: 材料图">
+</div>
+
+<div class="explanation">
+  <h3>核心问题：浪费掉的能量</h3>
+  <p>世界上能源消耗中有很大一部分以"废热"的形式损失掉——比如汽车发动机、工业炉、计算机芯片。Slide 4 提出：能不能把这些热回收成电？这就是 <strong>thermoelectric（热电）</strong> 现象。</p>
+
+  <h3>Seebeck 效应</h3>
+  <p>当一根材料的两端温度不同（一端 hot、一端 cold），材料内部会产生电压差。这就是 Seebeck 效应。Slide 4 上的 "S" 系数（V/K）就是 Seebeck 系数：每开尔文温差能产生多少电压。这是热电器件的"基础物理"。</p>
+
+  <h3>应用场景（slide 5）</h3>
+  <p>放射性同位素温差发电机（RTG）——NASA 的旅行者号、毅力号火星车都靠它供电；工业余热回收；可穿戴设备体温供电。共同点：要么没有别的选择（深空），要么发电效率不高但能就地用。</p>
+
+  <h3>ZT：判断材料好坏的指标</h3>
+  <p>Slide 6 给出 thermoelectric 材料的 figure of merit：</p>
+  <div class="formula">ZT = (S² · σ · T) / κ</div>
+  <p>其中 S 是 Seebeck 系数，σ 是电导率，κ 是热导率，T 是温度。理想材料要<em>电导高（电子好流动）但热导低（热不容易扩散掉）</em>——但这两件事在金属里是耦合的（电子既导电也导热），所以要找特殊材料才能解耦。这正是搜索的核心难点。</p>
+
+  <h3>材料家族（slide 7）</h3>
+  <p>Bi₂Te₃、PbTe、SnSe、Skutterudites、Half-Heuslers 等是历来研究热点。Slide 7 上的图是不同材料体系的 ZT 随温度的曲线——可以看到 ZT 通常 ≤ 2，工业上要 ZT ≈ 3 才有竞争力。<em>用 HPC 模拟筛材料</em>是这个领域的一条主路径。</p>
+</div>
+
+<div class="takeaway">
+  💡 整段 motivation 一句话：热电材料的 ZT 公式里每一项都需要对电子和声子的输运做<em>数值求解</em>——要解大规模本征值问题（hundreds of thousands × hundreds of thousands 的稠密矩阵），所以分布式线性代数是绕不开的。
+</div>
+
+
+<!-- ==================== SLIDE 8–10 ==================== -->
+<h2 class="slide-title">Slide 8–10 — Boltzmann transport + Phoebe code</h2>
+
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-008.png" alt="Slide 8: BTE">
+  <img class="slide-img" src="images/slide-009.png" alt="Slide 9: Phoebe">
+  <img class="slide-img" src="images/slide-010.png" alt="Slide 10: workflow">
+</div>
+
+<div class="explanation">
+  <h3>Boltzmann transport equation（BTE）</h3>
+  <p>要算 σ、S、κ，传统方法是解 <em>玻尔兹曼输运方程</em>：描述电子（或声子）在外加电场 / 温度梯度下分布函数 f(k, r, t) 怎么演化的偏微分方程。在材料里要离散到布里渊区的 k-mesh 上——典型 100×100×100 的 mesh，再乘上能带数，就得到一个稠密矩阵特征值 / 线性系统问题。</p>
+
+  <h3>Phoebe</h3>
+  <p>讲者所在组写的开源代码，C++ + MPI/OpenMP/CUDA，专门做电子-声子耦合下的输运计算。它的核心 kernel 之一就是<em>对一个分布式稠密矩阵做对角化</em>——也就是为什么这一节课要讲 ScaLAPACK。</p>
+
+  <h3>典型 workflow（slide 10）</h3>
+  <p>DFT（密度泛函）算电子结构 → Wannier 化 + 电子-声子耦合矩阵 → BTE 求解 → 输运系数 → ZT。每一步矩阵规模指数级放大，所以最后 BTE 求解必须分布式。</p>
+</div>
+
+
+<!-- ==================== SLIDE 11 ==================== -->
+<h2 class="slide-title">Slide 11 — 这节课的目标</h2>
+
+<img class="slide-img" src="images/slide-011.png" alt="Slide 11: Goals">
+
+<div class="explanation">
+  <p>讲者明确目标：(1) 知道有哪些分布式线性代数库可用；(2) 看懂 ScaLAPACK 的 setup 步骤、能去文档里找需要的函数；(3) 对现代替代品（ELPA / SLATE / cuSOLVERMp）有个 mental map，遇到 GPU 集群时知道往哪个方向找。<em>不要求</em>记住每个 API 的全部参数——记住"长什么样、怎么查"就够了。</p>
+</div>
+
+
+<!-- ==================== SLIDE 12–14 ==================== -->
+<h2 class="slide-title">Slide 12–14 — Prerequisites：MPI / BLAS / LAPACK 回顾</h2>
+
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-012.png" alt="Slide 12: MPI">
+  <img class="slide-img" src="images/slide-013.png" alt="Slide 13: BLAS">
+  <img class="slide-img" src="images/slide-014.png" alt="Slide 14: LAPACK">
+</div>
+
+<div class="explanation">
+  <h3>MPI</h3>
+  <p>分布式内存里进程之间不共享地址空间，要靠<em>消息传递</em>来交换数据。MPI 提供 send/recv 和 collective（broadcast、reduce、scatter、gather、allgather…）。后面 BLACS 完全建在 MPI 之上，所以 MPI 是底座。</p>
+
+  <h3>BLAS（Basic Linear Algebra Subprograms）</h3>
+  <p>线性代数底层 kernel，分三层：</p>
+  <ul>
+    <li><strong>Level 1</strong>：向量-向量操作（dot product、axpy）。复杂度 O(n)。</li>
+    <li><strong>Level 2</strong>：矩阵-向量（gemv、trsv）。O(n²)。</li>
+    <li><strong>Level 3</strong>：矩阵-矩阵（<em>gemm</em> 是其代表）。O(n³)。</li>
+  </ul>
+  <p>Level 3 是 HPC 最重要的，因为<em>每个数据元素被复用 n 次</em>，计算/访存比高，能吃满 cache 和向量单元。各厂商的高性能 BLAS 实现：Intel MKL、AMD AOCL、OpenBLAS（开源）、cuBLAS（NVIDIA GPU）、rocBLAS（AMD GPU）。</p>
+
+  <h3>LAPACK（Linear Algebra PACKage）</h3>
+  <p>建在 BLAS 之上，提供高层求解器：线性方程组（dgesv）、最小二乘（dgels）、特征值（<strong>dsyev</strong> 对称、dgeev 一般）、SVD（dgesdd）等。LAPACK 的设计哲学是"内部尽量多调 Level 3 BLAS"——所以当 BLAS 高效时，LAPACK 自动跟着快。</p>
+  <p>关键命名约定（影响后面 ScaLAPACK 阅读）：第一字母 = 数据类型（s 单精度、d 双精度、c 复单、z 复双），后两字 = 矩阵类型（sy = symmetric，ge = general，po = positive definite），最后是操作。所以 <code>dsyev</code> = double-precision symmetric eigenvalue。</p>
+</div>
+
+
+<div class="section-divider">第二部分 — Distributed Memory 矩阵分布的基本原则（slides 15–21）</div>
+
+
+<!-- ==================== SLIDE 15 (divider in deck) ==================== -->
+<!-- The slide itself is a divider; we already have the section header above. Skip rendering its image. -->
+
+
+<!-- ==================== SLIDE 16–19 ==================== -->
+<h2 class="slide-title">Slide 16–19 — 四种朴素分布方式 + load balancing / data locality</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-016.png" alt="Slide 16: 1D/2D Block">
+  <img class="slide-img" src="images/slide-017.png" alt="Slide 17: 1D/2D Cyclic">
+  <img class="slide-img" src="images/slide-018.png" alt="Slide 18: Gaussian elimination">
+  <img class="slide-img" src="images/slide-019.png" alt="Slide 19: load balancing vs locality">
+</div>
+
+<div class="explanation">
+  <h3>四种基础分布</h3>
+  <p>把一个 n×n 矩阵分给 P 个进程，最朴素的四种切法：</p>
+  <ul>
+    <li><strong>1D Block</strong>：按行（或列）切成 P 大块，进程 0 拿前 n/P 行，进程 1 拿下一段，依此类推。</li>
+    <li><strong>1D Cyclic</strong>：按行循环发牌——进程 0 拿第 0、P、2P… 行，进程 1 拿第 1、P+1、2P+1… 行。</li>
+    <li><strong>2D Block</strong>：把矩阵切成 √P × √P 的大方块，每个进程一块。</li>
+    <li><strong>2D Cyclic</strong>：行和列两个方向都按 cyclic 派发。</li>
+  </ul>
+
+  <h3>为什么 Gaussian elimination 暴露问题（slide 18）</h3>
+  <p>高斯消元是按列从左往右消的：第 k 步要用第 k 列做 pivot 去更新右下角的子矩阵。</p>
+  <ul>
+    <li>用 <strong>1D Block</strong>：消到第 k 列时，只有<em>持有第 k 列那一段</em>的进程在干活，其他进程空闲——严重 load imbalance。</li>
+    <li>用 <strong>1D Cyclic</strong>：每个进程都持有一些列，第 k 列归谁不好预测，但整体上工作分布得均匀——load balance 好。</li>
+  </ul>
+
+  <h3>但 cyclic 又坏在 data locality（slide 19）</h3>
+  <p>纯 cyclic 把矩阵切碎成单行或单元素，每个进程持有的元素在原矩阵里完全不连续。这意味着：</p>
+  <ul>
+    <li>本地一次操作最多只能调 BLAS Level 1（向量级），用不了 Level 3 的高效 gemm。</li>
+    <li>cache 利用率差——访问跳来跳去。</li>
+    <li>消息条数多但每条很短，通信开销主导。</li>
+  </ul>
+  <p>反过来 <strong>1D/2D Block</strong> 数据 locality 好——每个进程连续持有一大块，能跑高效的本地 gemm/dsyrk，cache 友好。</p>
+
+  <h3>矛盾</h3>
+  <p>所以两种朴素方式各自只解决一个问题：<em>Block 解决 locality 但 imbalance；Cyclic 解决 balance 但 locality 差</em>。下一张 slide 把两者揉到一起。</p>
+</div>
+
+
+<!-- ==================== SLIDE 20 ==================== -->
+<h2 class="slide-title">Slide 20 — Block-cyclic 分布</h2>
+
+<img class="slide-img" src="images/slide-020.png" alt="Slide 20: Block-cyclic">
+
+<div class="explanation">
+  <h3>思路：把矩阵切成中等大小的 block，再 cyclic 派发这些 block</h3>
+  <p>两个参数：</p>
+  <ul>
+    <li>进程网格 P_row × P_col（比如 2×2）</li>
+    <li>block 尺寸 m_b × n_b（比如 64×64）</li>
+  </ul>
+  <p>把矩阵按 m_b × n_b 切成网格状的小 block，然后这些 block 沿行方向 cyclic 发给 P_row 个 row，沿列方向 cyclic 发给 P_col 个 col——也就是 <strong>2D block-cyclic</strong>。</p>
+
+  <h3>为什么这个 layout 最优</h3>
+  <ul>
+    <li><strong>Locality</strong>：每个 block 内部是连续的，本地能调 Level 3 BLAS 处理整个 block。</li>
+    <li><strong>Load balance</strong>：高斯消元第 k 列扫过去时，cyclic 派发使得每个进程都持有一些 pivot 列，工作分布均匀。</li>
+  </ul>
+  <p>这就是 ScaLAPACK / ELPA / SLATE / cuSOLVERMp 通通采用 block-cyclic 的原因——它在两个极端之间找到了 sweet spot。</p>
+</div>
+
+
+<!-- ==================== SLIDE 21 ==================== -->
+<h2 class="slide-title">Slide 21 — Block size 的取舍</h2>
+
+<img class="slide-img" src="images/slide-021.png" alt="Slide 21: Block size">
+
+<div class="explanation">
+  <h3>"经验值"</h3>
+  <p>常用 block size：32 / 64 / 128。这些值对绝大多数现代 CPU 的 cache line 和 TLB 都是友好的，是社区跑出来的安全默认。</p>
+
+  <h3>选错了多大代价？</h3>
+  <ul>
+    <li>太小（比如 1×1）：退化成纯 cyclic，本地 BLAS 用不上，性能可能掉 4×。</li>
+    <li>太大（比如等于 n / P_row）：退化成纯 block，load imbalance 浮现，性能掉 ~2×。</li>
+  </ul>
+  <p>结论：除非有 profile 数据支持，否则别瞎调——默认 64 一般就对了。</p>
+</div>
+
+
+<div class="section-divider">第三部分 — BLACS + ScaLAPACK（slides 22–36）</div>
+
+
+<!-- ==================== SLIDE 23–24 ==================== -->
+<h2 class="slide-title">Slide 23–24 — 软件来源：netlib + Dongarra group + IBM ESSL</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-023.png" alt="Slide 23: Overview">
+  <img class="slide-img" src="images/slide-024.png" alt="Slide 24: A note about sources">
+</div>
+
+<div class="explanation">
+  <p>BLAS / LAPACK / BLACS / ScaLAPACK 都来自同一个谱系——Jack Dongarra 在 University of Tennessee Knoxville (UTK) 的小组（后来叫 Innovative Computing Lab）。它们的"参考实现"全放在 <code>netlib.org</code>。Dongarra 同一组之前还做过 EISPACK / LINPACK，再之前是 BLAS 1。</p>
+  <p>Slide 24 提醒：商用机器上常用 IBM 的 <strong>Parallel ESSL</strong>（PESSL），它是 ScaLAPACK 的私有变体，API 名字基本一样（PDSYEV、PDGESV 这种）但在 IBM Power 系列上做了深度优化。文档（PESSL 的）有时反而比 netlib ScaLAPACK 的更易读，所以查参数含义时可以两边对照看。</p>
+</div>
+
+
+<!-- ==================== SLIDE 25–26 ==================== -->
+<h2 class="slide-title">Slide 25–26 — BLACS：MPI 之上的"线性代数通信层"</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-025.png" alt="Slide 25: BLACS intro">
+  <img class="slide-img" src="images/slide-026.png" alt="Slide 26: BLACS process grid">
+</div>
+
+<div class="explanation">
+  <h3>BLACS = Basic Linear Algebra Communication Subprograms（1995）</h3>
+  <p>BLACS 是 MPI 和 ScaLAPACK 中间的<em>薄薄一层</em>，专门提供"线性代数式的"通信原语：发一行、发一列、发一个子矩阵、行内 broadcast、列内 reduce 等等。它内部完全是用 MPI 实现的，但暴露给 ScaLAPACK 的接口是<em>"按二维网格组织的进程之间收发矩阵 block"</em>这种领域语言，比直接写 MPI_Send 一行行编号方便得多。</p>
+
+  <h3>Process grid：为什么是网格</h3>
+  <p>既然要做 2D block-cyclic，就要把 P 个进程组织成<em>逻辑上的二维网格</em> P_row × P_col。Slide 25 的 2×3 例子和 slide 26 的 2×2 例子展示了同一件事：你有 6 个或 4 个 MPI rank，BLACS 把它们排成 grid，每个 rank 分配到 (myrow, mycol) 坐标，后续所有矩阵分发都按这套坐标走。<em>BLACS 不要求方阵网格</em>，但 ScaLAPACK 的 dense eigensolver 在方阵 grid（√P × √P）上性能最好——所以一般如果有 16 进程就用 4×4。</p>
+
+  <h3>BLACS context：一个整数标签</h3>
+  <p>BLACS 把"哪些 rank、什么形状、列优先还是行优先"打包成一个 <strong>context</strong>，用一个 <code>int</code> 标识。后续所有调用都要把这个 context 传进去——可以理解成 MPI_Comm 的"线性代数版"，但语义更窄、只描述网格结构。同一个程序里可以同时存在多个 context（比如一个全局 grid + 几个子 grid），按场景切换。</p>
+</div>
+
+
+<!-- ==================== SLIDE 27 ==================== -->
+<h2 class="slide-title">Slide 27 — ScaLAPACK：Scalable LAPACK</h2>
+
+<img class="slide-img" src="images/slide-027.png" alt="Slide 27: ScaLAPACK intro">
+
+<div class="explanation">
+  <h3>怎么"扩展"LAPACK</h3>
+  <p>ScaLAPACK（1995）= LAPACK 的分布式内存版本。<em>API 命名规则一一对应</em>：LAPACK 里的 <code>DSYEV</code>（double symmetric eigenvalue）在 ScaLAPACK 里就叫 <code>PDSYEV</code> ——前面加 P 表示 parallel。绝大多数 LAPACK 求解器都有对应的 ScaLAPACK 版本。</p>
+
+  <h3>依赖栈</h3>
+  <p>ScaLAPACK 依赖 MPI + BLAS + LAPACK + BLACS。从 ScaLAPACK 2.0 开始，BLACS 已经被 bundle 在 ScaLAPACK 的源码里，不用单独装。</p>
+
+  <h3>限制</h3>
+  <p><strong>CPU only</strong>。ScaLAPACK 自己不会跑到 GPU 上——这是它在 exascale 时代的最大弱点，也是 SLATE / cuSOLVERMp 等替代品诞生的原因（后面 modern landscape 会讲）。</p>
+</div>
+
+
+<!-- ==================== SLIDE 28–29 ==================== -->
+<h2 class="slide-title">Slide 28–29 — Descriptor Array：怎么告诉 ScaLAPACK"我的矩阵长这样"</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-028.png" alt="Slide 28: Descriptor table">
+  <img class="slide-img" src="images/slide-029.png" alt="Slide 29: Descriptor elements">
+</div>
+
+<div class="explanation">
+  <h3>问题</h3>
+  <p>ScaLAPACK 的某个调用（比如 PDSYEV）要操作一个分布在多个进程上的矩阵 A。这个调用本身是<em>collective</em> 的——所有 rank 同时进入，每个 rank 只持有 A 的一部分（一些 block）。函数怎么知道：A 全局多大？block 多大？grid 多大？我这块在全局的哪个位置？</p>
+
+  <h3>答案：descriptor array</h3>
+  <p>每个分布式矩阵都配一个长度为 9 的整数数组 <code>desc[0..8]</code>。所有元数据塞在里面：</p>
+  <table>
+    <tr><th>下标</th><th>含义</th></tr>
+    <tr><td>desc[0] DTYPE</td><td>matrix descriptor type，dense matrix 是 1</td></tr>
+    <tr><td>desc[1] CTXT</td><td>BLACS context 句柄（就是 slide 26 那个 int）</td></tr>
+    <tr><td>desc[2] M</td><td>全局矩阵的行数</td></tr>
+    <tr><td>desc[3] N</td><td>全局矩阵的列数</td></tr>
+    <tr><td>desc[4] MB</td><td>block 行尺寸 m_b</td></tr>
+    <tr><td>desc[5] NB</td><td>block 列尺寸 n_b</td></tr>
+    <tr><td>desc[6] RSRC</td><td>第一个 block-row 的"主"进程行号（一般 0）</td></tr>
+    <tr><td>desc[7] CSRC</td><td>第一个 block-col 的"主"进程列号（一般 0）</td></tr>
+    <tr><td>desc[8] LLD</td><td>本地存储的 leading dimension（local row stride，至少 = 本地行数）</td></tr>
+  </table>
+
+  <h3>为什么这么设计</h3>
+  <p>把所有"矩阵的逻辑视图"信息打包成一个简单数组，调用 ScaLAPACK 函数时只传<em>本地数据指针 + descriptor</em>就够了。函数内部根据 descriptor 自己算"我应该和哪些进程通信、什么时候、传多少 byte"。</p>
+  <p>实际写代码时基本不直接构造这 9 个数——用 BLACS 提供的辅助函数 <code>descinit(...)</code> 一次性填好（slide 42 的 code 会用到）。</p>
+</div>
+
+
+<!-- ==================== SLIDE 30–31 ==================== -->
+<h2 class="slide-title">Slide 30–31 — 例子：2×2 grid，7×7 矩阵，2×2 blocks</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-030.png" alt="Slide 30: example global view">
+  <img class="slide-img" src="images/slide-031.png" alt="Slide 31: example local view">
+</div>
+
+<div class="explanation">
+  <h3>怎么读这两张图</h3>
+  <p>左图（slide 30）是<em>全局视角</em>：7×7 的矩阵被切成 2×2 的小 block，注意 7 不能整除 2，所以最后一行 / 最后一列的 block 是"残块"（1×2 或 2×1 或 1×1）。每个 block 用颜色标记被哪个进程持有——4 种颜色对应 P00、P01、P10、P11 这 2×2 grid。颜色按 cyclic 派发：第 (i, j) 个 block 归 (i mod 2, j mod 2)。</p>
+  <p>右图（slide 31）是<em>本地视角</em>：每个进程把自己拿到的 block 在本地 stack 起来，存成一个连续的小矩阵。注意：</p>
+  <ul>
+    <li>本地存储不再是 7×7——比如 P00 拿到的 block 拼起来是 4×4，P11 拿到的可能是 3×3。</li>
+    <li>本地"行号"和全局行号不一样，需要 <code>indxl2g</code> / <code>indxg2l</code> 这类辅助函数互相转换。</li>
+  </ul>
+
+  <h3>关键认识</h3>
+  <p>每个进程的视角都<em>不同</em>——它只看到自己那一块拼出来的子矩阵。ScaLAPACK 函数收到的"local pointer"指的就是这个本地拼接矩阵；descriptor 告诉它这块在全局里对应什么位置。</p>
+</div>
+
+
+<!-- ==================== SLIDE 32–34 ==================== -->
+<h2 class="slide-title">Slide 32–34 — 练习：2×2 grid，7×7 矩阵，3×3 blocks</h2>
+
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-032.png" alt="Slide 32: exercise prompt">
+  <img class="slide-img" src="images/slide-033.png" alt="Slide 33: matrix coloring answer">
+  <img class="slide-img" src="images/slide-034.png" alt="Slide 34: full answer">
+</div>
+
+<div class="explanation">
+  <h3>怎么算</h3>
+  <p>7×7 矩阵 / 3×3 blocks → 行方向被切成 ⌈7/3⌉ = 3 个 block 行（高度 3,3,1），列方向同理 3 个 block 列（宽 3,3,1）。一共 3×3 = 9 个 block，按 cyclic 派发到 2×2 grid 上：第 (i, j) 个 block 归 (i mod 2, j mod 2)。</p>
+  <p>结果（slide 33 的着色）：</p>
+  <ul>
+    <li>P00 拿到 block (0,0) 和 (0,2) 和 (2,0) 和 (2,2) ——本地拼成大约 4×4 矩阵（实际是 3+1 行 × 3+1 列 = 4×4）。</li>
+    <li>P01 拿到 (0,1) 和 (2,1)——本地约 4×3。</li>
+    <li>P10 拿到 (1,0) 和 (1,2)——本地约 3×4。</li>
+    <li>P11 拿到 (1,1)——本地 3×3。</li>
+  </ul>
+
+  <h3>这个练习想说什么</h3>
+  <p>说明<em>同一个矩阵，不同 block size 会让本地存储形状完全不同</em>。block size 不只是性能调参——它决定了每个进程的本地内存占用、本地 BLAS 调用的形状。下一张 slide 35–36 顺着这个思路讨论"选错 block size 多惨"。</p>
+</div>
+
+
+<!-- ==================== SLIDE 35–36 ==================== -->
+<h2 class="slide-title">Slide 35–36 — Bad block size 演示</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-035.png" alt="Slide 35: 4x4 vs 5x5">
+  <img class="slide-img" src="images/slide-036.png" alt="Slide 36: 1x1 = pure cyclic">
+</div>
+
+<div class="explanation">
+  <p>同一个 7×7 矩阵换不同 block size 后的对比：</p>
+  <ul>
+    <li><strong>4×4 block</strong>：7/4 = 1 余 3，行列各只有 2 个 block。在 2×2 grid 上派发，意味着每个进程拿到 1 个 block，但 block 大小差异巨大（4×4 vs 4×3 vs 3×3）。<em>Load 严重不均衡</em>。</li>
+    <li><strong>5×5 block</strong>：更糟——7/5 = 1 余 2，几乎所有数据集中在 P00。</li>
+    <li><strong>1×1 block</strong>（slide 36）：退化成纯 cyclic，每个矩阵元素单独派发。Load balance 是完美的，但本地"矩阵"是稀稀疏疏的散点，调不了 Level 3 BLAS——slide 21 说的 4× 减速就是这种情况。</li>
+  </ul>
+
+  <h3>结论</h3>
+  <p>block 太大→ imbalance；太小 → locality 死。中间档（32/64/128）是历史经验值。这一段用具象例子佐证 slide 21 的口号。</p>
+</div>
+
+
+<div class="section-divider">第四部分 — Practical use：完整代码示例（slides 37–42）</div>
+
+
+<!-- ==================== SLIDE 38 ==================== -->
+<h2 class="slide-title">Slide 38 — Basic Use Overview：4 步</h2>
+
+<img class="slide-img" src="images/slide-038.png" alt="Slide 38: 4-step overview">
+
+<div class="explanation">
+  <p>用 BLACS + ScaLAPACK 做任何事情都是这四步：</p>
+  <ol>
+    <li><strong>Initialize MPI process grid</strong>：MPI_Init → 拿到 nprocs / rank → 决定 P_row × P_col → 用 BLACS 创建 context。</li>
+    <li><strong>Distribute data</strong>：每个进程根据 (myrow, mycol) 计算自己应该持有哪些全局 (i, j) 元素，把它们填到本地数组里。</li>
+    <li><strong>Set up and call ScaLAPACK routine</strong>：用 <code>descinit</code> 填好 descriptor，分配 workspace，调 <code>pdsyevd</code>（或别的）。</li>
+    <li><strong>Release process grid</strong>：blacs_gridexit + blacs_exit + MPI_Finalize。</li>
+  </ol>
+  <p>Slide 39–42 把这 4 步对应的代码逐段展开。</p>
+</div>
+
+
+<!-- ==================== SLIDE 39 ==================== -->
+<h2 class="slide-title">Slide 39 — LAPACK <code>dsyev</code> vs ScaLAPACK <code>pdsyevd</code>：API 对比</h2>
+
+<img class="slide-img" src="images/slide-039.png" alt="Slide 39: dsyev vs pdsyevd">
+
+<div class="explanation">
+  <p>这张 slide 把单节点 LAPACK 调用和分布式 ScaLAPACK 调用<em>并排放</em>，方便看出多了哪些参数、为什么多。</p>
+</div>
+
+<h3>LAPACK：<code>dsyev(...)</code> 一个节点上对称矩阵特征值</h3>
+
+<div class="code-walk">
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-c">dsyev(jobz, uplo, n, a, lda, w, work, lwork, info);</code></pre>
+    <div class="walk-doc">单节点的对称矩阵特征值求解器。一行调用就够。下面一项一项看每个参数。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-c">char jobz;   // 'N' = 只算特征值, 'V' = 同时算特征向量</code></pre>
+    <div class="walk-doc">告诉求解器要不要顺便算特征向量。算特征向量更慢、要更多内存，所以分两档。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-c">char uplo;   // 'U' 或 'L'：你只在矩阵的上三角 / 下三角填了数据</code></pre>
+    <div class="walk-doc">对称矩阵只要存一半就够。这个参数告诉它你存的是哪一半。另一半算法自己镜像。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-c">int n;       // 矩阵阶
+double* a;   // n × n 矩阵的数据指针 (column-major)
+int lda;     // leading dimension，本地存储的 row stride，&gt;= n</code></pre>
+    <div class="walk-doc">矩阵本体三件套。<code>lda</code> 通常等于 n，但如果你把 a 嵌在更大的数组里，lda 就是那个外层数组的 row stride。Fortran 风格，column-major。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-c">double* w;   // 输出：长度 n 的数组，特征值升序写在这</code></pre>
+    <div class="walk-doc">调用前你 malloc 一段 n 个 double，函数返回时里面就是排好序的特征值。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-c">double* work;  // workspace
+int lwork;     // workspace 长度</code></pre>
+    <div class="walk-doc">LAPACK 内部需要的临时空间，由调用者预分配——这是 LAPACK 的固定模式（避免 LAPACK 自己 malloc，便于在嵌入式 / Fortran 环境用）。<em>lwork 怎么知道?</em> 用 workspace query：先调一次 <code>dsyev(..., work, lwork=-1, info)</code>，函数把推荐的 lwork 写进 work[0]，然后真正分配再调一次。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-c">int* info;   // 返回码：0 = 成功，&lt;0 = 第 |info| 个参数有问题，&gt;0 = 不收敛</code></pre>
+    <div class="walk-doc">LAPACK 通用的返回约定。生产代码必须检查。</div>
+  </div>
+</div>
+
+<h3>ScaLAPACK：<code>pdsyevd(...)</code> 分布式版本</h3>
+
+<div class="code-walk">
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-c">pdsyevd(jobz, uplo,
+        n,
+        a, ia, ja, desca,
+        w,
+        z, iz, jz, descz,
+        work, lwork,
+        iwork, liwork,
+        info);</code></pre>
+    <div class="walk-doc">参数膨胀了，但本质多出来的就三类：(1) <em>分布式 descriptor</em> 替代了 lda；(2) <em>(ia, ja) 偏移</em>支持"对全局矩阵的某个子块求解"；(3) 输出特征向量也是分布式矩阵 z，要它自己的 descriptor。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-c">char jobz;   // 同 LAPACK
+char uplo;   // 同 LAPACK
+int n;       // 同 LAPACK：全局矩阵阶</code></pre>
+    <div class="walk-doc">语义和 LAPACK 完全一致。<em>n 始终是全局尺寸</em>，不是本地尺寸——这是 ScaLAPACK 的设计点：调用者按"全局视图"来描述要算什么。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-c">double* a;       // 本地数据指针：当前进程持有的 block 拼起来的小矩阵
+int ia, ja;      // 在全局矩阵里，本地数据对应的子矩阵的左上角坐标
+int* desca;      // 长度 9 的 descriptor 数组（slide 28-29）</code></pre>
+    <div class="walk-doc">每个进程传的 a 都不一样（自己那块）。(ia, ja) 一般 = (1, 1) 表示"操作整个 A"——但如果只想对 A 的某个子块求特征值，可以传 (ia, ja) = (k, k)。descriptor 告诉函数 A 的全局形状、block 大小、grid context。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-c">double* w;   // 输出：长度 n 的特征值数组（每个进程都拿到完整副本）</code></pre>
+    <div class="walk-doc">特征值很短（n 个数），所以 ScaLAPACK 把它<em>复制到每个进程</em>，避免后续还要再做一次 broadcast。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-c">double* z;       // 输出：特征向量矩阵，分布式存储
+int iz, jz;      // z 在 "全局特征向量矩阵" 里的左上角偏移
+int* descz;      // z 的 descriptor</code></pre>
+    <div class="walk-doc">和 a 完全平行——特征向量本身是 n×n 矩阵，分布式存储，需要它自己一套 (z, iz, jz, descz)。一般 z 用和 a 同样的 block-cyclic 布局。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-c">double* work;  int lwork;
+int* iwork;    int liwork;</code></pre>
+    <div class="walk-doc">分布式版本除了 double workspace，还要 int workspace（用于 cyclic indexing 的内部表）。两份都要 query 一遍才知道大小。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-c">int* info;</code></pre>
+    <div class="walk-doc">同 LAPACK。注意：<em>collective 调用</em>，每个进程都拿到同样的 info——所以只需要 root 检查并 abort。</div>
+  </div>
+</div>
+
+
+<!-- ==================== SLIDE 40 ==================== -->
+<h2 class="slide-title">Slide 40 — Step 1 代码：建立 BLACS process grid</h2>
+
+<img class="slide-img" src="images/slide-040.png" alt="Slide 40: BLACS setup code">
+
+<div class="explanation">
+  <p>这一段对应 slide 38 的 step 1。slide 上的代码是讲者写在一个完整 main 里的片段，下面把每一段拆开讲。</p>
+</div>
+
+<div class="code-walk">
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-cpp">int icontxt;
+int what = 0;   // 0 表示 "default system context"
+int idef = 0;
+blacs_get(&idef, &what, &icontxt);</code></pre>
+    <div class="walk-doc"><code>blacs_get</code> 拿一个"默认 context"——可以理解为 BLACS 启动时基于 MPI_COMM_WORLD 包出来的<em>种子 context</em>。我们后面要用它造一个真正带 grid 形状的 context。<code>idef = 0</code> 是约定的"我什么都不指定"，<code>what = 0</code> 是"给我默认的"。返回写到 <code>icontxt</code>。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-cpp">int nprow = 2, npcol = 2;
+char order = 'R';   // 'R' = row-major：rank 0 → (0,0), rank 1 → (0,1), ...
+blacs_gridinit(&icontxt, &order, &nprow, &npcol);</code></pre>
+    <div class="walk-doc"><code>blacs_gridinit</code> 在前面拿到的 icontxt 上"刻"出一个 nprow × npcol 的二维网格，并把 rank 按 row-major 的顺序映射到 (myrow, mycol) 坐标。<em>调用之后</em> icontxt 就变成了"带网格几何的 context"，后面所有矩阵 descriptor 都要引用这个 icontxt。如果 nprow × npcol &gt; 总进程数会失败。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-cpp">int myrow, mycol;
+blacs_gridinfo(&icontxt, &nprow, &npcol, &myrow, &mycol);</code></pre>
+    <div class="walk-doc">每个进程查询自己在 grid 里的 (myrow, mycol)。这是后面计算"我应该持有哪些全局矩阵元素"的起点——<em>所有本地索引计算都依赖这两个值</em>。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-cpp">int globalRows = ...;   // n
+int globalCols = ...;   // n
+int blockRows = 64;
+int blockCols = 64;
+int rsrc = 0, csrc = 0;
+
+int numLocalRows = numroc(&globalRows, &blockRows, &myrow, &rsrc, &nprow);
+int numLocalCols = numroc(&globalCols, &blockCols, &mycol, &csrc, &npcol);</code></pre>
+    <div class="walk-doc"><code>numroc</code>（Number of Rows Or Columns）是 BLACS 提供的辅助函数：<em>"按 block-cyclic 派发，全局 N 个 row、block 大小 NB、grid 这边 nprow 个进程，我（myrow）应该拿到几行？"</em> 因为 N 不一定能整除 NB·nprow，每个进程拿到的本地行数会不一样——<code>numroc</code> 帮你算出来。 列方向同理。计算完 numLocalRows 和 numLocalCols 之后，本地存储应该 malloc 多大就清楚了。</div>
+  </div>
+</div>
+
+<div class="takeaway">
+  💡 这一段全部是<em>"setup phase"</em>——还没碰任何矩阵数据，只是建立 grid + 算出"我这进程要分到多少本地空间"。
+</div>
+
+
+<!-- ==================== SLIDE 41 ==================== -->
+<h2 class="slide-title">Slide 41 — Step 2 代码：分配本地存储 + 用 indxl2g 填全局值</h2>
+
+<img class="slide-img" src="images/slide-041.png" alt="Slide 41: matrix setup code">
+
+<div class="code-walk">
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-cpp">int numLocalElements = numLocalRows * numLocalCols;
+double* matrix = new double[numLocalElements];</code></pre>
+    <div class="walk-doc">本地连续 buffer，按 column-major 存（ScaLAPACK 是 Fortran 风格）。注意大小是 <em>本地</em>—— 一个 100k × 100k 的全局矩阵在 100 进程上，每个进程只 malloc 大概 1k × 1k 那么大。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-cpp">for (int j = 0; j &lt; numLocalCols; j++) {
+  for (int i = 0; i &lt; numLocalRows; i++) {</code></pre>
+    <div class="walk-doc">外层列、内层行——column-major 顺序写入，让连续地址访问对应连续矩阵元素，cache 友好。i, j 是<em>本地</em>下标（从 0 到 numLocalRows-1 / numLocalCols-1）。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-cpp">    int globalRow = indxl2g(&i, &blockRows, &myrow, &rsrc, &nprow);
+    int globalCol = indxl2g(&j, &blockCols, &mycol, &csrc, &npcol);</code></pre>
+    <div class="walk-doc"><code>indxl2g</code>（INDeX Local TO Global）：把本地下标 (i, j) 翻译回它在<em>全局矩阵</em>里的下标。这是必须的——因为你要按某个数学公式（比如 H[i,j] = …）填这个矩阵元素，公式用的是全局坐标。block-cyclic 的本地→全局映射不是简单加偏移，而是要根据 myrow / blockRows / nprow 三个量混合算，所以必须用 BLACS 提供的 helper。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-cpp">    matrix[i + j * numLocalRows] = compute(globalRow, globalCol);
+  }
+}</code></pre>
+    <div class="walk-doc">拿到全局坐标后，调用问题相关的 <code>compute(i, j)</code> 算出该位置应该填什么（比如 Hamiltonian 矩阵元）。结果按 column-major 写入本地 buffer：<code>matrix[i + j * numLocalRows]</code> 就是 column-major 公式。</div>
+  </div>
+</div>
+
+<div class="takeaway">
+  💡 这一步的妙处：<em>每个进程独立填自己的本地块，没有任何通信</em>。前提是矩阵元素能由 (globalRow, globalCol) 直接算出来——很多物理 / 数值场景都满足。
+</div>
+
+
+<!-- ==================== SLIDE 42 ==================== -->
+<h2 class="slide-title">Slide 42 — Step 3 代码：descinit + workspace + pdsyevd 调用 + 释放</h2>
+
+<img class="slide-img" src="images/slide-042.png" alt="Slide 42: pdsyevd call code">
+
+<div class="code-walk">
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-cpp">int desc[9];
+int info;
+descinit(desc, &globalRows, &globalCols,
+         &blockRows, &blockCols,
+         &rsrc, &csrc, &icontxt,
+         &numLocalRows, &info);</code></pre>
+    <div class="walk-doc">把 slide 28–29 那 9 个数一次性填好。参数顺序和 desc 数组下标完全对应：M / N / MB / NB / RSRC / CSRC / CTXT / LLD（LLD = leading dimension = numLocalRows）。<em>每个进程都要调一次</em>——因为每个进程的 desc 里只有 LLD 可能不同（其他元数据是全局共享的）。<code>info</code> 检查参数合法性。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-cpp">int lwork = 7 * numRows + 5 * numCols + 2;
+double* work = new double[lwork];</code></pre>
+    <div class="walk-doc">workspace 大小公式来自 <code>pdsyevd</code> 的文档（每个 ScaLAPACK 函数的 man page 给一条公式）。<em>正式做法</em>是先调 pdsyevd 一次 lwork=-1 做 query，但很多代码直接套这条经验公式。<em>注意 numRows / numCols 是全局尺寸</em>。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-cpp">double* eigenvectors = new double[numLocalElements];
+double* eigenvalues  = new double[numRows];</code></pre>
+    <div class="walk-doc">输出空间。<em>eigenvectors</em> 是分布式的（和 matrix 同样的 block-cyclic 布局，所以本地大小 = numLocalElements）；<em>eigenvalues</em> 是<em>每个进程都持有的全局副本</em>（slide 39 提到过）。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-cpp">char jobz = 'V';   // 要特征向量
+char uplo = 'U';   // 我用了上三角
+int one = 1;
+pdsyevd(&jobz, &uplo,
+        &numRows,
+        matrix, &one, &one, desc,
+        eigenvalues,
+        eigenvectors, &one, &one, desc,
+        work, &lwork,
+        &info);</code></pre>
+    <div class="walk-doc">真正的求解调用——<em>collective</em>，所有 rank 同时进入。<code>(ia, ja) = (1, 1)</code> 意思是"对整个全局矩阵 A 求"。注意 eigenvectors 复用了 matrix 的 desc——因为 z 和 a 在这个例子里布局一致。返回后：每个 rank 的 eigenvalues[] 都是完整 n 个值；eigenvectors 是分布式的（要看完整特征向量需要 gather）。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-cpp">delete[] matrix;
+delete[] eigenvectors;
+delete[] eigenvalues;
+delete[] work;
+blacs_gridexit(&icontxt);
+blacs_exit(&info);
+// MPI_Finalize() 由外层负责</code></pre>
+    <div class="walk-doc">step 4：释放本地内存 → 退出 BLACS grid → 退出 BLACS。<code>blacs_exit</code> 的 info 参数 = 0 表示也帮你 MPI_Finalize；非 0 表示让外层自己 finalize（PHoebe 这种大代码通常 = 1）。</div>
+  </div>
+</div>
+
+<div class="takeaway">
+  💡 整个流程回顾：<em>建 grid → 算本地大小 → malloc + 填本地数据 → descinit → pdsyevd → 收尾</em>。除了第三步真正的数学调用，前后都是固定模板代码——所以很多组（包括讲者自己的 Phoebe）都会写一个 wrapper 把 setup/teardown 隐藏起来（slide 52 的 ParallelMatrix）。
+</div>
+
+
+<div class="section-divider">第五部分 — Modern Software Landscape（slides 43–48）</div>
+
+
+<!-- ==================== SLIDE 44 ==================== -->
+<h2 class="slide-title">Slide 44 — Modern Software：ScaLAPACK 的局限</h2>
+
+<img class="slide-img" src="images/slide-044.png" alt="Slide 44: Modern Software">
+
+<div class="explanation">
+  <h3>ScaLAPACK 仍然 reliable，但…</h3>
+  <ul>
+    <li><em>scaling 有限</em>：原始算法没考虑 exascale 级（10^18 flops）的通信瓶颈。</li>
+    <li><em>没有 GPU 支持、没有 thread 支持</em>：只能纯 MPI 跑在 CPU 上。今天大型集群基本都是 GPU 节点 + 节点内多线程，ScaLAPACK 用不上这些资源。</li>
+  </ul>
+
+  <h3>新一代努力的共同点</h3>
+  <p>不管是 ELPA、SLATE 还是 cuSOLVERMp，几个共性：</p>
+  <ul>
+    <li>仍然采用 block-cyclic 分布——这部分没人能颠覆。</li>
+    <li>很多仍然用 BLACS（或者实现一个等价层）做通信抽象，便于从 ScaLAPACK 代码迁移。</li>
+    <li>都暴露 Fortran 或 C/C++ 接口（不是 Python-first）——这些是底层库。</li>
+  </ul>
+  <p>边上小注："GPU 要求重写算法以避开通信开销"——CPU 时代被通信主导的算法在 GPU 上更糟，因为 GPU 内部带宽极高、节点间相对慢，所以要从根上换思路（比如 communication-avoiding QR）。</p>
+</div>
+
+
+<!-- ==================== SLIDE 45 ==================== -->
+<h2 class="slide-title">Slide 45 — ELPA：对称特征值的高性能替代</h2>
+
+<img class="slide-img" src="images/slide-045.png" alt="Slide 45: ELPA">
+
+<div class="explanation">
+  <p><strong>ELPA = Eigenvalue soLvers for Petaflop Applications</strong>。专攻一件事：<em>对称 / Hermitian 矩阵的特征值</em>——也就是 ScaLAPACK 里 PDSYEV 那一类问题。</p>
+  <ul>
+    <li>支持 CPU + GPU（Nvidia、AMD、Intel）。</li>
+    <li>性能上明显优于 ScaLAPACK，scaling 更好（slide 上的图：ELPA 在 ≥1k cores 后明显领先）。</li>
+    <li><em>仍然用 BLACS</em>，能直接 drop-in 替换 ScaLAPACK 的特征值调用——只换函数名。</li>
+    <li>缺点：<em>build 比较难</em>——依赖 MKL / GPU 工具链 / 对应的 MPI 实现，编译选项又多又复杂。生产集群上一般有管理员预装的 module 可用。</li>
+  </ul>
+  <p>典型场景：DFT 程序（VASP、Quantum ESPRESSO）的核心特征值步骤，几乎都接 ELPA 作为可选后端。</p>
+</div>
+
+
+<!-- ==================== SLIDE 46 ==================== -->
+<h2 class="slide-title">Slide 46 — SLATE：ScaLAPACK 的 exascale 替代</h2>
+
+<img class="slide-img" src="images/slide-046.png" alt="Slide 46: SLATE">
+
+<div class="explanation">
+  <p><strong>SLATE = Software for Linear Algebra Targeting Exascale</strong>。Dongarra 同一组（UTK 的 ICL）做的"ScaLAPACK 接班人"，是美国 Exascale Computing Project 的一部分。</p>
+  <ul>
+    <li>定位是<em>"全面替换 ScaLAPACK"</em>——覆盖 LU / QR / Cholesky / 特征值 / SVD，不像 ELPA 只攻一类问题。</li>
+    <li>从头设计支持 CPU + GPU，内部使用 task-based runtime（任务图调度）以更好地 overlap 通信和计算。</li>
+    <li>目前 GPU 后端的 BLAS 3 已经稳定可用，更高层求解器还在补全。</li>
+  </ul>
+</div>
+
+
+<!-- ==================== SLIDE 47 ==================== -->
+<h2 class="slide-title">Slide 47 — cuSOLVERMp：NVIDIA 自己的分布式</h2>
+
+<img class="slide-img" src="images/slide-047.png" alt="Slide 47: cuSOLVERMp">
+
+<div class="explanation">
+  <p><strong>cuSOLVERMp</strong> = CUDA 的 Multi-Process distributed dense linear algebra library。</p>
+  <ul>
+    <li>跟 BLACS + ScaLAPACK 用法<em>非常像</em>——意图就是让习惯 ScaLAPACK 的用户能快速迁移。</li>
+    <li>覆盖线性系统、特征值、SVD。</li>
+    <li>NVIDIA 在开发，跟着 NVIDIA HPC SDK 一起发布。<em>仅 NVIDIA GPU</em>，跨厂商不行。</li>
+    <li>相对较新，文档和实战经验比 ScaLAPACK / ELPA 少。</li>
+  </ul>
+</div>
+
+
+<!-- ==================== SLIDE 48 ==================== -->
+<h2 class="slide-title">Slide 48 — Modern Software Summary 表</h2>
+
+<img class="slide-img" src="images/slide-048.png" alt="Slide 48: Summary table">
+
+<div class="explanation">
+  <p>把上面几个库做横向对比：</p>
+  <table>
+    <tr><th>库</th><th>覆盖</th><th>并行</th><th>GPU</th><th>注意</th></tr>
+    <tr><td>ScaLAPACK</td><td>几乎全部 LAPACK 功能</td><td>MPI</td><td>无</td><td>scaling 受限</td></tr>
+    <tr><td>ELPA</td><td>对称特征值（专精）</td><td>MPI + OpenMP</td><td>NVIDIA + AMD</td><td>build 难</td></tr>
+    <tr><td>SLATE</td><td>BLAS 3 + 部分 LAPACK</td><td>MPI + OpenMP</td><td>NVIDIA + AMD</td><td>仍在补 LAPACK 覆盖度</td></tr>
+    <tr><td>cuSOLVERMp</td><td>线性系统、特征值、SVD</td><td>单节点 / 多 GPU</td><td>NVIDIA only</td><td>较新但有潜力</td></tr>
+    <tr><td>ELEMENTAL</td><td>BLAS 1 + 3</td><td>—</td><td>—</td><td>原作者已停维护，社区 fork 在 LLNL</td></tr>
+  </table>
+  <p>底部一句："Trillinos、其他也存在；Python 和 Julia 的实现还在涌现"——意思是这个生态在快速演化，这张表不是"全部选项"，只是<em>主流的几个</em>。</p>
+</div>
+
+
+<!-- ==================== SLIDE 49 ==================== -->
+<h2 class="slide-title">Slide 49 — 总结：三句话</h2>
+
+<img class="slide-img" src="images/slide-049.png" alt="Slide 49: Summary">
+
+<div class="explanation">
+  <ul>
+    <li><strong>分布式内存线性代数的基础</strong>：核心是 block-cyclic 分布和 block size 选择——选不对损失 2–4×。</li>
+    <li><strong>BLACS + ScaLAPACK 仍然是 reliable 的实现</strong>——但在现代架构（GPU、exascale）上有局限。</li>
+    <li><strong>现代软件正在改进</strong>——ELPA / SLATE / cuSOLVERMp 等是当下的方向。</li>
+  </ul>
+</div>
+
+
+<!-- ==================== SLIDE 52 ==================== -->
+<h2 class="slide-title">Slide 52 — ParallelMatrix wrapper（Phoebe 内部）</h2>
+
+<img class="slide-img" src="images/slide-052.png" alt="Slide 52: ParallelMatrix object">
+
+<div class="explanation">
+  <p>讲者顺带秀了一下 Phoebe 内部用的 C++ 包装类 <code>ParallelMatrix&lt;double&gt;</code>——把 BLACS setup + descriptor + ScaLAPACK 调用全藏在对象里。</p>
+
+<div class="code-walk">
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-cpp">ParallelMatrix&lt;double&gt; pmatrix(nRows, nCols, nBlocksRows, nBlocksCols);</code></pre>
+    <div class="walk-doc">构造函数接受全局尺寸 + 行列方向的 block 数。内部自动 blacs_get / gridinit / numroc / descinit / new[] —— 调用者完全不用碰这堆 boilerplate。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-cpp">auto local = pmatrix.getAllLocalElements();
+// returns std::vector of (globalRow, globalCol, value) tuples</code></pre>
+    <div class="walk-doc">让调用者拿到本地持有的所有矩阵元素，<em>每个元素带着它的全局坐标</em>——这正是 slide 41 那段填值循环的封装。用户写公式时只看 globalRow / globalCol，不再操心本地下标转换。</div>
+  </div>
+  <div class="walk-pair">
+    <pre class="walk-code"><code class="language-cpp">pmatrix.diagonalize();
+// 内部封装了 pdsyevd 调用，连 workspace 都自己 query 好</code></pre>
+    <div class="walk-doc">暴露的接口名是数学语言（"对角化"）而不是 ScaLAPACK 函数名。这就是 Phoebe 这种应用代码的工程模式：<em>把 ScaLAPACK 当组件，自己包一层易用 API</em>。生产 HPC 代码（Quantum ESPRESSO、VASP、PETSc）几乎都这么干。</div>
+  </div>
+</div>
+</div>
+
+<div class="takeaway">
+  💡 Slide 51 / 53 / 54 是 "EXAMPLE 1/2/3" 占位页，对应讲者现场跑的 demo（ParallelMatrix 用法、跑特征值、验证收敛性）——没有 slide 文字内容，所以笔记里只在这里 mention 一下：实战时去看 Phoebe 仓库的 examples/ 目录会比读 slide 更直接。
+</div>
+
+
+<!-- ==================== 结语 ==================== -->
+<div class="takeaway" style="margin-top:60px;">
+  <strong>Lecture 17 一句话总结：</strong> 分布式稠密线性代数 = block-cyclic 分布 + 一套描述这种分布的 descriptor。BLACS+ScaLAPACK 是经典工具链（CPU only），ELPA/SLATE/cuSOLVERMp 是现代 GPU 后继。具体写代码时熟记 4 步流程：grid setup → local data fill (用 indxl2g) → descinit + 求解 → 释放。
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
+</html>

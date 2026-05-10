@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>CS 2050 Lecture 20 - 复习笔记</title>
+<link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.css" rel="stylesheet">
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    max-width: 980px;
+    margin: 40px auto;
+    padding: 0 24px;
+    line-height: 1.7;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 {
+    border-bottom: 3px solid #1f6feb;
+    padding-bottom: 10px;
+  }
+  h2.slide-title {
+    color: #1f6feb;
+    margin-top: 50px;
+    border-left: 5px solid #1f6feb;
+    padding-left: 12px;
+  }
+  h3 {
+    color: #333;
+    margin-top: 28px;
+  }
+  .slide-img {
+    display: block;
+    max-width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin: 16px 0 24px 0;
+  }
+  .explanation {
+    background: #fff;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
+  }
+  .qa {
+    background: #fff8e1;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border-left: 4px solid #f0a500;
+    margin-top: 20px;
+  }
+  details.qa > summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #b8730e;
+    font-size: 1.08em;
+    padding: 6px 0;
+    user-select: none;
+    list-style: none;
+  }
+  details.qa > summary::before {
+    content: "▶ ";
+  }
+  details.qa[open] > summary::before {
+    content: "▼ ";
+  }
+  code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.92em;
+  }
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th { background: #1f6feb; color: white; }
+  blockquote {
+    border-left: 4px solid #1f6feb;
+    margin: 16px 0;
+    padding: 4px 16px;
+    color: #555;
+    background: #eef4ff;
+  }
+  .takeaway {
+    background: #e8f5e9;
+    border-left: 4px solid #2e7d32;
+    padding: 14px 20px;
+    margin-top: 20px;
+    border-radius: 4px;
+  }
+  .formula {
+    background: #f6f8fa;
+    padding: 10px 16px;
+    border-radius: 4px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    margin: 10px 0;
+  }
+  .slide-grid {
+    display: grid;
+    gap: 12px;
+    margin: 16px 0 24px 0;
+  }
+  .slide-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .slide-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .slide-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .slide-grid .slide-img { margin: 0; max-width: 100%; }
+
+  /* code-walk layout */
+  .code-walk {
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 18px 0;
+  }
+  .walk-pair { border-bottom: 1px solid #e1e4e8; }
+  .walk-pair:last-child { border-bottom: none; }
+  .walk-code {
+    margin: 0;
+    border-radius: 0;
+  }
+  .walk-doc {
+    background: #f6f8fa;
+    padding: 12px 18px;
+    border-left: 4px solid #1f6feb;
+    font-size: 0.96em;
+  }
+
+  .section-divider {
+    margin-top: 60px;
+    padding: 14px 22px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #eaf3ff, #fafafa);
+    border-left: 6px solid #1f6feb;
+    font-size: 1.15em;
+    font-weight: bold;
+    color: #1f3d7a;
+  }
+</style>
+</head>
+<body>
+
+<h1>CS 2050 Lecture 20 - 复习笔记</h1>
+<p><em>主题：Molecular Dynamics Simulation —— Research Examples &amp; Parallelization Techniques (MPI / GPU)</em></p>
+
+<blockquote>
+  Lecture 20 是 Week 10 "Extended Example: Molecular Dynamics" 的第二节，紧接着 Lecture 19 的串行算法 + 共享内存基础。整节课分两大块：(1) <strong>Research Examples</strong> —— 把今天的 MD + ML 力场（NequIP / Allegro）和真实科研课题（barocaloric 固态制冷）做一遍 case study，让大家看到课程内容在前沿研究里的样子；(2) <strong>Parallelization Techniques</strong> —— 在 L19 的 OpenMP pointwise / reduction 之上加两层：先讲 <em>distributed memory</em>（domain decomposition + ghost atoms + MPI 通信模式），再讲 <em>GPU 卸载</em>（CUDA kernel + "GPU-resident" 整步消除 CPU↔GPU 数据搬运）。Slide 1 标题、slide 2 是 "请 pull lecture-examples" 的行政页，跳过；slide 3 / 18 是讲者分的两个大章节标题页，转写成下面的章节横幅；slide 22 / 23 / 34 / 36 / 37 是 "Exercise 1–5" 现场练习占位页，本身没有讲解内容，只在它们之后那条 "结论性 bullet" 里有信息（"水分子开始苏醒 / 有一个 OpenMP 选择更好 / 已经能看到融化 / 1 分钟内能跑出结果 / 冰能融化"），把那些 takeaway 折进相邻章节里讲，slide 本身不展开。
+</blockquote>
+
+
+<div class="section-divider">第一部分 — Research Examples（slides 4–17）</div>
+
+
+<!-- ==================== SLIDE 4–6 ==================== -->
+<h2 class="slide-title">Slide 4–6 — From Molecules → To Materials → Large Scale + Quantum Accurate</h2>
+
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-004.png" alt="Slide 4: From molecules">
+  <img class="slide-img" src="images/slide-005.png" alt="Slide 5: To materials">
+  <img class="slide-img" src="images/slide-006.png" alt="Slide 6: Large scale and quantum accurate">
+</div>
+
+<div class="explanation">
+  <h3>三张图建立"现代 MD 想要什么"</h3>
+  <p>讲者用三张图把研究目标递进展开：</p>
+  <p><strong>Slide 4 ：分子层面（"水盒子"）。</strong> Lecture 19 已经讲过的标准 MD 场景——上千个 H₂O 在一个盒子里跑动力学。</p>
+  <p><strong>Slide 5 ：材料层面（纳米颗粒结构）。</strong> 把规模拉到上万原子，做整块材料/界面/缺陷模拟，目标从"分子"转到"宏观可观测的物性"。</p>
+  <p><strong>Slide 6 ：又大又准。</strong> 真正的研究痛点：传统经验势（如 Lecture 19 的 Stillinger-Weber）便宜但精度低，DFT 准但 O(N³) 算不动。理想是同时拿到<em>大尺度</em>和<em>量子精度</em>——这正是后面 NequIP / Allegro 这种<strong>机器学习力场</strong>要解决的事。</p>
+</div>
+
+
+<!-- ==================== SLIDE 7 ==================== -->
+<h2 class="slide-title">Slide 7 — NequIP：用神经网络拟合力场</h2>
+
+<img class="slide-img" src="images/slide-007.png" alt="Slide 7: Machine learned force fields - NequIP">
+
+<div class="explanation">
+  <h3>核心想法</h3>
+  <p>左上的两个公式还是 L19 那一套：总能量 <code>E_total = Σ E_i</code> 是各原子局部能量的和；力 <code>F = −∇E_total</code> 是势能梯度。<strong>NequIP 改的是"E_i 怎么算"这一步</strong>——不再写解析势函数（如 SW 的 φ₂、φ₃），而是用一个 <em>E(3)-equivariant 神经网络</em> 直接从原子坐标输出 E_i。</p>
+  <p>"E(3)-equivariant" 是关键技术词：把整个体系平移、旋转、镜像后，预测的能量必须不变、力必须按对应规则变换。这个对称性<em>不是后处理硬加上去</em>，而是通过架构本身（Clebsch-Gordon Tensor Product，slide 10 会出现）和内部特征的几何类型来强制保证的。</p>
+  <p>右上"Input Structure → Internal Features"：输入只是原子的位置 + 元素类型，内部特征就是几何对象（标量、向量、张量），对称性自动满足。这样训练出来的力场<em>泛化能力</em>显著好于不带等变性的 baseline。</p>
+</div>
+
+
+<!-- ==================== SLIDE 8–11 ==================== -->
+<h2 class="slide-title">Slide 8–11 — Reducing Overhead：把 ML 力场榨进 GPU 的四步</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-008.png" alt="Slide 8: TorchScript baseline">
+  <img class="slide-img" src="images/slide-009.png" alt="Slide 9: + AOTI">
+  <img class="slide-img" src="images/slide-010.png" alt="Slide 10: + Clebsch-Gordon Tensor Product">
+  <img class="slide-img" src="images/slide-011.png" alt="Slide 11: + custom TP, 6.2x">
+</div>
+
+<div class="explanation">
+  <h3>四张连续 slide 是同一张图在长出新曲线</h3>
+  <p>横轴是体系大小（原子数），纵轴是 timesteps/秒——越高越快。讲者每加一个优化就在图上叠一条新曲线，看吞吐怎么涨上去。</p>
+
+  <p><strong>Slide 8 ：TorchScript 基线（深绿）。</strong> 直接把 PyTorch 模型用 TorchScript 跑——能跑，但每个 timestep 里 Python/JIT 调度、kernel launch 这些<em>固定开销</em>很大。小体系（10–100 原子）尤其惨——本身计算量不大，开销占主导，所以左侧曲线很低。</p>
+
+  <p><strong>Slide 9 ：AOTI 加上来（中绿）。</strong> 用 PyTorch 新的 export + AOT-Inductor：</p>
+  <ul>
+    <li><em>Full-graph 编译</em>：把整个前向 trace 成一个图，一次编译成 C++/CUDA 二进制，消掉 Python 调度开销。</li>
+    <li><em>Dynamic shapes</em>：不同 batch / 原子数共用一个编译产物，不用每个尺寸都重编。</li>
+    <li><em>针对硬件的 kernel 调参</em>：自动选最适合 H100 的 tile size、block size 等。</li>
+  </ul>
+  <p>整条曲线被抬上去，特别是小体系（消的开销正是它的瓶颈）。</p>
+
+  <p><strong>Slide 10 ：暴露 Clebsch-Gordon Tensor Product 这个瓶颈。</strong> 左上那张稀疏矩阵图是关键：等变神经网络里把两个张量"耦合"成新张量的运算<em>稀疏</em>（只有特定 (l₁, l₂, l₃) 三元组组合非零）。如果直接用通用 dense 矩阵乘，绝大部分计算是浪费——这成了 AOTI 之后的新瓶颈。</p>
+
+  <p><strong>Slide 11 ：换上自定义 TP kernel（浅绿，6.2× 标注）。</strong> 用 NequIP 的 OpenEquivariance、Allegro 的 Custom Triton + NVIDIA cuEquivariance 这些专门写的稀疏 TP kernel 替代通用实现，再涨一档。slide 上那个 "6.2x" 标注是在某个 atom count 处<em>相对最初 TorchScript baseline 的总加速</em>——四步叠加下来的成果。</p>
+
+  <p>这一段的工程教训：<strong>"用 ML 模型当力场"在生产 MD 里的瓶颈，从来不在网络精度，而在 Python 调度、kernel launch 开销、和库里现成 kernel 与你算子结构的不匹配</strong>。课程后半部分（slide 35 之后）讲的 GPU 优化思路在这里完全对应。</p>
+</div>
+
+
+<!-- ==================== SLIDE 12 ==================== -->
+<h2 class="slide-title">Slide 12 — Allegro 在 LAMMPS 里 scale 到上千 GPU</h2>
+
+<img class="slide-img" src="images/slide-012.png" alt="Slide 12: Allegro in LAMMPS scales to 1000s of GPUs">
+
+<div class="explanation">
+  <h3>把单 GPU 优化推到 multi-node：strong scaling 图</h3>
+  <p>左右两张图分别是两台超算（MI250X 和 A100 40GB），横轴是节点数（最多 512 个），纵轴是 timesteps/秒。每张图里两条曲线对应两个体系大小：DHFR（24k 原子）和 Cellulose（405k 原子）。三种颜色对应 slide 8–11 的优化级别（TorchScript / AOTI / AOTI + custom TP）。</p>
+  <p>核心信息：曲线在两个数量级的节点数上仍然<em>近似线性上升</em>——说明把 Allegro 嵌进 LAMMPS 后，<strong>domain decomposition + ghost atom 通信</strong>（这是第二部分 slide 24–32 要讲的内容）能让 ML 力场也吃掉成千 GPU 的算力。这是把"实验室级 ML 模型"推到"超算级生产模拟"的关键证据。</p>
+  <p>注意大体系（Cellulose 405k）的曲线一直在小体系（DHFR 24k）上方——<em>原子越多越能填满 GPU</em>，每节点利用率高，scaling 效率反而更好。这是 MD strong scaling 的常见现象：太小的体系切到太多节点会被通信吃掉。</p>
+</div>
+
+
+<!-- ==================== SLIDE 13 ==================== -->
+<h2 class="slide-title">Slide 13 — Barocaloric：用 MD 研究固态制冷</h2>
+
+<img class="slide-img" src="images/slide-013.png" alt="Slide 13: Solid-state cooling potential">
+
+<div class="explanation">
+  <h3>从工具切到科学问题</h3>
+  <p>讲者切到自己组里在做的研究：<strong>barocaloric 材料</strong>——一种"压一下、撤压、就能当冰箱用"的固态相变材料。物理上利用<em>压力 ↔ 温度</em>的耦合：在临界压力下材料发生 order/disorder 相变，相变的潜热可以用来吸放冷热。</p>
+  <p>右边 P-E 图里的"hysteresis loop"（红色滞回曲线）是关键——越宽越浪费能量；reversibility / entropic change / pressure sensitivity 这几个指标共同决定一个材料能不能做成实用制冷剂。讲者要研究的就是<strong>用 MD 模拟去看微观上是什么决定了这些指标</strong>。</p>
+</div>
+
+
+<!-- ==================== SLIDE 14 ==================== -->
+<h2 class="slide-title">Slide 14 — 两种材料的 ΔS_TR,C9 差出一倍</h2>
+
+<img class="slide-img" src="images/slide-014.png" alt="Slide 14: Difference in entropy change">
+
+<div class="explanation">
+  <h3>实验现象</h3>
+  <p>两种成分相近的层状材料：</p>
+  <ul>
+    <li><strong>(C₉)₂CuBr₄</strong>：相变熵 ΔS_TR,C9 ≈ 25.5 J·mol⁻¹·K⁻¹</li>
+    <li><strong>dC₉-Br</strong>：相变熵 ΔS_TR,C9 ≈ 44.6 J·mol⁻¹·K⁻¹（接近<em>两倍</em>）</li>
+  </ul>
+  <p>制冷能力直接正比于 ΔS——所以 dC₉-Br 是更好的制冷剂候选。问题是：<strong>从化学式上看几乎一样的两个东西，为什么熵变差这么多？</strong> 这是 MD 要回答的问题（slides 15–17）。</p>
+</div>
+
+
+<!-- ==================== SLIDE 15 ==================== -->
+<h2 class="slide-title">Slide 15 — NPT MD 模拟能复现实验的体积-温度曲线</h2>
+
+<img class="slide-img" src="images/slide-015.png" alt="Slide 15: NPT MD captures T-V relationship">
+
+<div class="explanation">
+  <h3>第一步：先验证模拟可信</h3>
+  <p>两张图横轴温度、纵轴单胞体积。绿色圆点是 MD 模拟（NPT 系综——粒子数 N、压力 P、温度 T 都恒定，体积 V 自由变化），蓝色方块是实验 PXRD 数据，灰色虚线是分段 best fit。</p>
+  <p>关键：在相变温度附近（≈303 K）能看到一个<strong>体积跳变</strong> ΔV_tr，模拟和实验给出的 ΔV_tr 几乎一致：</p>
+  <ul>
+    <li>(C₉)₂CuBr₄：MD 4.61% vs 实验 4.0%</li>
+    <li>dC₉-Br：MD 6.23% vs 实验 6.2%</li>
+  </ul>
+  <p>这一步的目的是<em>建立 MD 模型的可信度</em>——既然能复现宏观相变行为，就可以放心用它去看实验看不到的<strong>原子层面机制</strong>。</p>
+</div>
+
+
+<!-- ==================== SLIDE 16 ==================== -->
+<h2 class="slide-title">Slide 16 — 把模拟结构按"链锚定 + 无机层"剖开</h2>
+
+<img class="slide-img" src="images/slide-016.png" alt="Slide 16: Chain anchors and inorganic layer">
+
+<div class="explanation">
+  <h3>第二步：分层观察</h3>
+  <p>两种材料的结构都是"层状"：长 C₉ 烷基链 + 中间一层无机层（CuBr₄ 或 Br⁻）。讲者把每个材料切出一片<em>无机层切片</em>（右侧的红蓝点阵图），观察相变前后<em>这一层</em>的有序度变化——尤其是 N–H · · · 阴离子 的氢键网络是否还在。</p>
+  <p>这种"先模拟整体再切片观察"是 MD 比实验强的地方：实验只能看体积、衍射峰这种全局量，模拟可以任意切层、统计任意子集的局部序参量。</p>
+</div>
+
+
+<!-- ==================== SLIDE 17 ==================== -->
+<h2 class="slide-title">Slide 17 — 两个材料的差别：H-bonding 稳定性</h2>
+
+<img class="slide-img" src="images/slide-017.png" alt="Slide 17: Stark difference in H-bonding stability">
+
+<div class="explanation">
+  <h3>第三步：找出微观差异</h3>
+  <p>左边两张图是 N–H 键向量自相关函数 vs 时间——曲线下降越快说明 H-键越早 decorrelate（即被破坏）。两组温度（280 K = 相变前 / 350 K = 相变后）。</p>
+  <ul>
+    <li><strong>(C₉)₂CuBr₄</strong>：链端 H-键<em>很快</em>就在两个相里 decorrelate，无机层稳定性差。</li>
+    <li><strong>dC₉-Br</strong>：在低温相中 H-键<em>能稳定到 ~7 ps</em>（虽然最后也会 decorrelate）——氢键网络更结实。</li>
+  </ul>
+  <p>右上的小卡通图就是这个发现：<em>"chain anchor"（链端的 N–H）和无机层的 Br 形成的氢键，是 dC₉-Br 多出来那部分熵变的来源</em>。</p>
+  <p>整个 case study 走完一遍：实验现象 → MD 验证 → 切层观察 → 找到微观机制。这就是这门课所讲技术（高效力场 + 大规模并行 MD）<em>能产生科学发现</em>的具体场景。</p>
+</div>
+
+
+<div class="section-divider">第二部分 — Parallelization Techniques（slides 19–39）</div>
+
+
+<!-- ==================== SLIDE 19–21 ==================== -->
+<h2 class="slide-title">Slide 19–21 — 共享内存并行（L19 已讲，slide 22 紧接 Exercise 1）</h2>
+
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-019.png" alt="Slide 19: Shared memory parallelism">
+  <img class="slide-img" src="images/slide-020.png" alt="Slide 20: Pointwise updates">
+  <img class="slide-img" src="images/slide-021.png" alt="Slide 21: Energy/Force reductions">
+</div>
+
+<div class="explanation">
+  <p>这三张和 Lecture 19 的 slide 31–33 内容完全一致，是讲者在做"快速回顾"作为 Exercise 1（slide 22 — "把 OpenMP 加进 MD 引擎"）的入场背景。</p>
+  <ul>
+    <li><strong>Pointwise（slide 20）</strong>：integration loop / thermostat loop，每个原子只读写自己的状态 → <code>#pragma omp parallel for</code> 直接套，无 race。</li>
+    <li><strong>Reduction（slide 21）</strong>：energy / force loop，外层 i + 内层邻居 j，<em>累加到 F_i / E_i</em>。如果按 i 分线程不冲突；按对子分线程会撞 F_j → 需要 atomic、per-thread accumulator、或 owner-computes。</li>
+  </ul>
+  <p>Exercise 1 之后那行 slide 上写着 "<em>The water molecules are starting to wake up</em>"——意思是加完 OpenMP 之后体系能动起来了，但还远没快到看融化。</p>
+</div>
+
+
+<!-- ==================== SLIDE 23 ==================== -->
+<h2 class="slide-title">Slide 23 — Exercise 2 之后的小结：哪种归约方式更好</h2>
+
+<div class="explanation">
+  <p>原 slide 只有 "Exercise 2" 占位 + 一行结论 "<em>One parallelism choice seems better for our force OpenMP reduction</em>"。讲者在课堂上让大家比较了 slide 21 reduction 的几种实现（atomic / per-thread accumulator / 按 i 分配 owner-computes）的 OpenMP 实测速度，结论是其中一种明显占优。</p>
+  <p>具体哪种更好，依赖体系大小、邻居数、线程数这些因素，但教学口径上一般是：<strong>per-thread accumulator + reduction</strong> 在中等线程数下是最稳的——避免 atomic 的 cache line 争抢，又比 owner-computes 少一半 force evaluation（保住 Newton 第三定律对称性）。这条结论会延续到下一节"分布式"——只是把"线程私有累加器"换成"每个 MPI rank 私有累加器 + 跨 rank reduce"。</p>
+</div>
+
+
+<!-- ==================== SLIDE 24 ==================== -->
+<h2 class="slide-title">Slide 24 — 为什么需要 MPI：单节点不够大</h2>
+
+<img class="slide-img" src="images/slide-024.png" alt="Slide 24: Distributed memory parallelism motivation">
+
+<div class="explanation">
+  <h3>三个 bullet 的逻辑链</h3>
+  <p><strong>"We need larger scale parallelism than one node can provide"</strong> —— OpenMP 只能吃掉<em>单节点</em>那点核（大约 10²–10³ 核），但 ML 力场 + 大体系（slide 12 那种 4×10⁵ 原子）要吃成百上千节点，必须跨节点 → MPI。</p>
+  <p><strong>"It is hard to split an interacting system without some communication"</strong> —— 拆分 MD 体系的根本困难：原子之间互相施力，跨边界的力一定要传消息。这是和"嵌入式并行（embarrassingly parallel）"问题最大的区别。</p>
+  <p><strong>"We cannot afford a lot of communication for every timestep"</strong> —— Δt ≈ fs，每秒钟可能要走 ~10⁶ 步；每步都做全局 communication 的开销会直接吃掉所有节点的算力。</p>
+  <p><strong>"We need to use some Algorithms and Physics intuition!"</strong> —— 讲者抛出转折点：要解决前面这个 dilemma，靠的是 L19 里讲过的<em>locality</em>（cutoff 之外没有相互作用）。下一页就是把 locality 翻译成 MPI 切分策略。</p>
+</div>
+
+
+<!-- ==================== SLIDE 25–26 ==================== -->
+<h2 class="slide-title">Slide 25–26 — Domain Decomposition：按空间切盒子</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-025.png" alt="Slide 25: Dividing system">
+  <img class="slide-img" src="images/slide-026.png" alt="Slide 26: MPI Rank 1 and 2">
+</div>
+
+<div class="explanation">
+  <h3>一刀切两半 → 每个 rank 拿一半盒子</h3>
+  <p>Slide 25 那条<em>黑色竖线</em>就是 domain 切分线：把整个 simulation box 沿 x 方向劈成两半，左半给 MPI Rank 1，右半给 MPI Rank 2。每个 rank 只<em>拥有</em>它那一半里的原子（"local" / "owned"）——只为这些原子算力、做积分、更新位置。</p>
+  <p>Slide 25/26 上画的两个<em>带阴影的圆圈</em>就是 cutoff 球——力的计算只看这个球内的原子。如果一个原子的 cutoff 球完全落在自己 rank 的区域内（slide 25 左半的圆圈），那它需要的所有邻居都在本地内存，<strong>不需要任何通信</strong>。</p>
+  <p>右图（slide 26）右上那段话点出了核心思想：<em>"We use the spatial locality of the most computationally expensive calculations to minimize communication."</em> —— 把 L19 讲的 cutoff 物理（slide 23 的"远处 ≈ 0"）从"少算"升级为"少传"。</p>
+  <p>关键约束（讲者没写但是物理上必备）：<strong>每个 rank 的 domain 必须比 cutoff 大</strong>——不然一个原子的邻居要跨多个 rank，通信模式就退化了。</p>
+</div>
+
+
+<!-- ==================== SLIDE 27 ==================== -->
+<h2 class="slide-title">Slide 27 — 简单全局量用 AllReduce / GatherV</h2>
+
+<img class="slide-img" src="images/slide-027.png" alt="Slide 27: Communication algorithms">
+
+<div class="explanation">
+  <h3>哪些操作是"先在每个 rank 算局部，再合到全局"？</h3>
+  <p>两个公式都是<em>对所有原子的求和</em>：</p>
+  <div class="formula">
+    T = (1/3Nk_B) Σᵢ mᵢvᵢ²,&nbsp;&nbsp;&nbsp; E_potential = Σ_{i&lt;j} φ₂(r_ij) + Σ_{i&lt;j&lt;k} φ₃(r_i, r_j, r_k)
+  </div>
+  <p>两边都是<strong>可分解的全局规约</strong>：</p>
+  <ul>
+    <li>每个 rank 先用自己 owned 原子算<em>本地部分和</em>；</li>
+    <li>用 <code>MPI_Allreduce(local_sum, global_sum, MPI_SUM)</code> 一次集合通信，每个 rank 都拿到全局结果。</li>
+  </ul>
+  <p>用 AllReduce（不是 Reduce）是因为 thermostat 那种 v_i ← α·v_i 公式里的 α 是用全局 T 算出来的，<em>每个 rank 都要</em>同一个 α 来更新自己的速度——所以全员都得拿到结果。</p>
+
+  <h3>Logging 用 GatherV</h3>
+  <p>把整个体系状态（每个原子的 position, velocity）<em>汇总到 rank 0 写文件</em>——经典 <code>MPI_Gatherv</code>：每个 rank 给的数据长度不一样（owned 原子数不一样），用 Gather<em>v</em>（V = variable）而不是 Gather。这通常每隔 N 步做一次，不是每步——避免成为瓶颈。</p>
+  <p>"More complex operations require more complex communication patterns" → 引出下一节的 ghost atom + sendrecv。</p>
+</div>
+
+
+<!-- ==================== SLIDE 28–31 ==================== -->
+<h2 class="slide-title">Slide 28–31 — Ghost Atoms：跨界面力的标准做法</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-028.png" alt="Slide 28: Cutoff crosses interface">
+  <img class="slide-img" src="images/slide-029.png" alt="Slide 29: Copy ghost atoms">
+  <img class="slide-img" src="images/slide-030.png" alt="Slide 30: Compute force using ghosts">
+  <img class="slide-img" src="images/slide-031.png" alt="Slide 31: Send forces back">
+</div>
+
+<div class="explanation">
+  <h3>四张连续 slide 把"跨边界相互作用"这件事的四个步骤画出来</h3>
+
+  <p><strong>Slide 28 ：问题暴露。</strong> Rank 1 区域里靠近边界的那个原子，它的 cutoff 球<em>明显穿过了 rank 边界</em>到了 Rank 2 的领地。算这个原子的力时，<em>它需要 Rank 2 那边的原子坐标</em>，但那些原子不在它本地内存里。</p>
+
+  <p><strong>Slide 29 ：解决方案 — 复制邻居（"ghost atoms"）。</strong> 每个 rank 在每步开始时，<em>从相邻 rank 把它边界附近的原子拷贝一份过来</em>。这些拷贝叫 "ghost atoms"，原版叫 "local" / "owned"。这样每个 rank 在算力时，<em>只读自己内存</em>就能拿到所有需要的邻居。Halo / ghost layer 的厚度只要 ≥ cutoff 半径 r_c 就够。</p>
+
+  <p><strong>Slide 30 ：用 ghost 信息算力。</strong> Rank 1 现在可以正常算它边界原子受到的所有 F_l, F_j, F_k, F_m, F_i——<em>包括</em>那些"对方原子作用在自己 owned 原子上的"贡献。注意此时 ghost 那一侧（slide 30 右半淡红色区域）的原子<strong>是只读的</strong>，rank 1 不更新它们的位置。</p>
+
+  <p><strong>Slide 31 ：把"自己施加在 ghost 上的反作用力"送回去。</strong> 这一步是 Newton 第三定律的代价：(i, j) 对子产生 F_ij 加到 i，同时 −F_ij 加到 j。如果 i 是本地、j 是 ghost，那 j 上累计的力是 rank 1 算出来的——但 j 真正的 owner 是 rank 2，得把这个增量<em>送回去</em>给 rank 2 累加。</p>
+
+  <p>整套循环（每个 timestep 都跑一次）：<br>
+    <code>(1) exchange ghost positions → (2) compute forces locally → (3) reverse-communicate ghost forces → (4) integrate own atoms</code>。</p>
+
+  <p>这是 LAMMPS、Gromacs、NAMD 这种主流 MD 引擎的<em>实质并行骨架</em>。Slide 12 那条 "Allegro scales to 1000s of GPUs" 的 strong scaling 曲线，就是建立在这套机制之上。</p>
+</div>
+
+
+<!-- ==================== SLIDE 32 ==================== -->
+<h2 class="slide-title">Slide 32 — 用 MPI_Sendrecv 而不是 Allreduce</h2>
+
+<img class="slide-img" src="images/slide-032.png" alt="Slide 32: Targeted communication via MPI_Sendrecv">
+
+<div class="explanation">
+  <h3>关键洞察：每个 rank 只跟邻居谈，不跟全集合谈</h3>
+  <p>Slide 27 那种 AllReduce 是<em>所有 rank 都参与</em>的集合通信——成本 O(log P) 在好的网络上，O(P) 在差的网络上。但在 ghost 交换里，<strong>每个 rank 只需要和它<em>空间上相邻</em>的 rank 通信</strong>（3D 切分时是 26 个面/边/角邻居，2D 时是 8 个，1D 时只有 2 个）。</p>
+  <p>这一页的 3×3 网格图就是在画这件事：中间那块红色 cell 只跟正东/西/南/北/对角的 cell 互发消息，不跟更远的 ranks 通信。</p>
+  <p>这种"邻居对邻居"的通信用 <code>MPI_Sendrecv</code>（同时发送给一个 peer、接收来自另一个 peer）或 nonblocking <code>MPI_Isend</code> + <code>MPI_Irecv</code> 实现。优势：</p>
+  <ul>
+    <li><strong>消息量小且固定</strong>：只发边界一层的原子（边界面积，O(L²) 而不是 O(L³)）；</li>
+    <li><strong>不阻塞远端 rank</strong>：rank 0 和 rank 999 互不相关时根本不需要碰头；</li>
+    <li><strong>可以和计算 overlap</strong>：用非阻塞调用，把"算内部原子的力（不需要 ghost）"和"等通信完成"重叠。</li>
+  </ul>
+
+  <h3>右侧那段："只在 neighbor list 重建时才重新分配原子"</h3>
+  <p>L19 slide 25 已经讲过 neighbor list 不是每步都重建——那么 ghost 也不用每步都换。原子漂移很慢（5 fs 一步走 ~0.05 Å），<em>哪些 ghost 要传、哪些 owned 原子要换 rank</em> 这些昂贵决策只在 neighbor list 重建那几步做一次（典型 50–100 步一次）。中间的所有步骤复用上次决定的 ghost 列表，只更新它们的坐标——这是另一处用 locality + 时间相关性把通信成本摊掉的地方。</p>
+</div>
+
+
+<!-- ==================== SLIDE 33 ==================== -->
+<h2 class="slide-title">Slide 33 — 进阶 domain decomposition：通信拓扑 + 负载均衡</h2>
+
+<img class="slide-img" src="images/slide-033.png" alt="Slide 33: Improved domain decomposition">
+
+<div class="explanation">
+  <h3>左图：递归二分 = 多步少传</h3>
+  <p>"Trading more communication steps for less data/ranks per step"。中间那块 rank 0 不是直接跟 4 个邻居一次性大交换，而是先 ↑↓（蓝色箭头）<em>同步上下邻居</em>、再 ←→（黄色箭头）同步左右邻居。这样每一步 rank 0 只跟<strong>一个</strong> rank 通信，但需要<strong>两步</strong>。整体延迟 t = 2·(latency + small_msg_size/bandwidth)；如果一次大交换 4 个邻居，t = latency + 4·msg_size/bandwidth。<em>当 latency 主导时（小消息），分多步更划算</em>。</p>
+
+  <h3>右图：按密度切（heterogeneous load balance）</h3>
+  <p>不是所有体系都均匀分布——比如一团液滴在真空里，原子集中在中央，外围几乎没有。<em>等大切分</em>会让边缘 rank 几乎没活干、中央 rank 累死。LAMMPS 的解决方案：把 grid 在不同方向<em>非均匀</em>切（图里那些不等宽的列就是按密度调整过的边界），让每个 rank 拿到的<em>原子数</em>而不是<em>体积</em>大致相等。</p>
+  <p>底部两个 LAMMPS 文档链接是讲者给"想再深入"的同学留的指针——课程不展开，但提示这是真实代码里要处理的问题。</p>
+</div>
+
+
+<!-- ==================== SLIDE 34 ==================== -->
+<h2 class="slide-title">Slide 34 — Exercise 3 之后的小结：MPI 之后能看到融化</h2>
+
+<div class="explanation">
+  <p>这一页内容是 "Exercise 3" 占位 + 结论行 "<em>This is not so bad, we can begin to see some melting!</em>"。意思：把 OpenMP（slide 22）+ MPI（slides 24–33）都加进来之后，单次模拟能在合理时间内推进到<em>开始观察到融化</em>的步数。但还不够快——下一段（slide 35 起）要把 GPU 也用上。</p>
+</div>
+
+
+<!-- ==================== SLIDE 35 ==================== -->
+<h2 class="slide-title">Slide 35 — GPU 共享内存：CUDA 等价物</h2>
+
+<img class="slide-img" src="images/slide-035.png" alt="Slide 35: Shared memory parallelism on GPU">
+
+<div class="explanation">
+  <h3>把 OpenMP 思路移植到 GPU</h3>
+  <p>核心结构没变——还是 pointwise update 和 reduction 两类 loop。区别在执行单元：从"几十个 OpenMP 线程"换成"几千个 CUDA thread + grid/block"。</p>
+  <ul>
+    <li><strong>Pointwise</strong>：每个 CUDA thread 处理一个原子，<code>i = blockIdx.x * blockDim.x + threadIdx.x</code>，pos[i] / vel[i] 完全独立读写——天然适合 GPU 的 SIMT 模型。</li>
+    <li><strong>Reduction</strong>：内层力的累加在 GPU 上更复杂——L19 slide 33 提到的几种策略（atomic / per-thread / per-i owner-computes）都有 CUDA 版本，atomic 在现代 GPU 已经够快、shared memory + warp shuffle 做 block 内 reduce 也是常见模板。</li>
+  </ul>
+  <p>"<em>We just need to write some CUDA equivalent to our previous operations</em>" —— 讲者在这里有意把它说得很轻松，因为概念上确实和 OpenMP 同构；但工程上要处理 memory coalescing、shared memory tile size、warp divergence 等一堆 GPU 特有的细节，这是 slide 11 NequIP 那 6.2× 加速里"custom TP kernel" 真正的工作内容。</p>
+</div>
+
+
+<!-- ==================== SLIDE 36 ==================== -->
+<h2 class="slide-title">Slide 36 — Exercise 4 之后的小结：1 分钟内能拿到结果</h2>
+
+<div class="explanation">
+  <p>"Exercise 4" 占位 + "<em>Now, we can really get somewhere, even in 1 minute!</em>"。把 GPU kernel 加上之后，速度跨过了"实用"门槛——一分钟的 wall time 就能跑出有意义的步数。下一页揭穿这个"1 分钟"背后还藏着的瓶颈。</p>
+</div>
+
+
+<!-- ==================== SLIDE 37 ==================== -->
+<h2 class="slide-title">Slide 37 — Exercise 5 之后的总结：冰真的化了</h2>
+
+<div class="explanation">
+  <p>"Putting it all together" + Exercise 5 + "<em>The ice can be melted!</em>"。OpenMP + MPI + CUDA 全部接好之后，本周的目标（slide 4 那个红色 ice cube）真的能融化成液体水——一整周的算法 + 工程铺垫终于回收。</p>
+</div>
+
+
+<!-- ==================== SLIDE 38–39 ==================== -->
+<h2 class="slide-title">Slide 38–39 — The Next Step：消除 CPU↔GPU 来回搬运</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-038.png" alt="Slide 38: CPU-GPU back and forth">
+  <img class="slide-img" src="images/slide-039.png" alt="Slide 39: GPU-resident timesteps">
+</div>
+
+<div class="explanation">
+  <h3>问题：天真的 GPU offload 模式</h3>
+  <p>Slide 38 上画的是"教学版" GPU 用法：每个 timestep 里，<strong>系统数据存在 CPU</strong>，<em>CPU → GPU 拷贝坐标 → GPU 跑 kernel → GPU → CPU 拷贝力 → CPU 做积分</em>，下一步再来一遍。两个红色 🚫 标志在 PCIe 数据通路上——这是核心瓶颈：</p>
+  <ul>
+    <li>PCIe 带宽（~32 GB/s）远低于 HBM（~3 TB/s）；</li>
+    <li>每步两次 CPU↔GPU 同步意味着 GPU 经常空转等待；</li>
+    <li>对于小体系，搬数据的时间可能<em>超过</em>kernel 真正算的时间。</li>
+  </ul>
+
+  <h3>解决方案：GPU-resident 整步</h3>
+  <p>Slide 39 把整张图的左侧 "CPU" 一行<em>整个删掉</em>——所有数据从程序启动后就<em>常驻 GPU memory</em>，timestep 之间也不回到 CPU。Position update、velocity update、force calc、thermostat 全部在 GPU kernel 里完成。CPU 只负责：</p>
+  <ul>
+    <li>初始化时把数据上传一次；</li>
+    <li>每隔 N 步（log frequency）拉回一次做日志输出；</li>
+    <li>调度 kernel 序列、处理 MPI 通信。</li>
+  </ul>
+  <p>这是 LAMMPS-Kokkos、NAMD 3、HOOMD-Blue、Allegro+LAMMPS 这类<em>现代 GPU MD 引擎</em>的标准设计。是把 slide 12 那条 "Allegro 1000 GPU strong scaling" 的曲线推上去的最后一个工程点。</p>
+</div>
+
+
+<!-- ==================== SLIDE 40 ==================== -->
+<h2 class="slide-title">Slide 40 — 进一步阅读</h2>
+
+<img class="slide-img" src="images/slide-040.png" alt="Slide 40: Further references">
+
+<div class="explanation">
+  <h3>三类参考</h3>
+  <ul>
+    <li><strong>教科书</strong>：Frenkel &amp; Smit 的 <em>Understanding Molecular Simulation</em>（MD/MC 圣经）；Molinero 2009 那篇 <em>mW water model</em>（这门课用的就是这个粗粒化水模型）。</li>
+    <li><strong>主流 MD 引擎</strong>：LAMMPS / Gromacs / NAMD / OpenMM / HOOMD-Blue —— 想做大规模 MD 几乎绕不过这几个。HPC 方向重点是 <strong>LAMMPS-Kokkos</strong> 和 <strong>ACM Gordon Bell Prize</strong> 的 MD 类获奖工作（多次刷新 strong scaling 纪录）。</li>
+    <li><strong>力场名字</strong>：经典经验势 AMBER / OPLS / MARTINI；近年的 ML 力场 NequIP / ACE。这一行连接回第一部分（slides 7–11）的研究主题。</li>
+  </ul>
+</div>
+
+
+<div class="takeaway">
+  <h3>本节核心 takeaway</h3>
+  <ul>
+    <li><strong>研究示例</strong>：现代 MD = 大尺度 + 量子精度，靠的是 ML 力场（NequIP / Allegro）。从 TorchScript → AOTI → custom TP kernel 四步把单 GPU 吞吐拉到 6.2×，再用 LAMMPS 集成 scale 到上千 GPU；barocaloric 案例展示这条工具链能直接产生科学发现（H-bonding 稳定性差异 → 熵变差异）。</li>
+    <li><strong>分布式并行的心脏</strong>：domain decomposition + ghost atoms。每个 rank 拥有一块空间区域；每步交换 ghost 坐标 → 本地算力 → 反向通信 ghost 力 → 本地积分。靠空间 locality 把通信缩到只跟邻居 rank。</li>
+    <li><strong>通信选型</strong>：全局求和（T、E）用 <code>MPI_Allreduce</code>；ghost 交换用 <code>MPI_Sendrecv</code>（点对点，邻居拓扑）；logging 用 <code>MPI_Gatherv</code>（变长汇总到 rank 0）。</li>
+    <li><strong>GPU 化的两层</strong>：(1) 把 OpenMP loop 翻译成 CUDA kernel（pointwise / reduction 同构）；(2) 把整步留在 GPU 里，避免每步 PCIe 来回——这是从"能跑"到"能 scale"的关键一跳。</li>
+    <li><strong>整周连起来</strong>：L19 给出 Velocity-Verlet + SW 势 + neighbor list + thermostat 的串行算法；L20 把它装进 OpenMP + MPI + CUDA 三层并行栈，最终融化那块 ice cube。</li>
+  </ul>
+</div>
+
+</body>
+</html>

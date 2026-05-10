@@ -419,6 +419,76 @@ for (int step : std::views::iota(0, steps)) {
   💡 串行版本的核心是 <code>std::transform(cups.begin(), cups.end(), cups.begin(), op)</code> —— 把"对每个元素做相同运算"用 STL 算法表达出来，原地更新。后面只要换成并行版的 transform 就能跑到 GPU。
 </div>
 
+<details class="qa">
+  <summary>这段代码里的 lambda、<code>iota</code>、<code>std::transform</code> 各自是什么 modern C++ 语法？</summary>
+
+  <h3>① <code>auto op = [=] (float t) { ... };</code> ——  lambda 函数对象</h3>
+  <p>Lambda 本质是<strong>编译器自动生成的匿名 class</strong>，重载了 <code>operator()</code>。这一行等价于：</p>
+  <pre><code>struct __anon {
+    float k, ambient_temp;     // 捕获的副本
+    float operator()(float t) const {
+        float diff = ambient_temp - t;
+        return t + k * diff;
+    }
+};
+__anon op{k, ambient_temp};</code></pre>
+
+  <p>逐部分：</p>
+  <ul>
+    <li><code>auto</code> —— lambda 类型不可命名（编译器内部生成），必须 auto 推导</li>
+    <li><strong><code>[=]</code> 捕获列表</strong> —— 决定 lambda 能从外部抓哪些变量。<code>[=]</code> = 按值捕获（拷一份）；<code>[&amp;]</code> = 按引用捕获；<code>[k]</code> = 只捕获 k；<code>[]</code> = 不捕获。这里 lambda 体里用到了外部的 <code>k</code> 和 <code>ambient_temp</code>，<code>[=]</code> 让编译器把它们各拷一份塞进 lambda 内部</li>
+    <li><code>(float t)</code> —— 普通参数列表</li>
+    <li><code>{ ... }</code> —— 函数体；返回类型从 return 自动推导（要显式写就 <code>(float t) -&gt; float { ... }</code>）</li>
+  </ul>
+
+  <p><strong>为什么用 lambda 不用普通函数</strong>：(1) 就地定义，不用单独命名；(2) 自动捕获外部变量，不用到处传参；(3) 类型编译期可知，能完美内联，比 <code>std::function</code> 或函数指针快。</p>
+
+  <h3>② <code>for (int step : std::views::iota(0, steps))</code> —— C++20 ranges 循环</h3>
+  <p>等价于老式 <code>for (int step = 0; step &lt; steps; ++step)</code>。</p>
+
+  <p><strong><code>std::views::iota(0, steps)</code></strong>：生成一个<em>整数视图</em>（范围 [0, steps)），名字 iota 来自希腊字母 ι、APL 语言传统。它<strong>不在内存里造数组</strong>，迭代时按需生成下一个值，几乎零开销。</p>
+  <pre><code>iota(0, 5)  →  视图 {0, 1, 2, 3, 4}
+iota(3, 7)  →  视图 {3, 4, 5, 6}
+iota(10)    →  无穷视图 {10, 11, 12, ...}</code></pre>
+
+  <p><strong>range-based for</strong>（冒号语法）自动从范围里逐个取出元素赋给循环变量，对视图、容器、数组、初始化列表都适用。</p>
+
+  <p>用 ranges 写的好处：表意更清楚（"0..steps 的整数序列"）、可链式接其他 view（filter / take / drop 等）、避开了写错 <code>&lt;</code> vs <code>&lt;=</code> 的小坑。功能上和老 for 一样，这里就是 demo modern C++ 风格。</p>
+
+  <h3>③ <code>std::transform(...)</code> —— STL 算法：每输入一个 → 输出一个</h3>
+
+  <p>函数签名（unary 版本）：</p>
+  <pre><code>std::transform(InputIt first, InputIt last,
+               OutputIt d_first,
+               UnaryOp op);</code></pre>
+
+  <p>行为等价于：</p>
+  <pre><code>for (auto it = first; it != last; ++it) {
+    *d_first = op(*it);
+    ++d_first;
+}</code></pre>
+
+  <p>slide 用法：<code>std::transform(cups.begin(), cups.end(), cups.begin(), op)</code> —— 输入范围和输出起点都是 <code>cups.begin()</code>，<strong>原地更新</strong>每个元素为 <code>op(原值)</code>。</p>
+
+  <p><strong>为什么用 transform 不写 for</strong>：</p>
+  <ul>
+    <li><strong>表意明确</strong>：算法名直接说"对每个元素做同样的事"</li>
+    <li><strong>能加并行策略</strong>（C++17）：<code>std::transform(std::execution::par_unseq, ...)</code> 一行变多核</li>
+    <li><strong>能换 GPU 版本</strong>：<code>thrust::transform</code> 签名几乎一样，主体代码不动就跑到 GPU 上 —— 这是 slide 12-15 的核心卖点</li>
+    <li><strong>库可做 SIMD / 循环展开 / 预取</strong>等手写 for 不一定能拿到的优化</li>
+  </ul>
+
+  <p><strong>STL 算法家族对照</strong>（围绕 transform 看一圈）：</p>
+  <table>
+    <tr><th>算法</th><th>做啥</th><th>模式</th></tr>
+    <tr><td><code>std::transform</code></td><td>每输入 → 每输出</td><td>map</td></tr>
+    <tr><td><code>std::for_each</code></td><td>对每个元素调函数，无返回</td><td>副作用</td></tr>
+    <tr><td><code>std::reduce</code> / <code>accumulate</code></td><td>累加得一个值</td><td>reduce</td></tr>
+    <tr><td><code>std::copy_if</code></td><td>条件过滤</td><td>filter</td></tr>
+  </table>
+  <p><code>transform</code> + <code>reduce</code> 组合就是 map-reduce 编程模型。</p>
+</details>
+
 
 <!-- ==================== SLIDE 16–17 ==================== -->
 <h2 class="slide-title">Slide 16–17 — 编译流水线：g++ vs nvcc，多产物输出</h2>
@@ -548,6 +618,53 @@ for (int step : std::views::iota(0, steps)) {
   💡 CUDA 程序模型：执行总是从 host (CPU) 开始；要让 GPU 干活必须 <em>显式</em> launch；host↔device 的所有切换（launch、memcpy、synchronize）都是程序员写的语法，不会自动发生。
 </div>
 
+<details class="qa">
+  <summary><code>__host__ __device__</code> 标记和"显式 launch" 是同一回事吗？</summary>
+
+  <p><strong>不是。这是两个独立层面的事。</strong>annotation 是<em>编译期</em>的资源准备，launch 是<em>运行期 / 源码层</em>的执行调度。</p>
+
+  <table>
+    <tr><th>问题</th><th>回答它的语法</th></tr>
+    <tr><td>这段代码<strong>能不能</strong>在 GPU 上跑（编译期生成 GPU 机器码）</td><td><code>__device__</code> / <code>__host__ __device__</code></td></tr>
+    <tr><td>这段代码<strong>什么时候、从哪</strong>跑（运行期实际去哪边执行）</td><td>调用方式：普通 call → CPU；<code>kernel&lt;&lt;&lt;&gt;&gt;&gt;</code> 或 <code>thrust::xxx(thrust::device, ...)</code> → GPU</td></tr>
+  </table>
+
+  <h3>annotation 干什么</h3>
+  <p><code>__host__ __device__</code> 让 nvcc <strong>编译两份机器码</strong>：一份 host 二进制（x86），一份 device 二进制（GPU PTX/SASS）。函数的源码只有一份，但产出物有两个独立版本，分别放在两边的二进制里。</p>
+
+  <h3>实际跑哪份取决于调用方式</h3>
+  <pre><code>__host__ __device__ float cool(float t) { ... }
+
+int main() {
+    cool(42.0f);              // host 版本，跑 CPU
+    kernel&lt;&lt;&lt;1,1&gt;&gt;&gt;(...);     // launch 把 kernel 派到 GPU
+}
+__global__ void kernel() {
+    cool(42.0f);              // device 版本，跑 GPU
+}</code></pre>
+  <p>annotation 准备了两份代码可用；调用上下文（host 函数体里 vs <code>__global__</code> kernel 里）决定用哪份。<strong>annotation 本身不会让函数自动跑到 GPU</strong>。</p>
+
+  <h3>水冷却例子的 GPU 化需要两件事一起到位</h3>
+  <pre><code>auto op = [=] __host__ __device__ (float t) { ... };  // ① 让 GPU 版本存在
+thrust::transform(thrust::device,                       // ② 让 GPU 真去跑
+                  cups.begin(), cups.end(), cups.begin(), op);</code></pre>
+  <ul>
+    <li>少了 ①：编译报错（GPU 找不到 op 的代码）</li>
+    <li>少了 ②：编译能过，但仍跑 CPU（用 host 版本）</li>
+  </ul>
+
+  <h3>三个独立层面，混一起容易迷糊</h3>
+  <table>
+    <tr><th>层面</th><th>关心啥</th><th>语法</th></tr>
+    <tr><td>声明层（编译期）</td><td>函数 / 变量被编译到哪边</td><td><code>__host__</code> / <code>__device__</code> / <code>__global__</code></td></tr>
+    <tr><td>执行层（运行期）</td><td>此刻 CPU 还是 GPU 在跑</td><td>kernel launch、<code>thrust::device</code> policy</td></tr>
+    <tr><td>数据层（运行期）</td><td>数据在 host 还是 device 内存</td><td><code>cudaMalloc</code> / unified memory / <code>cudaMemcpy</code></td></tr>
+  </table>
+  <p>三层独立配置，都得对上才能正常工作。函数标了 <code>__host__ __device__</code> 但只在 host 调用 → 永远跑 CPU；kernel 在 GPU 跑但指针指向 host 内存 → page fault 或崩溃。</p>
+
+  <p><strong>类比</strong>：<code>__host__ __device__</code> 像"双语翻译"——把书翻译成两个国家的版本，放在两边图书馆。但<em>派人去哪个国家工作</em>是 launch 的事，翻译本身不会自动派人。</p>
+</details>
+
 
 <!-- ==================== SLIDE 26 ==================== -->
 <h2 class="slide-title">Slide 26 — Host/Device 模型整页总结：还有一条新规则"device 内部调用留在 device"</h2>
@@ -614,6 +731,61 @@ for (int step : std::views::iota(0, steps)) {
   💡 GPU 化三步：① lambda 加 <code>__host__ __device__</code> ② 算法换 <code>thrust::transform(thrust::cuda::par, ...)</code> ③ 容器换 <code>thrust::universal_vector</code>。代码主体保持 STL 风格不动。
 </div>
 
+<details class="qa">
+  <summary><code>thrust::universal_vector</code> 是不是一种 CPU 和 GPU 都能直接看到、省去搬运的特殊 vector？</summary>
+
+  <p>API 视角看是的——你写代码时只看到一块"两边都能访问的内存"，不用写任何 <code>cudaMemcpy</code>。</p>
+
+  <p><strong>但底层不是"同时在两边"</strong>。物理上同一时刻数据只在 CPU RAM 或 GPU VRAM 一边。CUDA Unified Memory 通过 <strong>page fault 自动迁移</strong>实现"两边都能访问"的假象：</p>
+  <ul>
+    <li>CPU 访问时数据在 CPU 侧 → 直接读</li>
+    <li>切到 GPU 访问 → 触发 page fault → CUDA 驱动捕获、把对应页搬到 GPU VRAM → 继续</li>
+    <li>切回 CPU 访问 → 再 page fault → 搬回</li>
+  </ul>
+  <p>整个过程对程序员透明，所以代码层"省去搬运"，但<strong>物理迁移依然发生</strong>——只是不用你手写。</p>
+
+  <p><strong>"自动搬"不等于"零成本"</strong>：每次跨边界访问触发的迁移走 PCIe（约 32 GB/s 单向），延迟实打实存在。CPU/GPU 反复访问同一块数据会触发<strong>抖动（page thrashing）</strong>，比显式 memcpy 一次搬过去还慢。</p>
+
+  <p><strong>对应到 slide 29 这个例子</strong>：循环里 <code>std::println</code> 在 CPU 读、<code>thrust::transform</code> 在 GPU 写，每轮触发两次跨边界迁移。教学版图省事，生产代码追求性能时会改用 <code>device_vector</code> 让数据一直留在 GPU、最后一次性搬回。</p>
+</details>
+
+<details class="qa">
+  <summary>既然 Thrust 是 CUDA 侧的库，为什么还有 <code>thrust::host</code> 跑在 CPU 上？</summary>
+
+  <p><strong>Thrust 不是 "CUDA-only"，它是一个<em>多后端</em>的并行算法库</strong>，CUDA 只是默认 / 最常用的后端。它的设计核心是<strong>"算法 + 可切换后端"</strong>——同一份代码，换个 policy 就能换硬件目标。</p>
+
+  <p><strong>Thrust 的后端选项</strong>（编译期决定哪些可用）：</p>
+  <table>
+    <tr><th>后端</th><th>跑在哪</th><th>对应 policy</th></tr>
+    <tr><td>CUDA</td><td>NVIDIA GPU</td><td><code>thrust::cuda::par</code></td></tr>
+    <tr><td>OpenMP</td><td>多核 CPU（OpenMP 线程）</td><td><code>thrust::omp::par</code></td></tr>
+    <tr><td>TBB</td><td>Intel TBB 线程库</td><td><code>thrust::tbb::par</code></td></tr>
+    <tr><td>CPP / Sequential</td><td>单线程 CPU</td><td><code>thrust::seq</code></td></tr>
+    <tr><td colspan="2"><code>thrust::host</code></td><td>映射到上面 CPU 后端之一（依编译配置）</td></tr>
+  </table>
+
+  <p><strong>历史背景</strong>：Thrust 最早是 NVIDIA Research 2009 年做的库，目标就是"把 STL 风格带进 CUDA"。设计者从一开始就让它解耦硬件——同一份代码能调试在 CPU、上线到 GPU、回退到串行。2022 年起 Thrust 并入 NVIDIA <strong>CCCL</strong>（CUDA C++ Core Libraries）项目跟 libcu++、CUB 一起维护，但多后端架构保留至今。</p>
+
+  <p><strong><code>thrust::host</code> 的实战用途</strong>：</p>
+  <ul>
+    <li><strong>调试</strong>：GPU 出 bug 难定位，先切 <code>thrust::host</code> 在 CPU 跑同一份算法，确认是算法错还是 GPU 特定问题</li>
+    <li><strong>回退</strong>：没 GPU / 数据太小不值得 launch / GPU 内存不够时自动切 CPU</li>
+    <li><strong>基准对比</strong>：写论文时同算法跑两遍比性能</li>
+    <li><strong>泛型库</strong>：用 <code>auto policy</code> 让调用方决定（slide 79 的 <code>compute_kernel</code> 就这种写法）</li>
+  </ul>
+
+  <p><strong>容器和 policy 要"配对"才不浪费</strong>：</p>
+  <table>
+    <tr><th>容器</th><th>内存在</th><th>配什么 policy 最自然</th></tr>
+    <tr><td><code>std::vector</code> / <code>thrust::host_vector</code></td><td>CPU</td><td><code>thrust::host</code></td></tr>
+    <tr><td><code>thrust::device_vector</code></td><td>GPU</td><td><code>thrust::cuda::par</code></td></tr>
+    <tr><td><code>thrust::universal_vector</code></td><td>unified（两边可见）</td><td>都行</td></tr>
+  </table>
+  <p>不匹配（如 <code>thrust::cuda::par</code> + <code>std::vector</code>）能编译过，但 Thrust 内部要做隐式 host↔device 拷贝，性能拉跨——这正是 slide 29 必须把容器换成 <code>universal_vector</code> 的原因。</p>
+
+  <p><strong>为什么课程把 Thrust 当 "CUDA 侧的东西" 介绍</strong>：因为它跟 CUDA SDK 绑发布、绝大多数用户用它就是为 GPU 加速、课程主线是 GPU 编程——所以介绍时主要讲 CUDA 后端。但严格说 Thrust 是<strong>"NVIDIA 出的 / 跟 CUDA 一起发的 / 主场景是 GPU"的通用并行算法库</strong>，不是 "CUDA-only"。</p>
+</details>
+
 
 <!-- ==================== SLIDE 30–36 ==================== -->
 <h2 class="slide-title">Slide 30–36 — Thrust 全景：Algorithms / Containers / Iterators 三大件</h2>
@@ -651,6 +823,32 @@ for (int step : std::views::iota(0, steps)) {
 <div class="takeaway">
   💡 Thrust = STL 风格的 GPU 库，四大件：Standard Algorithms、Extended Algorithms、Containers、Iterators。其中 universal_vector 不仅算法并行，构造和赋值也并行。Iterator 是"无中间数组"地组合算法的关键。
 </div>
+
+<details class="qa">
+  <summary>slide 35 说"构造和赋值并行"，是指 u0 / u1 两次构造同时进行吗？</summary>
+
+  <p>不是。指的是<strong>每条语句内部</strong>的工作并行化，三条语句之间还是按顺序执行。</p>
+  <pre><code>thrust::universal_vector&lt;T&gt; u0(1 &lt;&lt; 30);   // ① 内部并行（10 亿次初始化由 GPU 多线程做）
+thrust::universal_vector&lt;T&gt; u1(1 &lt;&lt; 30);   // ② 内部并行
+u0 = u1;                                      // ③ 内部并行（10 亿次拷贝并行做）</code></pre>
+  <p>① ② ③ 仍按 C++ 源码顺序执行，差别在于<strong>每一条单独操作的内部</strong>从串行（<code>std::vector</code> 单 CPU 线程逐个）变成并行（GPU 千万级线程一起做）。slide 强调的就是这条单语句内部的并行——10 亿级数据吞吐差距巨大。</p>
+</details>
+
+<details class="qa">
+  <summary><code>(1 &lt;&lt; 30)</code> 是什么？<code>std::vector&lt;T&gt;(n)</code> 真的会立刻初始化所有 n 个元素吗？</summary>
+
+  <p><strong><code>1 &lt;&lt; 30</code></strong> 是 C++ 左移位运算，等于 <strong>2³⁰ ≈ 10.7 亿</strong>。<code>a &lt;&lt; n</code> = a 的二进制位左移 n 位 = a × 2ⁿ。<code>1</code> 左移 30 位 = 二进制 1 后面 30 个 0 = 2³⁰。这种写法比直接写 <code>1073741824</code> 直观、避免数错 0、且是编译期常量。</p>
+
+  <p><strong><code>std::vector&lt;T&gt;(n)</code> 会立刻 value-initialize 所有 n 个元素</strong>，不是懒分配：</p>
+  <ul>
+    <li>分配 n × sizeof(T) 字节内存</li>
+    <li>对每个元素 value-initialize：内置类型（int/float/double/指针）= 写入 0；class 类型 = 调默认构造函数</li>
+  </ul>
+
+  <p>所以 <code>std::vector&lt;float&gt; h0(1 &lt;&lt; 30)</code> 真的执行 10 亿次写 0 操作——slide 34 说的 "serial" 就是这 10 亿次写在 CPU 上单线程顺序做。Thrust 的 universal_vector 同样要做 10 亿次初始化，区别在于 GPU 并行完成。</p>
+
+  <p>想"只订容量、不初始化"得用 <code>reserve</code>：<code>vector&lt;float&gt; h; h.reserve(1 &lt;&lt; 30);</code> —— 但这种 vector 是空的（size 0），不能直接 <code>h[i]</code>。</p>
+</details>
 
 
 <!-- ==================== SLIDE 37–39 ==================== -->
@@ -694,6 +892,20 @@ thrust::for_each_n(thrust::cuda::par, i, N,
 <div class="takeaway">
   💡 Thrust iterator 不一定来自真实数组：<code>counting_iterator</code> 生成 0,1,2,...，<code>constant_iterator</code> 永远返回同一个值。配合 <code>for_each_n</code> 可以零成本表达"做 N 次"或"广播标量"，不需要分配中间数组。
 </div>
+
+<details class="qa">
+  <summary>slide 37 vs 38：lambda 拿到的参数含义不一样吗？</summary>
+
+  <table>
+    <tr><th></th><th>slide 37</th><th>slide 38</th></tr>
+    <tr><td>输入</td><td><code>X.begin()</code>（真 vector）</td><td><code>make_counting_iterator(0)</code>（虚拟整数序列）</td></tr>
+    <tr><td>lambda 收到</td><td><code>auto&amp; obj</code> = vector 里的<strong>实际元素值</strong> X[0], X[1], ...</td><td><code>auto idx</code> = <strong>索引数字本身</strong> 0, 1, 2, ...</td></tr>
+    <tr><td>内存占用</td><td>N × sizeof(T)</td><td>0（按需生成，不占内存）</td></tr>
+    <tr><td>能写回吗</td><td>能（引用，可改 vector）</td><td>不能（idx 是数值，写它没意义）</td></tr>
+  </table>
+
+  <p>所以你的理解对——slide 38 的 lambda 拿到的就是"我是第几个"的索引数字本身，不是任何数组里的数据。当你只需要"做 N 次某个操作、每次知道自己是第几次"时，用 <code>counting_iterator</code> 比先分配一个 0..N-1 的数组省内存又省初始化时间。</p>
+</details>
 
 
 <!-- ==================== SLIDE 40–43 ==================== -->
@@ -742,8 +954,25 @@ auto r = thrust::reduce(thrust::cuda::par,
 </div>
 
 <div class="takeaway">
-  💡 朴素的"transform 写 tmp，再 reduce 读 tmp"有两宗罪：tmp 占 O(N) 设备内存，且两个 kernel 间要硬同步。用 <code>thrust::make_transform_iterator</code> 把 transform 变成惰性，融进 reduce 内部，tmp 直接消失——这是 GPU 编程最常用的 fusion 技巧。
+  💡 朴素的"transform 写 tmp，再 reduce 读 tmp"有两宗罪：tmp 占 O(N) 设备内存，且两个 kernel 间要硬同步。用 <code>thrust::make_transform_iterator</code> 把 transform 变成惰性，融进 reduce 内部，tmp 直接消失——这是 GPU 编程最常用的 fusion 技巧。一句话概括：<strong>从"先计算再合并"变成"合并的时候按需计算"</strong>。
 </div>
+
+<details class="qa">
+  <summary><code>thrust::reduce</code> 里的 <code>T{}</code> 是什么？</summary>
+
+  <p>C++ 的 <strong>value-initialization</strong> 语法，构造类型 T 的"零值"对象：</p>
+  <ul>
+    <li><code>int{}</code> = 0、<code>float{}</code> = 0.0f、<code>double{}</code> = 0.0</li>
+    <li>指针类型 = nullptr</li>
+    <li>类类型 = 调默认构造函数</li>
+  </ul>
+
+  <p>在 reduce 里它当<strong>初始累加值</strong>用：</p>
+  <pre><code>result = T{} + a[0] + a[1] + ... + a[N-1]
+//        ↑ 加法零元</code></pre>
+
+  <p>写 <code>T{}</code> 而不是 <code>0</code>，让代码<strong>对任何元素类型都通用</strong>——T 是 int / float / 自定义复数类都能正确给出"加法零元"。这是模板代码里的标准惯用法。</p>
+</details>
 
 
 <!-- ==================== SLIDE 44–45 ==================== -->
@@ -854,6 +1083,37 @@ auto max_diff = thrust::reduce(
 <div class="takeaway">
   💡 max abs difference 的实现演化：朴素版 = <code>transform</code> 写中间数组 + <code>reduce</code>；融合版 = <code>zip_iterator</code>(A,B) → <code>transform_iterator</code>(abs(a−b)) → <code>reduce</code>(maximum)。融合版零中间数组、一次 kernel，是 Thrust 风格 GPU 代码的代表。
 </div>
+
+<details class="qa">
+  <summary>transform_iterator / zip_iterator 各自具体在干啥？什么时候用得上？</summary>
+
+  <h3><code>transform_iterator(it, f)</code></h3>
+  <p>给底层 iterator 套一层<strong>惰性变换函数</strong>：每次 <code>*tit</code> 解引用时<em>临时</em>调一次 <code>f(*it)</code> 返回结果。本身不存任何东西、不预先算 f。下游算法（reduce/for_each/...）从它读值时分不清"是真数组还是临时算"，于是<strong>"算"和"读"合二为一</strong>，省掉中间数组。</p>
+
+  <p><strong>什么时候用得上</strong>：变换结果只是中间步骤、被下游消费完就扔。如果你<em>就是想要</em>那个变换后的 vector 拿在手里（最终产物），就必须真分配内存——这种情况 transform_iterator 帮不上忙，老老实实写 <code>thrust::transform</code> 即可。</p>
+
+  <h3><code>zip_iterator(it_a, it_b, ...)</code></h3>
+  <p>把<strong>多个独立 iterator 绑成一个 tuple 流</strong>：解引用得 <code>tuple{*it_a, *it_b, ...}</code>。本身不分配数组、零开销。</p>
+
+  <p><strong>关键认识：zip_iterator 单用<em>不</em>省资源</strong>。它的价值是"适配器"——把多输入压成单输入。因为 <code>transform_iterator</code> 只接受<em>一个</em>底层 iterator，要把"多输入计算"惰性化（如 <code>abs(a−b)</code>）就得先 zip 才能套 transform_iterator。</p>
+
+  <pre>没 zip:  transform_iterator 包不了 (A, B) 两个流
+         → 只能用 binary thrust::transform
+         → 必须 materialize 中间数组
+
+有 zip:  zip(A, B) → 单 tuple 流
+         → transform_iterator 可以套
+         → 进 reduce 不 materialize ✓</pre>
+
+  <p><strong>省内存的功劳是 transform_iterator 的，zip 只是让它进得了多输入场景</strong>。</p>
+
+  <h3>速记</h3>
+  <ul>
+    <li>变换结果只是中间步骤 → <code>transform_iterator</code> 融合掉</li>
+    <li>多输入要融合 → <code>zip_iterator</code> + <code>transform_iterator</code> 联用</li>
+    <li>变换结果就是最终 vector → 老实用 <code>thrust::transform</code></li>
+  </ul>
+</details>
 
 
 <!-- ==================== SLIDE 51–54 ==================== -->
@@ -1054,6 +1314,41 @@ auto row_ids_end = row_ids_begin + nx * ny;</code></pre>
   💡 <code>thrust::reduce_by_key</code> 把"相邻同 key 的 values"作为一组归约。矩阵行求和的 idiom：<strong>用 <code>counting_iterator + transform_iterator(x / ny)</code> 惰性生成行号当 keys</strong>，把拍平的矩阵 M 作为 values，调一次 reduce_by_key 就拿到所有行和。键不用真的分配一个数组——这是迭代器在大规模问题里省内存 + 省 kernel 的代表用法。
 </div>
 
+<details class="qa">
+  <summary>row_ids_begin / row_ids_end 是 vector 吗？为什么需要 end？</summary>
+
+  <h3>关键修正：<em>不是 vector</em></h3>
+  <p>逻辑序列是 <code>0,0,0,0, 1,1,1,1, ..., 7,7,7,7</code>（nx=8, ny=4）没错，但<strong>这串数字从未在内存里出现过</strong>。<code>row_ids_begin</code> 是一个"位置 + 取值规则"的小对象：每次 <code>*it</code> 才现场算 <code>*counter / ny</code>；它甚至不知道自己后面"应该"有多长。</p>
+
+  <h3>为什么需要 <code>row_ids_end</code></h3>
+  <p>C++ 算法都遵循 <strong><code>[begin, end)</code> 半开区间</strong>。光给 begin 算法不知何时停。<code>row_ids_end = row_ids_begin + nx*ny</code> 就是同类型的 iterator，只是位置 = begin 再走 nx*ny 步——<strong>它也不存东西</strong>，只是一个"走到这儿停"的标记。和 raw pointer 完全同思想：<code>int* p_end = arr + 32;</code></p>
+</details>
+
+<details class="qa">
+  <summary>"分配 nx*ny 的 keys 数组是 O(N) 浪费"——为什么浪费？O(N) 指的是整体还是单个 key？</summary>
+
+  <h3>O(N) 指<em>整体</em>，不是单个 key</h3>
+  <ul>
+    <li>单个 key：<code>i / ny</code>，<strong>O(1)</strong>，几个 cycle</li>
+    <li>整个 keys 数组：N 个元素 × 每个 O(1) → <strong>总开销 O(N)</strong>（显存 + 带宽 + kernel 工作量都随 N 线性增长）</li>
+  </ul>
+
+  <h3>朴素物化的四笔代价（都是 O(N)）</h3>
+  <table>
+    <tr><th>代价</th><th>量级</th></tr>
+    <tr><td>显存占用</td><td><code>nx*ny * sizeof(int)</code>（4096² 矩阵就是 64 MB 废数据）</td></tr>
+    <tr><td>HBM 写带宽</td><td>kernel 把 0,0,0,1,1,1,... 写一遍</td></tr>
+    <tr><td>HBM 读带宽</td><td>reduce_by_key 又读一遍</td></tr>
+    <tr><td>额外 kernel + cudaMalloc</td><td>launch overhead + 分配开销</td></tr>
+  </table>
+
+  <h3>关键：GPU 上"算"比"读"便宜</h3>
+  <p>整数除法 ~几 cycle；HBM 读取 ~几百 cycle。所以<strong>重算 <code>i/ny</code> 比从显存读已存值还快</strong>。把可 O(1) 重算的数据存下来反而是亏的——花两次 HBM 带宽换一条 IDIV，纯亏。</p>
+
+  <h3>用 transform_iterator 之后</h3>
+  <p>那笔 O(N) 额外开销直接<strong>抹成 0</strong>：0 字节显存、0 次额外 HBM 读写、0 次额外 kernel——<code>i/ny</code> 在寄存器里算完直接喂给 reduce_by_key 本就要做的访问。</p>
+</details>
+
 
 <!-- ==================== SLIDE 71–76 ==================== -->
 <h2 class="slide-title">Slide 71–76 — <code>reduce_by_key</code> 收尾：keys output 用 <code>discard_iterator</code> 丢掉 + by-key 算法家族</h2>
@@ -1138,6 +1433,32 @@ thrust::reduce_by_key(thrust::cuda::par,
   💡 把"对每个元素做运算"扩展到 2D：每个网格点的更新依赖自己 + 上下左右 4 个邻居（5-point stencil）。例子是 2D 热方程 <code>U_next = U + α·(∂²U/∂x² + ∂²U/∂y²)</code>，每个内部点更新仍然彼此独立 → GPU 友好。
 </div>
 
+<details class="qa">
+  <summary>"stencil" 是这个例子专属名字还是模式分类？和"row sum"那种"也不独立"的情况有何区别？</summary>
+
+  <h3>Stencil 是<em>模式分类名</em></h3>
+  <p>来自美术——拿一片镂空模板按在每个位置上读"模板形状内"的点。在 HPC 里专指一类计算：<strong>每个输出 <code>out[i,j]</code> 由"以 (i,j) 为中心的固定形状邻居集合"决定</strong>。和 map / reduce / scan 同级，是并行计算的一类基本 dwarf。常见形状：5-point cross、9-point box、7-point 3D；用在 PDE、blur、edge detection、生命游戏等。</p>
+
+  <h3>关键区别：<em>分组互斥</em> vs <em>邻居重叠</em></h3>
+  <p>row sum 确实也"不独立"，但和 stencil 是<strong>不同种类的"不独立"</strong>——区别在<em>不同输出之间的输入是否共享</em>：</p>
+  <table>
+    <tr><th>模式</th><th>例子</th><th>输出 i 读哪些输入</th><th>输出之间</th></tr>
+    <tr><td>Map</td><td>咖啡冷却</td><td><code>in[i]</code></td><td>不交集</td></tr>
+    <tr><td>Reduce-by-key</td><td>每行求和</td><td><code>in[i, 0..ny-1]</code></td><td><strong>分组互斥</strong>——一个 input 只属于一个 output</td></tr>
+    <tr><td>Stencil</td><td>5-point Laplacian</td><td><code>in[i,j], in[i±1,j], in[i,j±1]</code></td><td><strong>大量重叠</strong>——同一个 <code>in[i,j]</code> 被 5 个相邻输出读</td></tr>
+  </table>
+
+  <h3>重叠为什么定义了 stencil 的优化方向</h3>
+  <ul>
+    <li><strong>数据复用</strong>：每个输入被读多次 → 值得放 shared memory / cache，省 DRAM 流量。row sum 没这机会（每值只读一次）。</li>
+    <li><strong>Tiling + halo</strong>：分块处理时 tile 边缘需要邻居 tile 的"边界一行"才能算 stencil → 引出 halo / ghost cell。row sum 不需要 halo。</li>
+    <li><strong>时间迭代</strong>：stencil 通常多步推进（PDE），单步优化的收益乘以步数被放大。</li>
+  </ul>
+
+  <h3>一句话答疑</h3>
+  <p>stencil 是模式名（"读固定形状邻居"这一类）。和 row sum 都不独立，但<strong>row sum 是分组互斥，stencil 是邻居重叠</strong>——重叠才是 stencil 的本质特征，也是它需要 shared memory / halo / tiling 这套武器的原因。</p>
+</details>
+
 
 <!-- ==================== SLIDE 79–86 ==================== -->
 <h2 class="slide-title">Slide 79–86 — heat_equation 函数 raw-pointer 版：counting + xy 解码 + 边界 + 5 点拉普拉斯</h2>
@@ -1208,6 +1529,62 @@ V[x*ny + y] = U[x*ny + y] + 0.2f * (d2tdx2 + d2tdy2);</code></pre>
   💡 heat_equation 的 idiom：<code>for_each_n + counting_iterator</code> 表达"对每个 xy 做事"；用 <code>raw_pointer_cast</code> 把 universal_vector 拆成裸指针 capture 进 lambda；从 xy 解出 (x, y)；内部点算 5 点 stencil 写 V，边界点直接复制。<strong>必须 U→V 双缓冲</strong>（不能原地），否则邻居读到不确定值。
 </div>
 
+<details class="qa">
+  <summary>SIMT 心智模型 + 边界归谁管 + 一次调用做了多少事</summary>
+
+  <ul>
+    <li><strong>参数语义</strong>：<code>nx, ny</code> 告知网格尺寸（用于 xy → (x,y) 解码 + 边界判定）。</li>
+    <li><strong>一次调用 = 一个完整时间步</strong>，覆盖所有 nx*ny 个格子。<em>不</em>是一个点，也<em>不</em>是整段模拟。多步推进靠外层循环重复调（slide 95+ 的 <code>compute_steps</code>），每次 U/V 角色对调。</li>
+    <li><strong>SIMT 思路</strong>：lambda 体里你看到的代码<em>逻辑上是"处理单个格子"</em>——但 <code>for_each_n</code> 把它实例化 nx*ny 次并行跑。<strong>写一个点的代码，框架生成所有点同时算</strong>。</li>
+  </ul>
+
+  <h3>边界归 <code>for_each_n</code> 管，不归 <code>counting_iterator</code></h3>
+  <p>容易误以为 <code>U.size()</code> "约束了 counting_iterator"——其实 counter 本身是**无穷源**，被问就吐下一个 i，从不停。控制循环次数的是 <code>for_each_n</code> 自己——它收到 <code>n = U.size()</code>，内部数到第 n 次就不再叫 lambda：</p>
+  <pre>U.size() ──传给──▶ for_each_n（决定循环几次）
+                        │
+                        └──▶ 每次问 counter 要下一个 i
+                              counter 不知道自己被问几次</pre>
+  <p>推论：约束 <code>n ≤ U.size()</code> 是程序员的责任，counter 不会替你检查越界。</p>
+
+  <h3>U / V 角色对调推进时间</h3>
+  <pre>heat_equation(U → V);   // 第 1 步
+heat_equation(V → U);   // 第 2 步：身份对调
+heat_equation(U → V);   // 第 3 步：再换回</pre>
+  <p>两块物理内存永远扮演"当前 / 下一时刻"，互换即可推进，<strong>不需要第三块缓冲</strong>。"ping-pong" 名字由此而来。</p>
+</details>
+
+<details class="qa">
+  <summary>为什么这是"基础版本"——没复用 U 的重叠读取</summary>
+
+  <h3>浪费在哪</h3>
+  <p>5 点 stencil 里同一个 <code>U[i,j]</code> 会被 <strong>5 个相邻线程</strong>独立读：thread (x,y) / (x±1,y) / (x,y±1) 都把它当邻居。这版每个线程都<strong>直接读 DRAM</strong>，<em>没有显式复用</em>：</p>
+  <ul>
+    <li>有效信息：1× — 每个 U 值只携带一份数据</li>
+    <li>实际 DRAM 带宽消耗：5× — 同一个值被独立 fetch 5 次</li>
+  </ul>
+  <p>GPU L1/L2 cache 能被动捡回一部分（相邻线程几乎同时访问 → 可能 cache hit），但这是不可控的——<strong>没显式利用 stencil 的重叠结构</strong>。</p>
+
+  <h3>"高级版本"长什么样：shared memory tiling + halo</h3>
+  <ol>
+    <li>切 16×16 tile，每个 block 负责一个 tile</li>
+    <li>block 内线程<strong>协作</strong>把 (16+2)×(16+2) 区域（tile + 1 圈 halo）一次性 DRAM → shared memory</li>
+    <li><code>__syncthreads()</code> 等所有线程加载完</li>
+    <li>每个线程从 shared memory 读 5 个值算 stencil（shared 比 DRAM 快 ~100×）</li>
+  </ol>
+  <p>每个 U[i,j] 的 DRAM 读次数：<strong>5 → 1</strong>。</p>
+
+  <h3>关键限制：Thrust 表达不了 block 协作</h3>
+  <p><code>thrust::for_each_n</code> 是<strong>单线程语义</strong>（"对每个元素做这事"），没有暴露 "block 内协作 + shared memory + <code>__syncthreads()</code>" 这些原语。要做 tiling 优化必须<strong>脱离 Thrust，直接写 raw CUDA <code>__global__</code> kernel</strong>：</p>
+  <pre><code>__global__ void heat_equation_tiled(...) {
+    __shared__ float tile[18][18];   // 16+2 halo
+    // 协作加载 + __syncthreads()
+    // 从 shared memory 算 stencil
+}</code></pre>
+
+  <h3>为什么仍然先写这版</h3>
+  <p>典型"<strong>library 优先</strong>"哲学：先用 Thrust 写到正确（代码少一个数量级、可读性高），<em>必要时再下沉到手写 kernel</em>。教学上也方便——从这个干净基线后续才能讲 mdspan、ForEachInLayout、shared memory tiling 等优化。</p>
+</details>
+
 
 <!-- ==================== SLIDE 87 ==================== -->
 <h2 class="slide-title">Slide 87 — <code>std::mdspan</code>：多维数组的非拥有 view（C++23）</h2>
@@ -1266,6 +1643,64 @@ class std::mdspan;</code></pre>
 <div class="takeaway">
   💡 <code>std::mdspan</code>（C++23）= 多维 view，不拥有数据，只把一段连续内存按 (extents, layout) 解释成多维数组。优点：<code>U(x, y)</code> 比手算 <code>x*ny + y</code> 更安全；row-major 和 column-major 同一段代码兼容；non-owning 因此能 capture 进 device lambda。device 端用 <code>cuda::std::mdspan</code>。
 </div>
+
+<details class="qa">
+  <summary>名字怎么来的：span = ? mdspan = ?</summary>
+
+  <h3><code>span</code>（C++20）= "一段连续元素的非拥有 view"</h3>
+  <p>字面意思"跨度 / 一段"。在 C++ 里被精确化为：</p>
+  <pre><code>template&lt;typename T&gt;
+struct span { T* ptr; size_t len; };   // 概念上就这俩字段</code></pre>
+  <p><strong>不分配、不释放、不拷贝</strong>——只是把别人已经分配好的连续内存"借"过来按数组用。<code>vector / 数组 / 裸指针+长度</code> 都能塞进同一个 span 接口。</p>
+
+  <h3><code>mdspan</code> = <em>multi-dimensional span</em>（C++23）</h3>
+  <p>把 span 推广到任意维度：在"指针 + 长度"基础上加上 <strong>形状（extents）</strong> 和 <strong>布局（layout）</strong>。仍然非拥有，仍然只是 view。</p>
+  <pre>numpy ndarray  =  指针 + .shape + .strides
+std::mdspan    =  T*   + Extents + LayoutPolicy</pre>
+  <p>本质上就是 <strong>C++ 版的 NumPy ndarray view</strong>——除了它不持有数据。</p>
+</details>
+
+<details class="qa">
+  <summary>mdspan 最小例子：12 元素一维 → 3×4 二维</summary>
+
+  <pre><code>#include &lt;mdspan&gt;
+#include &lt;vector&gt;
+
+std::vector&lt;float&gt; data(12);
+for (int i = 0; i &lt; 12; ++i) data[i] = i;
+// data = [0,1,2,3, 4,5,6,7, 8,9,10,11]
+
+// 把 data 这块一维内存"重新解释"成 3×4 的 2D 数组
+std::mdspan&lt;float, std::extents&lt;size_t, 3, 4&gt;&gt; M(data.data());
+
+float a = M(1, 2);    // 等价 data[1*4 + 2] = 6
+M(2, 3) = 99.0f;      // 等价 data[2*4 + 3] = 99
+// data[11] 现在是 99 — M 和 data 是同一块内存</code></pre>
+
+  <p><strong>关键</strong>：M 没分配新内存——构造只接收 <code>data.data()</code> 指针；<code>M(i, j)</code> 内部就是 <code>data[i*4 + j]</code>，手算偏移这步被 mdspan 包掉。</p>
+
+  <h3>动态形状版本（运行时才知道大小）</h3>
+  <pre><code>int nx = 8, ny = 4;
+std::vector&lt;float&gt; data(nx * ny);
+
+std::mdspan&lt;float, std::dextents&lt;size_t, 2&gt;&gt; M(data.data(), nx, ny);
+//                  ↑
+//                  dextents = 全部维度运行时确定（heat_equation 用法）
+
+M(3, 2) = 1.0f;   // → data[3*ny + 2]</code></pre>
+
+  <h3>套到 heat_equation：可读性对比</h3>
+  <pre><code>// 旧版（slide 79–86，手算偏移）
+V[x*ny + y] = U[x*ny + y]
+            + 0.2f * (U[x*ny + y-1] + U[x*ny + y+1]
+                    + U[(x-1)*ny + y] + U[(x+1)*ny + y] - 4*U[x*ny + y]);
+
+// mdspan 版（slide 87–89）
+V(x, y) = U(x, y)
+        + 0.2f * (U(x, y-1) + U(x, y+1)
+                + U(x-1, y) + U(x+1, y) - 4*U(x, y));</code></pre>
+  <p>逻辑、性能完全一样（mdspan 编译期 inline 成同样的偏移计算），区别只在<strong>可读性 + 不会写错</strong>——<code>x*ny+y</code> vs <code>y*nx+x</code> 这种 bug 自动消失。</p>
+</details>
 
 
 <!-- ==================== SLIDE 88–89 ==================== -->
@@ -1328,6 +1763,34 @@ class std::mdspan;</code></pre>
 <div class="takeaway">
   💡 用 <code>cuda::std::mdspan&lt;T, cuda::std::dims&lt;2&gt;&gt;</code> 改写后：raw_pointer_cast 没了、nx/ny 不用单独传（嵌在 mdspan 的 extent 里）、<code>U[x*ny+y]</code> 变 <code>U(x, y)</code>。Stencil 代码读起来和数学公式同构，写错概率显著降低，且布局可换。
 </div>
+
+<details class="qa">
+  <summary>换成 <code>cuda::std::mdspan</code> 后，CPU 和 GPU 都能 access 吗？</summary>
+
+  <h3>能——但要分清两件事：mdspan 对象本身 vs 它指向的数据</h3>
+
+  <p><strong>① mdspan 对象本身：两侧都能用</strong></p>
+  <table>
+    <tr><th></th><th>host 代码</th><th>device 代码</th></tr>
+    <tr><td><code>std::mdspan</code>（标准库）</td><td>✓</td><td>✗</td></tr>
+    <tr><td><code>cuda::std::mdspan</code>（libcu++）</td><td>✓</td><td>✓</td></tr>
+  </table>
+  <p>libcu++ 版本的成员函数都带 <code>__host__ __device__</code>——这就是 slide 89 从 <code>std::</code> 换到 <code>cuda::std::</code> 的全部理由：为了能 capture 进 <code>__device__</code> lambda。</p>
+
+  <p><strong>② 真正的访问限制在<em>底层 backing memory</em></strong>：</p>
+  <table>
+    <tr><th>底层来自</th><th>host deref</th><th>device deref</th></tr>
+    <tr><td><code>host_vector</code> / <code>std::vector</code></td><td>✓</td><td>✗ 段错误</td></tr>
+    <tr><td><code>device_vector</code></td><td>✗ 段错误</td><td>✓</td></tr>
+    <tr><td><code>universal_vector</code> ← <em>heat_equation 用的</em></td><td>✓</td><td>✓</td></tr>
+  </table>
+
+  <h3>类比</h3>
+  <p>mdspan 是一张"地图"——地图本身轻便，两侧都能持有；但地图上画的地方<strong>你能不能进去</strong>由那块土地的所有权决定（即底层 memory 的类型）。</p>
+
+  <h3>一句话</h3>
+  <p>对，<code>cuda::std::mdspan</code> 对象两侧都能用。<strong>能否 deref 数据</strong>取决于 backing memory——heat_equation 因为是 <code>universal_vector</code> 在 unified memory 上，所以两侧都合法；换成 <code>device_vector</code> 则 host 上 <code>M(x,y)</code> 就会段错误。</p>
+</details>
 
 
 <!-- ==================== SLIDE 90 ==================== -->
@@ -1403,6 +1866,42 @@ thrust::fill_n(policy, bot.data_handle(), bot.size(), 90.0);</code></pre>
 <div class="takeaway">
   💡 <code>submdspan</code> = 多维数组的"slice"——整数降维、<code>full_extent</code> 全保留、<code>tuple(b,e)</code> 取区间。本例用三个 submdspan 把 U 切成 top/mid/bot 三段，再各自 <code>fill_n</code> 填不同温度，零内存拷贝。
 </div>
+
+<details class="qa">
+  <summary><code>submdspan(U, 0, full_extent)</code> 切出来还是 2D 吗？</summary>
+
+  <h3>不是——它降到 <strong>1D</strong></h3>
+  <p>规则：每个 slice 参数的<em>类型</em>决定该维去留：</p>
+  <table>
+    <tr><th>slice 类型</th><th>例子</th><th>该维</th></tr>
+    <tr><td>整数</td><td><code>0</code>, <code>nx-1</code></td><td><strong>砍掉</strong>（只取该位置）</td></tr>
+    <tr><td><code>full_extent</code></td><td>—</td><td>保留（NumPy 的 <code>:</code>）</td></tr>
+    <tr><td><code>tuple(b, e)</code></td><td><code>tuple(1, nx-2)</code></td><td>保留，截取 [b, e)</td></tr>
+  </table>
+  <p>输出维度数 = <strong>保留的维度数</strong>。</p>
+
+  <h3>对应到本例 3 个切片</h3>
+  <table>
+    <tr><th></th><th>slice 0</th><th>slice 1</th><th>输出维度</th></tr>
+    <tr><td><code>top</code></td><td>整数 <code>0</code> ← 砍</td><td><code>full_extent</code> ← 留</td><td><strong>1D</strong>, shape (ny,)</td></tr>
+    <tr><td><code>mid</code></td><td><code>tuple(1, nx-2)</code> ← 留</td><td><code>full_extent</code> ← 留</td><td>2D, shape (nx-2, ny)</td></tr>
+    <tr><td><code>bot</code></td><td>整数 <code>nx-1</code> ← 砍</td><td><code>full_extent</code> ← 留</td><td><strong>1D</strong>, shape (ny,)</td></tr>
+  </table>
+
+  <h3>NumPy 类比</h3>
+  <pre><code>U.shape          # (nx, ny)
+U[0, :]          # 1D, shape (ny,)         ← top
+U[1:nx-1, :]     # 2D, shape (nx-2, ny)    ← mid
+U[nx-1, :]       # 1D, shape (ny,)         ← bot</code></pre>
+  <p><code>submdspan(U, 0, full_extent)</code> ≡ <code>U[0, :]</code>。</p>
+
+  <h3>想保留 2D 怎么办</h3>
+  <p>把整数换成单元素 <code>tuple</code>：</p>
+  <pre><code>auto top_2d = submdspan(U, cuda::std::tuple{0, 1}, full_extent);
+// shape (1, ny) — 仍 2D，只是高度=1</code></pre>
+
+  <p class="hint">补充：<strong>tuple = 元组</strong>（元素 + 组合），固定大小、可异质类型的有序容器，按位置访问。在 submdspan 这里就是用 <code>tuple(begin, end)</code> 把"区间"打包成一个参数。</p>
+</details>
 
 
 <!-- ==================== SLIDE 95–102 ==================== -->
@@ -1496,6 +1995,73 @@ heat_equation(..., U_data.data(), V_data.data());  // 第 2 步：读 U，写 V<
   💡 <code>thrust::cuda::par</code> 默认每次 kernel 结束都同步，host 频繁 block。换成 <code>thrust::cuda::par_nosync</code> 不再自动同步——但你必须在"host 要读 device 数据"之前显式 <code>cudaDeviceSynchronize()</code>。同步开销从每步 1 次降到每个 write_step 1 次。
 </div>
 
+<details class="qa">
+  <summary>par_nosync + U.swap(V)：为什么不会读到错的数据？</summary>
+
+  <h3>担心</h3>
+  <p>异步下 host 不等 GPU 就 swap，下一轮 heat_equation 进 GPU 时 U/V 角色会不会错？</p>
+
+  <h3>三层保护让结果仍然正确</h3>
+  <ol>
+    <li><strong>swap 只动 host 端的 mdspan struct，不动 GPU 数据</strong>——交换的是"指针 + 形状"几个字段（ns 量级），universal memory 物理地址一字节没改。</li>
+    <li><strong>lambda 在 launch 时按值快照 U/V</strong>——<code>[=]</code> capture 把当时的 mdspan 拷贝进 kernel 闭包；launch 之后 host 再改 mdspan 不影响已在路上的 kernel。</li>
+    <li><strong>同一 stream 内 kernel 严格串行</strong>——CUDA 保证 kernel N+1 必须等 kernel N <em>所有</em> CUDA cores 完成才能开始。</li>
+  </ol>
+
+  <h3>关键澄清：par_nosync <em>不</em>让 kernel 之间在 GPU 上并行</h3>
+  <pre>错误理解：
+GPU: [kernel t=1 ===]
+     [kernel t=2 =====]      ← 同时跑？读到一半的 t=1？❌
+
+实际行为：
+GPU: [kernel t=1 ==] → 全部 CUDA cores 完成 → [kernel t=2 ==] → 完成 → [kernel t=3]</pre>
+  <p>并行发生在<strong>纵向</strong>："host 派单 ‖ GPU 干活"——不是"kernel 横向同时跑"。par 和 par_nosync 在 <strong>GPU 侧的执行图完全一样</strong>，区别只在 host 要不要等。</p>
+
+  <h3>比喻</h3>
+  <p>swap = 经理在办公室换桌面标签牌（ns）；GPU 工人手上的工单写的是物理地址（不是看标签），所以无论 host 怎么换标签 GPU 都按工单顺序干活。</p>
+</details>
+
+<details class="qa">
+  <summary>par_nosync 究竟省了什么——光省 swap 那几 ns 太不值得吧？</summary>
+
+  <h3>对——swap 本身可以忽略不计。真正省的是 sync barrier + GPU 空闲间隙</h3>
+  <p>par 的时序图本质是"乒乓"：</p>
+  <pre>host:  [launch][== Blocked 等 ==][swap][launch][== Blocked ==]...
+                 ↑                       ↑
+                 ① sync (5–50 μs)       ③ 又一次 sync
+GPU:           [== kernel 1 ==][空][== kernel 2 ==][空]
+                                ↑
+                                ④ GPU 等 host 派下一单</pre>
+
+  <table>
+    <tr><th>浪费源</th><th>在哪侧</th><th>量级</th></tr>
+    <tr><td>① + ③ 每次 sync 的 driver 来回</td><td>host</td><td>5–50 μs/次</td></tr>
+    <tr><td>② host 处理 + 重新 launch</td><td>host</td><td>几 μs/次</td></tr>
+    <tr><td>④ GPU 等 host 派下一单</td><td>GPU</td><td>host 处理那几 μs</td></tr>
+  </table>
+
+  <h3>par_nosync 把"乒乓"压成"流水"</h3>
+  <pre>host:  [launch][swap][launch][swap]...100次...     [sync 一次]
+GPU:           [kernel 1][kernel 2][kernel 3]...[kernel N]
+               ↑         ↑         ↑
+               无缝拼接——GPU 不再等 host</pre>
+  <p>同步次数：<strong>N 次 → 1 次</strong>；GPU 空闲间隙：<strong>N 个 → 0 个</strong>。</p>
+
+  <h3>收益看 kernel 大小</h3>
+  <table>
+    <tr><th>kernel 跑多久</th><th>每次 sync 占比</th><th>par_nosync 收益</th></tr>
+    <tr><td>1 ms（大网格）</td><td>~10%</td><td>小</td></tr>
+    <tr><td>100 μs（中网格）</td><td>~30%</td><td>中等</td></tr>
+    <tr><td><strong>10 μs（小网格）</strong></td><td>2–5×</td><td><strong>巨大</strong>——GPU 利用率从 ~33% → 接近 100%</strong></td></tr>
+  </table>
+
+  <h3>术语精度</h3>
+  <p>这种"切换"<strong>不是</strong> OS 意义的 context switch——CPU/GPU 是独立硬件，不抢时间片。准确说叫 <strong>"driver 同步等待 + 串行交接"开销</strong>：GPU 跑完 → 写完成标志 → driver 通知 host → host 处理 + 派下一单。</p>
+
+  <h3>这堂课真正的大头</h3>
+  <p>slide 103-106 的 par_nosync 是铺垫。真正"用 host 的空闲时间干别的事"在 <strong>slide 148-158</strong>——host 写文件 ‖ GPU 算下一步，两侧同时满负荷。那才是 par_nosync 的最大价值。</p>
+</details>
+
 
 <!-- ==================== SLIDE 107–111 ==================== -->
 <h2 class="slide-title">Slide 107–111 — CUDA streams：执行顺序的"通道"</h2>
@@ -1543,6 +2109,103 @@ cudax::stream B(cudax::devices[1]);</code></pre>
 <div class="takeaway">
   💡 Stream = 设备上的"串行通道"：同一 stream 内 FIFO 执行，不同 stream 间默认并发。三件事工具：<code>policy.on(stream)</code> 提交工作、<code>stream.sync()</code> host 等流、<code>stream.record_event()</code>+<code>stream.wait(e)</code> 跨流（甚至跨 GPU）依赖。
 </div>
+
+<details class="qa">
+  <summary>名词与对象：<code>cudax</code> / <code>cudax::stream A</code> / 多车道类比</summary>
+
+  <ul>
+    <li><strong><code>cudax</code> = <code>cuda::experimental</code></strong>。X = e<strong>X</strong>perimental——CCCL 的实验性命名空间，API 会变。等稳定后会迁到 <code>cuda::</code> 或 <code>cuda::std::</code>。</li>
+    <li><strong><code>cudax::stream A</code> 是一个 RAII 对象</strong>（变量），不是容器。内部包装一个 CUDA stream 句柄（底层 <code>cudaStream_t</code>），构造时 <code>cudaStreamCreate</code>，析构时 <code>cudaStreamDestroy</code>。</li>
+  </ul>
+
+  <h3>多车道高速公路类比</h3>
+  <pre>GPU = 一条高速公路（共享的 SM + DMA 引擎池）
+
+Stream A: ─── 车 ─── 车 ─── 车 ───→     A 内部 FIFO
+Stream B: ── 车 ── 车 ──────────→     B 内部 FIFO
+Stream C: ─────── 车 ──── 车 ───→     C 内部 FIFO
+          ↑
+          三条车道同时使用同一条高速（硬件足够时真并行）</pre>
+  <p>一条车道内排队（前车没过去后车不能上）；不同车道之间可以同时跑。跨车道想等用 <strong>event + wait</strong>。</p>
+</details>
+
+<details class="qa">
+  <summary><code>par.on(A)</code> 的主语是谁？为什么要返回新对象？</summary>
+
+  <h3>方向澄清：主语是 <em>policy</em>，A 只是参数</h3>
+  <pre>thrust::cuda::par.on(A)
+└─────┬──────┘   └┬┘
+   接收者         方法
+  (policy)
+   ↓
+   "造一个新 policy，让它知道走 A 这条车道"
+   <em>不是</em> "告诉 A 用 par 这套策略"</pre>
+
+  <table>
+    <tr><th></th><th>是不是被改？</th></tr>
+    <tr><td><code>thrust::cuda::par</code></td><td>没改——它是 constexpr 全局常量动不得</td></tr>
+    <tr><td><code>A</code></td><td>没改——只是被记下的"车道编号"</td></tr>
+    <tr><td>返回值</td><td>新对象——"par 多一个字段记着 stream = A"</td></tr>
+  </table>
+  <p>functional 风格（类比 Python 字符串 <code>s.upper()</code> 返回新字符串、s 不变）。</p>
+
+  <h3>为什么必须返回</h3>
+  <p>Thrust 算法签名要的就是一个 policy 参数：</p>
+  <pre><code>thrust::for_each_n(POLICY, iterator, n, function);
+//                  ↑ 必须接到这里</code></pre>
+  <p>所以 <code>.on()</code> 给你的就是"喂给算法用的那个 policy"。可以当场喂、也可以接住反复用：</p>
+  <pre><code>// 方法 a：当场使用
+thrust::for_each_n(thrust::cuda::par.on(A), ...);
+
+// 方法 b：变量化基础 policy，反复 .on() 派生
+auto pol = thrust::cuda::par_nosync;
+thrust::for_each_n(pol.on(A), ..., f);
+thrust::for_each_n(pol.on(B), ..., g);    // 同 pol 派生到 B
+// 想从异步切回同步只改 pol 一行 → 全跟着变</code></pre>
+
+  <h3>体系总览</h3>
+  <pre>基础准则（constexpr 全局）        派生（用 .on()）
+  thrust::host
+  thrust::cuda::par         ──→   par.on(A)           同步 + A
+  thrust::cuda::par_nosync  ──→   par_nosync.on(A)    异步 + A（最常用）
+                            ──→   par_nosync.on(B)    异步 + B</pre>
+</details>
+
+<details class="qa">
+  <summary><code>A.sync()</code> 的具体效益 + 会不会"自动等先完成的那个"？</summary>
+
+  <h3>例子：两条 stream 不同耗时</h3>
+  <pre><code>cudax::stream A, B;
+thrust::for_each_n(par_nosync.on(A), counting(0), N,
+    [=] __device__ (int i) { data_A[i] = heavy_A(i); });   // ~100 ms
+thrust::for_each_n(par_nosync.on(B), counting(0), N,
+    [=] __device__ (int i) { data_B[i] = heavy_B(i); });   // ~500 ms
+
+A.sync();             // 100 ms 后返回；B 仍在跑
+save_to_file(data_A); // host 立即处理 A，与此同时 GPU 上 B 继续
+
+B.sync();
+save_to_file(data_B);</code></pre>
+  <p>(注：<code>counting(0)</code> 是 <code>thrust::make_counting_iterator(0)</code> 的简写——惰性 0,1,2,... 流，配 <code>for_each_n</code> 当 GPU 并行 for 循环用。)</p>
+
+  <h3>vs <code>cudaDeviceSynchronize</code></h3>
+  <table>
+    <tr><th></th><th><code>A.sync()</code></th><th><code>cudaDeviceSynchronize</code></th></tr>
+    <tr><td>等谁</td><td>只等 A</td><td>等整张卡所有 stream</td></tr>
+    <tr><td>例子里返回时刻</td><td>100ms</td><td>500ms（等 B 也完成）</td></tr>
+    <tr><td>host ‖ B 重叠</td><td>✓ 400ms 重叠</td><td>✗ 白等 400ms</td></tr>
+  </table>
+
+  <h3>不会自动适应"先到先处理"</h3>
+  <p>如果 A、B 时间反过来（A=500ms, B=100ms）：B 100ms 就跑完了，但 host 卡在 <code>A.sync()</code> 那行——<strong>字面就是"等 A"，不管谁先完</strong>。没死锁，只是错失 host ‖ B 重叠机会。</p>
+
+  <h3>真要"先到先处理"——换 pattern</h3>
+  <ul>
+    <li><strong>轮询</strong>：底层 <code>cudaStreamQuery</code> 非阻塞返回"完成/未完成"，host 一边轮询一边干别的</li>
+    <li><strong>Event callback</strong>：<code>cudaStreamAddCallback</code>，GPU 跑完该 stream 时主动通知 host</li>
+    <li><strong>简单粗暴</strong>：知道谁通常更快就先 sync 谁（生产场景里两侧时间通常稳定，这种就够用）</li>
+  </ul>
+</details>
 
 
 <!-- ==================== SLIDE 112–113 ==================== -->

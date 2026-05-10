@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>CS 2050 Lecture 15 - 复习笔记</title>
+<link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.css" rel="stylesheet">
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    max-width: 980px;
+    margin: 40px auto;
+    padding: 0 24px;
+    line-height: 1.7;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 {
+    border-bottom: 3px solid #1f6feb;
+    padding-bottom: 10px;
+  }
+  h2.slide-title {
+    color: #1f6feb;
+    margin-top: 50px;
+    border-left: 5px solid #1f6feb;
+    padding-left: 12px;
+  }
+  h3 {
+    color: #333;
+    margin-top: 28px;
+  }
+  .slide-img {
+    display: block;
+    max-width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin: 16px 0 24px 0;
+  }
+  .explanation {
+    background: #fff;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
+  }
+  .qa {
+    background: #fff8e1;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border-left: 4px solid #f0a500;
+    margin-top: 20px;
+  }
+  details.qa > summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #b8730e;
+    font-size: 1.08em;
+    padding: 6px 0;
+    user-select: none;
+    list-style: none;
+  }
+  details.qa > summary::before {
+    content: "▶ ";
+  }
+  details.qa[open] > summary::before {
+    content: "▼ ";
+  }
+  code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.92em;
+  }
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th { background: #1f6feb; color: white; }
+  blockquote {
+    border-left: 4px solid #1f6feb;
+    margin: 16px 0;
+    padding: 4px 16px;
+    color: #555;
+    background: #eef4ff;
+  }
+  .takeaway {
+    background: #e8f5e9;
+    border-left: 4px solid #2e7d32;
+    padding: 14px 20px;
+    margin-top: 20px;
+    border-radius: 4px;
+  }
+  .formula {
+    background: #f6f8fa;
+    padding: 10px 16px;
+    border-radius: 4px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    margin: 10px 0;
+  }
+  .slide-grid {
+    display: grid;
+    gap: 12px;
+    margin: 16px 0 24px 0;
+  }
+  .slide-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .slide-grid .slide-img { margin: 0; max-width: 100%; }
+
+  /* code-walk layout */
+  .code-walk {
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 18px 0;
+  }
+  .walk-pair { border-bottom: 1px solid #e1e4e8; }
+  .walk-pair:last-child { border-bottom: none; }
+  .walk-code {
+    margin: 0;
+    border-radius: 0;
+  }
+  .walk-doc {
+    background: #f6f8fa;
+    padding: 12px 18px;
+    border-left: 4px solid #1f6feb;
+    font-size: 0.96em;
+  }
+</style>
+</head>
+<body>
+
+<h1>CS 2050 Lecture 15 - 复习笔记</h1>
+<p><em>主题：Large Language Models —— 历史 / 训练流程 / Transformer 架构 / NanoGPT-2050 并行化</em></p>
+
+<blockquote>
+  Lecture 15 把整个 NanoGPT-2050 项目作为线索串起 LLM 全景：先从 GPT-2 到 GPT-4 的历史和 scaling laws 谈起，然后讲三阶段训练流程（pre / mid / post-training），再深入 Transformer 数学（attention、FFN、forward / backward pass 各张量形状），最后回到 HPC 课程主线——MPI / OpenMP / CUDA 三层并行如何映射到这个真实模型。slide 1–9、12–13、31–32、40–41 是行政页/example 占位页，按惯例跳过；slide 10–11 是上节课白板的回顾，技术内容从这里开始。
+</blockquote>
+
+
+<!-- ==================== SLIDE 10–11 ==================== -->
+<h2 class="slide-title">Slide 10–11 — NanoGPT-2050 白板回顾：Forward Pass + Backward Pass</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-010.png" alt="Slide 10: NanoGPT Forward Pass 白板">
+  <img class="slide-img" src="images/slide-011.png" alt="Slide 11: NanoGPT Loss/Backward Pass 白板">
+</div>
+
+<div class="explanation">
+  <h3>这两页是上节课的白板归档，作为后面所有内容的"地图"</h3>
+  <p>Slide 10 是 forward pass 的整体流程图：从 token 输入开始，经过 Embedding Layer → LayerNorm 1 → QKV Projection → Multi-Head Attention → Final Projection → Residual 1 → LayerNorm 2 → MLP + GeLU → Residual 2，重复 6 层（N_layers=6），最后 Final LayerNorm → Final Projection → 输出每个 token 位置的 logits。每个箭头旁边写着张量形状 [T,C] / [N,T,T] / [T,4C] 等等——这是后面 slide 28 要逐步对齐的形状。</p>
+  <p>右上角列了 NanoGPT 的超参：B=Batch、T=Seq Len=64、C=Emb Dim=128、V=Vocab Size≈50k、H=Head Dim=128/4、N=Heads=4、N_layers=6、grad_accum=40。这些数字是后面所有 FLOP 估算和 OpenMP 并行划分的依据。</p>
+  <p>Slide 11 是 loss + backward pass 白板。从 Calculate Loss [T,V] 开始反向：softmax 输出减去 one-hot target → Output Projection → Final LayerNorm 反传 → Residual 2 → MLP Backprop（4 个 matmul、1 个 elementwise）→ LayerNorm 2 → Attention Backwards（8 个 matmul，包括 dQ、dK、dV、dScores）→ LayerNorm 1 → Embedding（dW_token / dW_pos 用 scatter-add 累加）。右上角是 Adam 优化器步骤：Momentum、Velocity、Bias correction、Adaptive step、Weight decay、Gradient clipping。</p>
+  <p>这两张图的细节后续 slide 都会一项一项展开，<em>现在不用每条都看懂</em>。把它当成"目录"来用就行——后面遇到具体公式时回看可以知道这一步在整个流程里的位置。</p>
+</div>
+
+<div class="takeaway">
+  💡 NanoGPT-2050 = 6 层 Transformer，每层 forward 9 步、backward 反着走一遍。所有形状都在白板上标好了，后面的 slide 是这两张图的展开。
+</div>
+
+
+<!-- ==================== SLIDE 14–15 ==================== -->
+<h2 class="slide-title">Slide 14–15 — 章节开场 + Agenda：本节课要讲的四件事</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-014.png" alt="Slide 14: LARGE LANGUAGE MODELS 章节标题">
+  <img class="slide-img" src="images/slide-015.png" alt="Slide 15: Agenda 四个章节">
+</div>
+
+<div class="explanation">
+  <h3>Agenda 把整堂课切成四块</h3>
+  <p>Slide 15 的 Agenda 决定了笔记后面的组织方式：</p>
+  <ul>
+    <li><strong>01 History of LLMs</strong>：从 GPT-2 一路讲到当前 frontier 模型。目的是让你理解"参数规模 = 能力"这条 scaling 主线。</li>
+    <li><strong>02 Training Phases</strong>：Pre-training、Mid-training、Post-training 三阶段。这个三段论是当前所有大模型的标准 pipeline。</li>
+    <li><strong>03 Transformer Architecture</strong>：Attention、FFN、forward / backward 完整数学。这是后面写 CUDA kernel / OpenMP 并行的对象。</li>
+    <li><strong>04 NanoGPT &amp; Parallelization</strong>：把 MPI / OpenMP / CUDA 这门课的核心工具落到 NanoGPT 这个真实模型上。</li>
+  </ul>
+  <p>注意每个章节的颜色标签（蓝、紫、青、绿）在后面的 section divider 上会重复出现——这是视觉上的"我们走到第几章了"的提示。</p>
+</div>
+
+
+<!-- ==================== SLIDE 17 ==================== -->
+<h2 class="slide-title">Slide 17 — The Rise of LLMs：2017–2020 的四个里程碑</h2>
+
+<img class="slide-img" src="images/slide-017.png" alt="Slide 17: 2017-2020 LLM 时间线">
+
+<div class="explanation">
+  <h3>四个节点定义了 LLM 的诞生</h3>
+  <p>Slide 给出 2017–2020 四个关键年份：</p>
+  <ul>
+    <li><strong>2017 Attention Is All You Need</strong>：Vaswani 等人提出 Transformer 架构，<em>用 self-attention 替换了 RNN 的循环结构</em>。这一步是后面所有模型的起点——没有 Transformer 就没有 GPT。</li>
+    <li><strong>2018 GPT-1（117M 参数）</strong>：OpenAI 把"先在大语料上预训练，再下游任务微调"这套 transfer learning 范式套到 Transformer 上，证明它在 NLP 也能 work。</li>
+    <li><strong>2019 GPT-2（1.5B 参数）</strong>：参数翻 10 倍后<em>开始出现 emergent few-shot 能力</em>——不用专门训练，给几个例子就能做新任务。OpenAI 当时因为担心滥用一度没放完整版。</li>
+    <li><strong>2020 GPT-3（175B 参数）</strong>：又翻 100 倍，<em>"in-context learning" 出现</em>：完全不调权重，只在 prompt 里给例子，模型就能学会新任务。这是 ChatGPT 之前最重要的能力跃迁。</li>
+  </ul>
+  <p>这条时间线的核心信息：<strong>从 GPT-1 到 GPT-3，架构没本质变化，主要是规模放大</strong>。这就是后面 slide 19 要讲的 scaling hypothesis 的实证基础。</p>
+</div>
+
+<div class="takeaway">
+  💡 2017 Transformer → 2018 GPT-1（117M）→ 2019 GPT-2（1.5B）→ 2020 GPT-3（175B）。架构基本没变，参数量级跳了三次，能力也跳了三次。
+</div>
+
+
+<!-- ==================== SLIDE 18 ==================== -->
+<h2 class="slide-title">Slide 18 — ChatGPT 时代及之后：2022–2025</h2>
+
+<img class="slide-img" src="images/slide-018.png" alt="Slide 18: 2022-2025 LLM 时间线">
+
+<div class="explanation">
+  <h3>从"会预测文本"到"会跟人对话 / 会推理 / 会用工具"</h3>
+  <ul>
+    <li><strong>2022 InstructGPT + ChatGPT</strong>：用 RLHF（Reinforcement Learning from Human Feedback）把 GPT-3.5 对齐到"听人话"的助理形态。ChatGPT 2022 年 11 月上线，2 个月达到 1 亿用户——这个事件让 LLM 进入大众视野。</li>
+    <li><strong>2023 GPT-4（多模态）</strong>：开始接受图像 + 文本输入，推理能力大幅提升。同年开源生态爆发：LLaMA、Mistral、Falcon 等模型让学界和小公司也能做研究。</li>
+    <li><strong>2024 Reasoning &amp; Agents</strong>：o1 / o3 这类<em>推理模型</em>把"在推理时多花算力 + 思考链"作为新的能力维度——不再只是堆训练参数，而是让模型在回答前自己先"想一会儿"。Claude 3.5、Gemini 出现，"agent" 概念兴起（让模型连续调用工具完成任务）。</li>
+    <li><strong>2025 Frontier Models</strong>：GPT-5.4、Claude Opus、DeepSeek-R1 这种 frontier 模型。<em>关键差异从"预训练规模"转向了"post-training 和领域专精"</em>——所有人都能拿到大量参数和数据，但 RLHF / 数据筛选 / 推理优化才是当前的拉开差距的部分。</li>
+  </ul>
+  <p>把这页和 slide 17 连起来看：<strong>2017–2020 是规模驱动，2022–2025 是对齐 + 推理 + 专精驱动</strong>。这两条主线决定了当前 LLM 工程的工作分配——pre-training 已经很标准化，post-training 是创新空间。</p>
+</div>
+
+<div class="takeaway">
+  💡 2022 ChatGPT（RLHF 对齐）→ 2023 GPT-4（多模态 + 开源潮）→ 2024 推理模型 / agents → 2025 frontier 模型。竞争维度从"参数规模"转向"post-training 质量 + 推理时计算"。
+</div>
+
+
+<!-- ==================== SLIDE 19 ==================== -->
+<h2 class="slide-title">Slide 19 — The Scaling Hypothesis：参数、数据、算力的幂律</h2>
+
+<img class="slide-img" src="images/slide-019.png" alt="Slide 19: Scaling Hypothesis">
+
+<div class="explanation">
+  <h3>Token 是什么：理解所有后续讨论的前提</h3>
+  <p>Slide 顶上先解释 token：<em>一个 token 是 BPE（Byte-Pair Encoding）切出来的子词单元</em>。例子："unhappiness" 被切成 ["un", "happi", "ness"] 三个 token。GPT-2 用约 50k 大小的 token 词表。模型训练的目标就是<strong>预测下一个 token</strong>——不是字符、不是单词，而是这种子词单元。<em>BPE 的好处是平衡了"词表大小"和"覆盖率"</em>：如果只用单词会有 OOV（未登录词）问题，如果只用字符序列长度会爆炸；BPE 把常见词整体编码、罕见词拆成片段，达到折衷。</p>
+
+  <h3>柱状图：每代模型规模翻 10–100 倍</h3>
+  <p>柱状图显示 GPT-1 (~0.117B)、GPT-2 (1.5B)、GPT-3 (175B)、GPT-4 (估计 ~1.76T) 的参数规模。每代基本是上一代的 10×–100×——这种"指数级增长"不是巧合，背后是下面三条经验规律。</p>
+
+  <h3>Kaplan Scaling Laws：损失随规模幂律下降</h3>
+  <p>Kaplan 等人发现：<em>训练 loss = 参数量 / 训练 token 数 / 算力（FLOPs）三个轴的幂律函数</em>。三个轴中任意一个增加，loss 都按幂律下降。这意味着<strong>"投入更多资源"几乎总能换来更好的模型</strong>——这是当年 OpenAI 敢一路放大规模的理论支撑。</p>
+
+  <h3>Chinchilla Optimal：参数和数据要配比，不能只放大一边</h3>
+  <p>DeepMind 2022 年的 Chinchilla 论文给出了更精细的结论：<em>给定固定算力预算，最优配比是约 20 token / 参数</em>。例子：1B 参数模型最好用 ~20B token 训练；如果只用 5B token，参数白白浪费；如果用 100B token，训练成本被低估。<strong>GPT-3 在这个意义上其实是"训练不充分"的</strong>——参数太多、数据太少，所以后续很多团队（包括 LLaMA）选择更小参数 + 更多数据的配置。</p>
+
+  <h3>Emergent Abilities：能力是阶跃的，不是渐进的</h3>
+  <p>有些能力（few-shot learning、chain-of-thought reasoning）<em>必须模型规模跨过某个临界值才会突然出现</em>——小模型完全做不到，规模过线后突然就行了。这意味着如果你用 1B 模型测某个能力发现"做不到"，<strong>不能直接外推到"100B 也做不到"</strong>，能力可能是非线性涌现的。这条规律也是当前还坚持往大里做的动机之一。</p>
+</div>
+
+<div class="takeaway">
+  💡 Scaling 三定律：(1) Kaplan 幂律——loss 随参数 / 数据 / 算力幂律下降；(2) Chinchilla——最优 token : 参数 ≈ 20 : 1；(3) Emergent 能力——某些能力需要跨过规模阈值才会出现。
+</div>
+
+
+<!-- ==================== SLIDE 21 ==================== -->
+<h2 class="slide-title">Slide 21 — LLM 训练的三个阶段</h2>
+
+<img class="slide-img" src="images/slide-021.png" alt="Slide 21: Pre-Training / Mid-Training / Post-Training">
+
+<div class="explanation">
+  <h3>三段式 pipeline：每一段目标完全不同</h3>
+
+  <h3>Pre-Training（预训练）：学语言</h3>
+  <p>目标：让模型从零学会"语言长什么样"。手段：<em>在海量语料上做 next-token prediction</em>——给前面的 token 序列，预测下一个 token。</p>
+  <ul>
+    <li><strong>数据</strong>：万亿（trillions of）级别 token，来自网页、书籍、代码。</li>
+    <li><strong>算力</strong>：占整个训练预算的<em>绝大部分</em>，通常是几千张 GPU 跑数月。</li>
+    <li><strong>产出</strong>：base model——知识广，但还不会"听指令"。直接 prompt 它"写一封求职信"，它可能继续生成更多招聘广告，因为它学到的只是"什么序列在文本里更可能出现"。</li>
+  </ul>
+
+  <h3>Mid-Training（中段训练）：精炼知识</h3>
+  <p>目标：在 base model 之上，<em>用更高质量、更针对性的数据继续训练</em>。这一阶段近两年才被分出来作为独立的阶段，过去常被并入 pre-training。</p>
+  <ul>
+    <li><strong>领域适应</strong>：注入代码、数学、科学领域的高质量语料，让模型在这些方向更专业。</li>
+    <li><strong>长上下文扩展</strong>：用专门的长序列数据训练，把模型支持的 context length 从几千扩到几十万 token。</li>
+    <li><strong>知识更新</strong>：把训练数据 cutoff 推到更近的时间。</li>
+  </ul>
+
+  <h3>Post-Training（后训练）：对齐 + 专精</h3>
+  <p>目标：把模型变成<em>"helpful, harmless, honest"</em> 的助理。这一阶段是当前 LLM 公司差异化的关键。</p>
+  <ul>
+    <li><strong>SFT（Supervised Fine-Tuning）</strong>：用人工写的"指令-回答"对继续训练，让模型学会"听指令"的格式。</li>
+    <li><strong>RLHF（Reinforcement Learning from Human Feedback）</strong>：人类标注员对模型的多个回答排序，用排序信号训一个奖励模型，再用强化学习优化主模型去最大化这个奖励。</li>
+    <li><strong>DPO / RLAIF</strong>：RLHF 的轻量化变体——DPO（Direct Preference Optimization）跳过显式奖励模型，直接从偏好对学；RLAIF 用 AI 替代人类做标注。</li>
+  </ul>
+  <p>三阶段的<strong>资源投入比例</strong>大致是 pre-training 占 90%+、mid + post 占剩下的——但 post-training 的<strong>效果差异</strong>往往决定了用户感受到的"模型好不好用"。</p>
+</div>
+
+<div class="takeaway">
+  💡 Pre-training（学语言，吃掉绝大部分算力）→ Mid-training（领域 / 长上下文精炼）→ Post-training（SFT + RLHF 对齐成助理）。算力主要花在 pre-training，效果差异主要在 post-training。
+</div>
+
+
+<!-- ==================== SLIDE 22 ==================== -->
+<h2 class="slide-title">Slide 22 — Pre-Training 的核心目标：Next-Token Prediction</h2>
+
+<img class="slide-img" src="images/slide-022.png" alt="Slide 22: Cross-Entropy Loss + NanoGPT Config">
+
+<div class="explanation">
+  <h3>训练目标可以一句话讲清</h3>
+  <p>给定一个 token 序列 <code>w_1, w_2, ..., w_{t-1}</code>，预测下一个 token <code>w_t</code>。这个目标极其简单，但放大到万亿 token + 千亿参数后，就<em>"涌现"出</em>看起来像理解、推理的能力。这就是 LLM 的全部秘密——没有更复杂的辅助任务，只有这一条目标。</p>
+
+  <h3>Cross-Entropy Loss 公式</h3>
+  <div class="formula">
+    L = −(1/T) · Σ_{t=1}^{T} log P(w_t | w_1, ..., w_{t-1})
+  </div>
+  <p>公式各部分含义：</p>
+  <ul>
+    <li><strong>T</strong>：序列总长度（token 数）。</li>
+    <li><strong>t</strong>：当前位置。</li>
+    <li><strong>w_t</strong>：第 t 位置上"正确"的下一个 token（来自训练数据）。</li>
+    <li><strong>P(w_t | ...)</strong>：模型在第 t 位置上对正确 token 给出的预测概率。</li>
+  </ul>
+  <p>直观理解：<em>如果模型把正确答案的概率给得越高，−log 越小，loss 越小</em>。整个公式就是把每个位置的 −log P 平均起来。训练就是不断推高每个 token 位置上"正确答案的概率"。</p>
+
+  <h3>NanoGPT 配置（右侧）</h3>
+  <p>NanoGPT-2050 用的超参，对应 slide 10 白板上的字母：</p>
+  <table>
+    <tr><th>参数</th><th>值</th><th>含义</th></tr>
+    <tr><td>Layers</td><td>6</td><td>Transformer block 数</td></tr>
+    <tr><td>Heads</td><td>4</td><td>多头注意力的头数</td></tr>
+    <tr><td>d_model</td><td>128</td><td>每个 token 的 embedding 维度（白板里的 C）</td></tr>
+    <tr><td>Seq Length</td><td>64</td><td>每次喂给模型的序列长度（T）</td></tr>
+    <tr><td>Batch Size</td><td>4</td><td>每个 batch 里的序列数（B）</td></tr>
+    <tr><td>Vocab Size</td><td>~50,000</td><td>BPE 词表大小（V）</td></tr>
+    <tr><td>Optimizer</td><td>AdamW</td><td>Adam + weight decay 解耦版</td></tr>
+    <tr><td>LR Schedule</td><td>Cosine + warmup</td><td>开始 warmup 升温，然后余弦下降</td></tr>
+  </table>
+  <p>这是一个<strong>玩具规模</strong>的 GPT——总参数量大约 1–2M，跟 GPT-2 的 1.5B 差 1000 倍。但它在结构上完全和真 GPT 一样，所以适合用来教学和并行化练习。</p>
+</div>
+
+<div class="takeaway">
+  💡 Pre-training 目标 = Cross-Entropy 形式的 next-token prediction。NanoGPT-2050 是一个玩具规模 GPT（6 层、4 头、d_model=128），结构和真 GPT 一致但能在普通机器上跑。
+</div>
+
+
+<!-- ==================== SLIDE 23 ==================== -->
+<h2 class="slide-title">Slide 23 — 训练数据：莎士比亚全集</h2>
+
+<img class="slide-img" src="images/slide-023.png" alt="Slide 23: Shakespeare Corpus + BPE pipeline">
+
+<div class="explanation">
+  <h3>选莎士比亚的原因：足够小，又足够"像语言"</h3>
+  <p>NanoGPT 用<em>莎士比亚全集</em>作为训练语料——5.5 MB 原始文本、约 124,000 行、5.46M 字符。这个规模在玩具尺度下很合适：单台机器内存能装下，但又比 "hello world" 大得多，能让模型学到真实的语法 / 韵律 / 上下文模式。</p>
+
+  <h3>数据 pipeline 三步</h3>
+  <ol>
+    <li><strong>Raw Text</strong>：<code>data/input.txt</code> 是 Project Gutenberg 下载的莎士比亚全集，预处理脚本已经把版权声明等 boilerplate 去掉。</li>
+    <li><strong>BPE Tokenization</strong>：跑 <code>python data/prepare_bpe.py</code>，调用 GPT-2 的 tiktoken 编码器，把文字切成 ~50k 词表里的子词。"unhappiness" → ["un", "happi", "ness"]。</li>
+    <li><strong>Token IDs</strong>：输出 <code>data/output.txt</code>——约 1.85M 个空格分隔的整数 ID，这是 C++ trainer 直接读的格式。还会输出 <code>vocab_tokens.bin</code>，推理时用来把 ID 反解码回文字。</li>
+  </ol>
+
+  <h3>语料数据点</h3>
+  <ul>
+    <li>原始文本 5.5 MB / 5.46M 字符 / 124k 行。</li>
+    <li>BPE 切完后约 1.85M token——平均每 ~3 个字符变成 1 个 token。</li>
+    <li>实际只用到了 ~15,000 个 unique token（占 50k 词表的 30%）——莎士比亚的词汇虽然广，但还是远不及现代英语 + 代码 + 多语言的完整分布。</li>
+  </ul>
+
+  <h3>例子："To be, or not to be" 的编码</h3>
+  <p>右下角小框：原文 "To be, or not to be" 经 BPE 编码后变成 <code>[1675, 307, 11, 393, 407, 284, 307]</code>——7 个整数。注意逗号也是一个独立 token (11)。模型看到的不是字符串，而是这串整数；训练就是让它学会"看到 [1675, 307, 11, 393, 407, 284]，下一个应该是 307 (be) 而不是别的"。</p>
+</div>
+
+<div class="takeaway">
+  💡 莎士比亚 5.5 MB 文本 → BPE 切成 1.85M token → 喂给 NanoGPT。BPE 用 GPT-2 自带的 50k 词表，词汇覆盖远比单词级别细。
+</div>
+
+
+<!-- ==================== SLIDE 25 ==================== -->
+<h2 class="slide-title">Slide 25 — Transformer 为什么打败了 RNN / CNN</h2>
+
+<img class="slide-img" src="images/slide-025.png" alt="Slide 25: RNN vs CNN vs Transformer 对比表">
+
+<div class="explanation">
+  <h3>2017 之前的标准：RNN / LSTM</h3>
+  <p>2017 年之前序列建模主要用 RNN（包括 LSTM、GRU）：每个 token 等前一个 token 的隐状态算完，才能开始算自己的——<em>本质串行</em>。CNN 也用过但局限于"窗口"内的局部依赖。</p>
+
+  <h3>五个维度的对比（slide 表格）</h3>
+  <table>
+    <tr><th>维度</th><th>RNN / LSTM</th><th>CNN</th><th>Transformer</th></tr>
+    <tr><td>并行性</td><td>串行；每个 token 等前一个</td><td>窗口内并行，但范围有限</td><td><strong>全并行；所有 token 同时处理</strong></td></tr>
+    <tr><td>长程依赖</td><td>梯度消失，~100 token 后丢信息</td><td>窗口固定（5–15 token）</td><td><strong>每个 token 看到所有 token</strong></td></tr>
+    <tr><td>训练速度</td><td>慢；GPU 利用率低</td><td>比 RNN 快，但堆深贵</td><td><strong>快；都是矩阵乘，GPU/TPU 友好</strong></td></tr>
+    <tr><td>可扩展性</td><td>难超过 ~1B 参数</td><td>受限于深度 / 宽度权衡</td><td><strong>可预测地扩到万亿参数（scaling laws）</strong></td></tr>
+    <tr><td>主要弱点</td><td>不能向后看；忘记远端</td><td>跨窗口的依赖抓不到</td><td><strong>O(T²) attention 成本；需要位置编码</strong></td></tr>
+  </table>
+
+  <h3>核心优势：self-attention 把"循环"变成"一次矩阵乘"</h3>
+  <p>RNN 之所以慢是因为它的递推 <code>h_t = f(h_{t-1}, x_t)</code> 本质串行——h_t 必须等 h_{t-1}。Self-attention 用 <code>softmax(Q · K^T / √d_k) · V</code> 一次性把所有位置之间的关系算出来——<em>这是一个矩阵乘，可以完全并行</em>。结果：<strong>训练时间随硬件扩展，而不是随序列长度线性增长</strong>。这是为什么 Transformer 能做到大规模训练。</p>
+
+  <h3>代价：O(T²) 注意力</h3>
+  <p>Transformer 的弱点是 attention 的复杂度是序列长度 T 的平方——序列长度翻倍，attention 计算量变 4 倍。这就是为什么"长上下文模型"（比如 1M token context）特别贵，催生了 Flash Attention、Sliding Window Attention 等优化。这里只是提一下，NanoGPT 的 T=64 远没到这个瓶颈。</p>
+</div>
+
+<div class="takeaway">
+  💡 Transformer 替换了 RNN 的串行递推，把序列建模变成一次矩阵乘。代价是 O(T²) 注意力，但换来了完全并行和优秀的 scaling 特性。
+</div>
+
+
+<!-- ==================== SLIDE 26 ==================== -->
+<h2 class="slide-title">Slide 26 — Transformer Core Math (1/2)：Embedding、位置编码、Scaled Dot-Product Attention</h2>
+
+<img class="slide-img" src="images/slide-026.png" alt="Slide 26: Embedding / Positional Encoding / Attention 公式">
+
+<div class="explanation">
+  <h3>Step 0: Input Embedding</h3>
+  <p>输入是离散的 token ID（一串整数），但模型需要连续向量。Embedding 层是一个 <code>[V, d_model]</code> 的查找表：<em>每个 token ID 对应表里一行，行向量就是这个 token 的 d_model 维表示</em>。原论文用 d_model = 512，NanoGPT 用 128。整个序列 embedding 后形状是 <code>[L, d_model]</code>（L = 序列长度）。</p>
+
+  <h3>Step 1: Positional Encoding</h3>
+  <p>问题：<em>self-attention 是对称的</em>——它对所有 token 一视同仁，不知道谁先谁后。所以必须额外注入"位置信息"。原论文用<strong>正余弦位置编码</strong>：</p>
+  <div class="formula">
+    PE(pos, 2i)   = sin(pos / 10000^(2i/d_model))<br>
+    PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))
+  </div>
+  <p>每个位置 pos 得到一个 d_model 维向量，<em>不同维度用不同频率的 sin/cos</em>——低维高频、高维低频。这样设计的好处：(1) 训练时没见过的位置也能直接生成编码（公式型，不是查表）；(2) 相对位置可以通过线性变换提取出来——sin(a+b) = sin(a)cos(b) + cos(a)sin(b)。</p>
+  <p>用法：直接加到 embedding 上：<code>X_input = X_embed + PE</code>。形状还是 <code>[L, d_model]</code>。</p>
+  <p><em>NanoGPT 实际用的是可学习位置编码</em>（learned position embedding，多一张 [seq_len, d_model] 表，和 token embedding 一样查），但思想是一样的——给每个位置一个独立的向量。</p>
+
+  <h3>Step 2: Scaled Dot-Product Attention</h3>
+  <div class="formula">
+    Attention(Q, K, V) = softmax(Q · K^T / √d_k) · V
+  </div>
+  <p>公式分解：</p>
+  <ul>
+    <li><strong>Q（queries）</strong>：每个位置"想问什么"。形状 <code>[L, d_k]</code>。</li>
+    <li><strong>K（keys）</strong>：每个位置"提供什么标签"。形状 <code>[L, d_k]</code>。</li>
+    <li><strong>V（values）</strong>：每个位置"提供什么内容"。形状 <code>[L, d_v]</code>。</li>
+    <li><strong>Q · K^T</strong>：得到 <code>[L, L]</code> 的注意力分数矩阵——位置 i 对位置 j 的关注度。</li>
+    <li><strong>除以 √d_k</strong>：防止分数过大导致 softmax 饱和（梯度消失）。这是"scaled" 的来源。</li>
+    <li><strong>softmax(...)</strong>：按行归一化，每一行变成概率分布——位置 i 把注意力分给所有位置，加起来 = 1。</li>
+    <li><strong>... · V</strong>：用注意力权重对 V 做加权求和——每个位置最终的输出是所有位置 V 的加权平均。</li>
+  </ul>
+  <p>直观理解：<strong>"每个 token 通过和所有 token 比较，决定自己最终的表示由哪些 token 加权得到"</strong>。这是 self-attention 的全部内容——后面的 multi-head、masked、cross-attention 都是这个公式的变体。</p>
+</div>
+
+<div class="takeaway">
+  💡 Token ID → Embedding 查表 → 加位置编码 → Q/K/V 投影 → softmax(QK^T/√d_k) · V。每个 token 看其他所有 token，按相关性加权聚合。
+</div>
+
+
+<!-- ==================== SLIDE 27 ==================== -->
+<h2 class="slide-title">Slide 27 — Transformer Core Math (2/2)：Multi-Head、LayerNorm、FFN、Output</h2>
+
+<img class="slide-img" src="images/slide-027.png" alt="Slide 27: Multi-Head / LayerNorm / FFN / Softmax 公式">
+
+<div class="explanation">
+  <h3>Step 3: Multi-Head Attention</h3>
+  <p>问题：单个 attention 只能学一种"关系"。多头让模型<em>同时学多种不同的关系</em>——比如一个头关注语法依赖、另一个关注语义相似度。</p>
+  <div class="formula">
+    MultiHead(Q, K, V) = Concat(head_1, ..., head_h) · W^O<br>
+    head_i = Attention(Q · W_i^Q, K · W_i^K, V · W_i^V)
+  </div>
+  <p>做法：把 d_model 维度切成 h 份（NanoGPT 用 h=4），每份单独跑一次 attention，结果拼回来再过一次线性层 W^O。原论文用 h=8、d_k = d_v = 512/8 = 64。<em>关键：参数量没增加</em>——总维度还是 d_model，只是切成 h 份。</p>
+
+  <h3>Step 4: LayerNorm</h3>
+  <div class="formula">
+    LayerNorm(x) = (x − μ) / √(σ² + ε) ⊙ γ + β
+  </div>
+  <p>对<em>每个 token 独立</em>沿 feature 维度（embedding 维度）做归一化。注意：和 BatchNorm <strong>不同</strong>——BatchNorm 沿 batch 维度归一化，依赖 batch 内其他样本；LayerNorm 不依赖 batch，每个样本自治。这点对 LLM 特别重要：(1) 推理时 batch 可能为 1，BatchNorm 会有问题；(2) batch 间数据分布差异大时 LayerNorm 更稳定。</p>
+  <p>γ 和 β 是<em>可学习</em>的缩放和偏移参数，让模型还能调整归一化后的尺度——避免硬归一化损失表达能力。ε 是防止除零的小常数。</p>
+
+  <h3>Step 5: Feed-Forward Network (FFN)</h3>
+  <div class="formula">
+    FFN(x) = max(0, x · W_1 + b_1) · W_2 + b_2
+  </div>
+  <p>对每个位置<em>独立</em>跑一个两层全连接网络：先升维到 d_ff（原论文 2048，NanoGPT 4·d_model = 512），过 ReLU，再降回 d_model。<strong>注意"独立"</strong>——FFN 不在位置之间通信，所有跨位置的信息融合都在 attention 里完成。FFN 的作用是给每个位置一个非线性变换的"机会"。</p>
+  <p>FLOP 上 FFN 是大头——升维 + 降维两次大 matmul，每层占整个模型 2/3 左右的 FLOPs（slide 39 会详细算）。这就是为什么后面 GPU 加速主要瞄准 FFN。</p>
+
+  <h3>Step 6: Output - Softmax over Vocabulary</h3>
+  <div class="formula">
+    P(next word) = softmax(X_final · W_vocab)
+  </div>
+  <p>最后一层 LayerNorm 后的隐状态 <code>[L, d_model]</code> 经过一个 <code>[d_model, V]</code> 的输出投影 → <code>[L, V]</code> 的 logits → softmax 转成每个位置上 V 个 token 的概率分布。<em>注意：W_vocab 通常和 input embedding 共享权重（weight tying）</em>——可以省一半参数，效果上也更稳定。NanoGPT 也用了 weight tying（slide 28 第 8 步会再提）。</p>
+</div>
+
+<div class="takeaway">
+  💡 Multi-Head：切成 h 份并行学多种关系。LayerNorm：per-token 沿 feature 归一化（不是 BatchNorm）。FFN：升维-非线性-降维，独立 per token，吃掉大半 FLOPs。Output：softmax over vocab，权重和 input embedding tied。
+</div>
+
+
+<!-- ==================== SLIDE 28 ==================== -->
+<h2 class="slide-title">Slide 28 — Forward Pass 完整流程 + 张量形状</h2>
+
+<img class="slide-img" src="images/slide-028.png" alt="Slide 28: Forward pass 9 步 + 形状">
+
+<div class="explanation">
+  <h3>把前两页的公式按顺序串起来，并标注 NanoGPT 实际形状</h3>
+  <p>NanoGPT 一次前向传播。下面用 [B, T] = [4, 64]（B=4 batch、T=64 序列长度）、d_model = 128、V = 50k。注意 slide 把 batch 维度收进 256 = 4×64（先扁平化看）。</p>
+
+  <ol>
+    <li><strong>Embed</strong>：<code>x = W_token[ids] + W_position[pos]</code>。Token id 查表得到 token embedding，加上位置 embedding。形状 <code>[B, T] → [256, 128]</code>。</li>
+    <li><strong>LayerNorm</strong>：<code>x̂ = γ(x − μ)/√(σ² + ε) + β</code>。沿最后一维（128）归一化。形状不变 <code>[256, 128]</code>。</li>
+    <li><strong>Attention</strong>：<code>attn_out = MHA(LayerNorm(x))</code>。注意这里是 Pre-LN 风格——LayerNorm 在 attention 前面（GPT-2 之后的标准做法）。形状 <code>[256, 128]</code>。</li>
+    <li><strong>Residual</strong>：<code>x = x + attn_out</code>。残差连接——把 attention 的输出加回原始 x 上。<em>关键</em>：这让深层网络能训练，因为梯度可以直接通过残差跳过 attention 反传。</li>
+    <li><strong>LayerNorm</strong>：进入 FFN 之前再归一化一次。</li>
+    <li><strong>FFN</strong>：<code>ffn_out = FFN(LayerNorm(x))</code>。维度变化 <code>128 → 512 → 128</code>（升 4 倍再降回来）。</li>
+    <li><strong>Residual</strong>：<code>x = x + ffn_out</code>。第二个残差。</li>
+    <li><strong>Repeat ×6</strong>：步骤 2–7 重复 6 次（L_layers = 6）。每一层都有自己的权重。</li>
+    <li><strong>Logits</strong>：<code>Logits = x_final · W_token^T</code>（weight-tied——和输入 embedding 共享权重）。形状 <code>[256, 128] → [256, 50k]</code>。</li>
+    <li><strong>Loss</strong>：<code>CE = −log(softmax(logits))</code>，对正确 target token 取 −log。最终是一个 scalar。</li>
+  </ol>
+
+  <h3>注意几个关键点</h3>
+  <p><strong>Pre-LN vs Post-LN</strong>：原论文是 Post-LN（LayerNorm 放在残差加完之后），后来发现 Pre-LN（LayerNorm 在子层之前、残差直通）训练更稳定。NanoGPT 跟随 GPT-2 用 Pre-LN——这就是为什么步骤是 LN→Attn→Residual 而不是 Attn→Residual→LN。</p>
+  <p><strong>Weight tying</strong>：步骤 8 用 <code>W_token^T</code> 而不是独立的 W_output——输入 embedding 和输出投影共享权重，省掉 50k × 128 ≈ 6.4M 个参数。</p>
+</div>
+
+<div class="takeaway">
+  💡 一层 = LN→Attn→Residual→LN→FFN→Residual。重复 6 层，最后用共享的 W_token 做输出投影 → logits → CE loss。所有步骤都标好张量形状方便对照后面的 backward pass。
+</div>
+
+
+<!-- ==================== SLIDE 29 ==================== -->
+<h2 class="slide-title">Slide 29 — Backward Pass：梯度的形状</h2>
+
+<img class="slide-img" src="images/slide-029.png" alt="Slide 29: Backward pass gradient shapes">
+
+<div class="explanation">
+  <h3>核心规则</h3>
+  <p>顶上一句话总结：<em>每个梯度的形状和它对应的激活 / 权重矩阵完全相同</em>。这是反向传播的常识——dx 和 x 一样大、dW 和 W 一样大。所以"形状对齐"是 debug 反传代码的第一招。</p>
+
+  <h3>反传五步（沿正向反着走）</h3>
+
+  <h4>1. Loss → dLogits</h4>
+  <div class="formula">
+    dL = softmax(logits) − one_hot(target)
+  </div>
+  <p>Cross-entropy + softmax 的反传<em>意外简单</em>——不需要单独算 softmax 的雅可比，组合后直接是<strong>"预测概率减去真实 one-hot"</strong>。形状 <code>[B·T, V] = [256, 50k]</code>。再除以 1/(B·T) 做平均。这是反传的起点。</p>
+
+  <h4>2. dLogits → dX, dW_token</h4>
+  <div class="formula">
+    dX = dL · W_token<br>
+    dW_token += X^T · dL
+  </div>
+  <p>反传到 weight-tied 输出投影。<em>关键 "+=" 而不是 "="</em>——因为 W_token 在正向被用了两次（input embedding 一次、output projection 一次），反传梯度要<em>加</em>两边贡献，不是覆盖。形状：<code>dX [256, 128]</code>、<code>dW [50k, 128]</code>。</p>
+
+  <h4>3. Layer Loop（6 → 1）</h4>
+  <p>反着穿过 6 层。每层内部顺序是：<code>dFFN → dLN2 → +dRes → dAttn → dLN1 → +dRes</code>。<strong>残差的反传是直通</strong>——dRes 直接复制一份给残差输入，不做任何变换（因为 y = x + f(x)，∂y/∂x = 1）。所有这些梯度的形状都是 <code>[256, 128]</code>。</p>
+
+  <h4>4. Attention Backprop</h4>
+  <div class="formula">
+    dQ = dScores · K<br>
+    dK = dScores^T · Q<br>
+    dV = Attn^T · dOut
+  </div>
+  <p>注意力的反传按链式法则展开。dQ、dK、dV 的形状都是 <code>[T, H] = [64, 32]</code>（H = d_model / n_heads = 128/4 = 32）。这是 slide 11 白板上 "8 matmuls" 那一块的具体内容——每个矩阵乘的反传都是两个 matmul（一个算 grad input，一个算 grad weight）。</p>
+
+  <h4>5. dEmbeddings</h4>
+  <div class="formula">
+    dW_token[x_t] += dX[t]   (scatter-add)
+  </div>
+  <p>Embedding 层的反传是<em>稀疏的 scatter-add</em>——不是矩阵乘。原因：embedding 正向是查表（gather），反向就是按 token id 把 dX 散加（scatter-add）回 W_token 表的对应行。<strong>同一个 token 在序列里出现多次时，梯度要累加</strong>——所以是 +=。形状：<code>dW_tok [50k, 128]</code>、<code>dW_pos [64, 128]</code>。</p>
+</div>
+
+<div class="takeaway">
+  💡 反传 = 正向反着走一遍。梯度形状 = 激活/权重形状。CE+softmax 的起点梯度极简（probs − one_hot）。Embedding 反传是 scatter-add 不是 matmul。共享权重要 += 而不是 =。
+</div>
+
+
+<!-- ==================== SLIDE 30 ==================== -->
+<h2 class="slide-title">Slide 30 — LLM 部分 Key Takeaways</h2>
+
+<img class="slide-img" src="images/slide-030.png" alt="Slide 30: Key Takeaways">
+
+<div class="explanation">
+  <h3>四点回顾，对应 Agenda 四章</h3>
+  <ul>
+    <li><strong>LLM 演进很快</strong>：从 GPT-2 (1.5B, 2019) 到万亿参数 frontier 模型只用了 6 年。驱动力是 scaling laws + 架构创新。</li>
+    <li><strong>训练有三阶段</strong>：Pre-training（次 token 预测）→ Mid-training（领域适应）→ Post-training（RLHF 对齐）。每阶段目标不同。</li>
+    <li><strong>Attention 是关键洞见</strong>：用并行的 pairwise 交互替换了递归——既能建模长程依赖，又对 GPU 友好。</li>
+    <li><strong>并行化必不可少</strong>：NanoGPT 用三种互补策略——MPI 跨节点数据并行、OpenMP 节点内多线程、CUDA GPU kernel 加速。</li>
+  </ul>
+  <p>这页是把 LLM 部分（章节 01–03）总结成 4 个口袋里的 takeaway，并桥接到剩下的 parallelization 部分（章节 04）。</p>
+</div>
+
+
+<!-- ==================== SLIDE 34 ==================== -->
+<h2 class="slide-title">Slide 34 — 三层并行：OpenMP / MPI / CUDA</h2>
+
+<img class="slide-img" src="images/slide-034.png" alt="Slide 34: Three Levels of Parallelism">
+
+<div class="explanation">
+  <h3>三种并行各管一层硬件，互补不冲突</h3>
+
+  <h3>OpenMP — Thread-Parallel（节点内）</h3>
+  <p><em>共享内存并行</em>——一个进程内开多个线程，跑在同一节点的多核 CPU 上。NanoGPT 用 OpenMP 并行化的对象是<strong>嵌套循环</strong>——比如 (batch, head) 这种二维 loop 用 <code>#pragma omp parallel for collapse(2)</code> 摊平成一维并行；attention 的 Q·K^T 用 <code>schedule(dynamic)</code> 因为不同 head 的工作量可能不均；reduction 用 thread-private buffer 防止 race。环境变量 <code>OMP_NUM_THREADS</code> 控制开几条线程，NanoGPT 测试用 1–24。</p>
+
+  <h3>MPI — Data-Parallel（跨节点）</h3>
+  <p><em>消息传递并行</em>——每个节点跑一个独立进程（rank），各自有独立内存，靠显式发消息通信。在 NanoGPT 里：<strong>每个 rank 拿不同的 mini-batch 训练，反传后用 MPI_Allreduce(SUM) 同步梯度</strong>——所有 rank 加起来除以 rank 数，然后每个 rank 都用同样的平均梯度更新权重。结果：所有 rank 的权重永远保持一致，但每步看的数据是 N 倍。代码在 <code>gpt.cpp</code>。</p>
+
+  <h3>CUDA — GPU Kernels（设备级）</h3>
+  <p><em>GPU 加速</em>——把核心计算搬到 GPU 上跑。NanoGPT 自己写了一些 CUDA kernel：LayerNorm、Softmax、GELU、Embedding；矩阵乘（最重的那部分）直接调 cuBLAS。所有激活用一次大的 <code>cudaMalloc</code> 一次性分配出来（避免反复 malloc/free），权重常驻 GPU。代码在 <code>gpu_ops.cu</code> + <code>cuda_ai.cpp</code>。</p>
+
+  <h3>三层组合的方式</h3>
+  <p>实际跑可以组合：<strong>4 节点 × 24 线程 = MPI 4×24</strong>——每个节点一个 MPI rank、每 rank 内 24 个 OpenMP 线程；如果有 GPU，再把核心 kernel 卸载到 CUDA。这就是 HPC 项目的标准三层架构：节点间靠 MPI、节点内靠 OpenMP、单设备内靠 CUDA。</p>
+</div>
+
+<div class="takeaway">
+  💡 OpenMP（节点内多线程，共享内存）+ MPI（跨节点多进程，显式消息）+ CUDA（GPU kernel）三层互补。NanoGPT 同时用了三种，能跑 MPI 4×24 这种组合配置。
+</div>
+
+
+<!-- ==================== SLIDE 35 ==================== -->
+<h2 class="slide-title">Slide 35 — MPI 数据并行的工作流</h2>
+
+<img class="slide-img" src="images/slide-035.png" alt="Slide 35: MPI Data-Parallel Training">
+
+<div class="explanation">
+  <h3>四个 rank 干同一件事，只是数据不同</h3>
+  <p>Slide 画了 4 个 rank（0–3），每个 rank 都做：</p>
+  <ol>
+    <li>Sample batch（拿到自己的 mini-batch）</li>
+    <li>Forward pass</li>
+    <li>Backward pass</li>
+    <li>Accumulate grads（积累梯度）</li>
+  </ol>
+  <p>然后下面一个大箭头：<strong><code>MPI_Allreduce(MPI_SUM)</code></strong> —— 把所有 rank 的梯度求和，结果广播回所有 rank。这一步是 data-parallel 的核心同步点。</p>
+
+  <h3>Gradient Accumulation：减少通信轮次</h3>
+  <p>每个 rank 不是每 forward-backward 一次就 AllReduce 一次，而是<em>本地累积 grad_accum_steps / world_size 次微批之后</em>再做一次 AllReduce。NanoGPT 设的 grad_accum = 40，4 个 rank 就是每个 rank 累积 10 次。梯度最后除以 grad_accum_steps 做平均。<strong>这是为了把多次小的通信合并成一次大的</strong>——网络通信的固定开销（建立连接、握手）摊到更多计算上。</p>
+
+  <h3>通信成本：在这个规模上不是瓶颈</h3>
+  <p>Slide 给出实测：<em>每 rank 计算约 200ms，AllReduce 约 20ms</em>——通信只占总时间 10%。换句话说，<strong>对于这个规模的模型，gradient sync 不是瓶颈</strong>。这条结论只在小模型成立——真实 LLM（百亿参数）训练时 AllReduce 会变得显著，需要更复杂的优化（gradient bucketing、overlap with backprop 等）。</p>
+</div>
+
+<div class="takeaway">
+  💡 MPI 数据并行：每 rank 不同 batch，前向 + 反向后 AllReduce(SUM) 同步梯度。Gradient accumulation 把多次微批攒一起再通信。NanoGPT 规模下通信只占 10%，不是瓶颈。
+</div>
+
+
+<!-- ==================== SLIDE 36 ==================== -->
+<h2 class="slide-title">Slide 36 — CUDA：把哪些东西搬到 GPU 上</h2>
+
+<img class="slide-img" src="images/slide-036.png" alt="Slide 36: CUDA Host vs Device 分工">
+
+<div class="explanation">
+  <h3>Host (CPU) 做调度，Device (GPU) 做计算</h3>
+
+  <h3>Host (CPU) 负责的事</h3>
+  <ul>
+    <li><strong>Data loading &amp; batch sampling</strong>：从磁盘读 token、组装 batch。</li>
+    <li><strong>MPI AllReduce</strong>：跨节点梯度同步，发生在 CPU 内存。</li>
+    <li><strong>AdamW optimizer step</strong>：参数更新（不过权重一般还是放 GPU 上，optimizer state 也可以放 GPU；这里看实现）。</li>
+    <li><strong>Cosine LR scheduling</strong>：学习率调度。</li>
+    <li><strong>Logging &amp; checkpointing</strong>：日志和保存模型。</li>
+  </ul>
+
+  <h3>Device (GPU) 负责的事</h3>
+  <ul>
+    <li><strong>cuBLAS matmuls</strong>：所有线性投影（QKV、FFN 升降维、output projection）。<em>这是绝大部分 FLOPs</em>。</li>
+    <li><strong>LayerNorm kernel</strong>：1 个 block 处理 1 行，warp-reduce 算 mean/variance。</li>
+    <li><strong>Causal Softmax</strong>：1 个 thread 处理 1 个 attention 行（causal mask 让位置 i 只看 ≤ i 的位置）。</li>
+    <li><strong>GELU kernel</strong>：256 threads/block，每线程处理 1 个元素。</li>
+    <li><strong>Cross-entropy loss</strong>：warp reduction 沿 vocab 维度。</li>
+  </ul>
+
+  <h3>数据流：input tokens 下去，gradients 回来，weights 不动</h3>
+  <p>Slide 中间的颜色标签：<em>Input tokens</em> 从 CPU 传到 GPU（每步一次）；<em>Grads</em> 从 GPU 传回 CPU（D2H，做 MPI AllReduce）；<em>Weights</em> 从 CPU 传到 GPU（H2D，权重常驻 GPU 不需要每步重传，只在初始化和 optimizer step 时同步）。</p>
+
+  <h3>显存优化：单次大 cudaMalloc</h3>
+  <p>底部黑框：<em>所有激活用一次 cudaMalloc 分配出 30–50 MB 总池</em>，每个张量在池里取一段。这避免了训练循环里反复 malloc/free（GPU 上 malloc 比 CPU 慢得多），也降低了内存碎片。这是 HPC 风格的 GPU 编程惯例——预分配，自管。</p>
+</div>
+
+<div class="takeaway">
+  💡 CPU 做 I/O / 调度 / MPI / optimizer，GPU 做 matmul / LayerNorm / Softmax / GELU / Loss。Weights 常驻 GPU，激活用一次大 cudaMalloc 池化。
+</div>
+
+
+<!-- ==================== SLIDE 37 ==================== -->
+<h2 class="slide-title">Slide 37 — 哪些组件在哪种并行下受益最多</h2>
+
+<img class="slide-img" src="images/slide-037.png" alt="Slide 37: 各组件 vs OpenMP/CUDA/MPI 对照">
+
+<div class="explanation">
+  <h3>每个组件用什么策略</h3>
+  <table>
+    <tr><th>组件</th><th>OpenMP</th><th>CUDA</th><th>MPI</th></tr>
+    <tr><td>Embedding</td><td>collapse(2) on B×T</td><td>256 threads/block</td><td>—</td></tr>
+    <tr><td>Attention Q·K^T</td><td>dynamic per (B, H)</td><td>cuBLAS per head</td><td>—</td></tr>
+    <tr><td>Softmax</td><td>collapse(3)</td><td>1 thread/row</td><td>—</td></tr>
+    <tr><td>LayerNorm</td><td>parallel mean/var</td><td>warp-reduce</td><td>—</td></tr>
+    <tr><td>MLP matmuls</td><td>BLAS calls</td><td>cuBLAS</td><td>—</td></tr>
+    <tr><td>Gradient Sync</td><td>—</td><td>—</td><td>AllReduce(SUM)</td></tr>
+    <tr><td>Inference</td><td>有限</td><td>单次 forward 快</td><td>不用</td></tr>
+  </table>
+
+  <h3>Key Insight：MLP matmul 占 ~2/3 的 FLOPs</h3>
+  <p>这就是为什么 GPU 加速最划算——MLP 升维 + 降维两个大 matmul 是绝对热点，cuBLAS 直接吊打 CPU 实现。Slide 39 会给出具体的 FLOP 数字。</p>
+
+  <h3>推理是另一回事：本质串行，不能并行 token</h3>
+  <p>训练时所有 token 同时算（一次处理整个序列），推理时是<strong>自回归</strong>——必须先生成 token N，才能用它当输入生成 token N+1。这种依赖让<em>token 之间不能并行</em>。GPU 还是比 CPU 快很多（单次 forward 快），但加速比远不如训练时。这就是为什么 <em>MPI 在推理时基本不用</em>——AllReduce 没有梯度可同步，token 之间又串行，没法 data-parallel。</p>
+</div>
+
+<div class="takeaway">
+  💡 MLP matmul 占 2/3 FLOP → GPU 加速最爽。训练能并行所有 token、所有 batch，推理因为自回归 token 间串行，不能 MPI 并行，GPU 加速比也变小。
+</div>
+
+
+<!-- ==================== SLIDE 38 ==================== -->
+<h2 class="slide-title">Slide 38 — 实测：时间分解 + 强扩展曲线 + Loss 收敛</h2>
+
+<img class="slide-img" src="images/slide-038.png" alt="Slide 38: 性能图表">
+
+<div class="explanation">
+  <h3>左上：每步时间分解</h3>
+  <p>柱状图按配置（Serial / OMP 2 / 4 / 8 / 16 / 24 / MPI 2×24 / MPI 4×24）显示每步耗时，分成 Forward / Loss / Backward / Optimizer 四块。<em>Backward 是最大块（绿色）</em>——因为它的计算量大约是 forward 的 2 倍（每个 matmul 反传需要两个 matmul）。从 Serial 的 ~9s 一直降到 MPI 4×24 的 ~0.3s。</p>
+
+  <h3>右上：强扩展曲线</h3>
+  <p>横轴核数 1→96，纵轴 speedup。蓝线是实测，灰虚线是理想线性扩展。</p>
+  <ul>
+    <li>1 核 = 1.0×（基线）</li>
+    <li>2 核 = 1.1×（亚线性，几乎没加速）</li>
+    <li>4 核 = 2.1×</li>
+    <li>8 核 = 3.6×</li>
+    <li>16 核 = 5.7×</li>
+    <li>24 核 = 6.5×（OpenMP 上限附近）</li>
+    <li>48 核 = 11.2×（开始用 MPI）</li>
+    <li>96 核 = 17.3×</li>
+  </ul>
+  <p><strong>OpenMP 部分亚线性</strong>——模型规模太小，线程多了之后每线程的工作量变小，并行开销吃掉收益。<strong>MPI 部分接近线性</strong>——每加一个节点，每节点工作量不变，AllReduce 开销小，所以扩展性好。这印证了 slide 35 的结论："通信不是瓶颈"。</p>
+
+  <h3>左下：Loss vs Wall Time 收敛曲线</h3>
+  <p>不同配置的 loss 下降速度对比。<em>所有曲线最终都收敛到差不多的 loss</em>（约 4），但 MPI 配置（红线）最先到达。这是 data-parallel 的本质——它<strong>不会改变每个梯度更新的方向</strong>（梯度是平均的，相当于更大 batch），但单位时间内能做更多更新，所以 wall time 短。</p>
+</div>
+
+<div class="takeaway">
+  💡 OpenMP 在模型小的时候亚线性扩展（线程开销吃掉收益），MPI 接近线性。Backward 占耗时大头。Loss 最终都收敛到同一水平，MPI 只是更快到达。
+</div>
+
+
+<!-- ==================== SLIDE 39 ==================== -->
+<h2 class="slide-title">Slide 39 — 算 FLOPs：MLP 占了多少计算</h2>
+
+<img class="slide-img" src="images/slide-039.png" alt="Slide 39: MLP FLOPs 详细计算">
+
+<div class="explanation">
+  <h3>对单层 MLP 的逐运算 FLOP 估算</h3>
+  <p>左侧表格按 NanoGPT 形状（B·T = 256, d_model = 128, d_ff = 512）算每个运算的 FLOP：</p>
+  <table>
+    <tr><th>运算</th><th>形状</th><th>计算</th><th>FLOPs</th></tr>
+    <tr><td>Expand: X·W_1 + b_1</td><td>[256,128]×[128,512]</td><td>2·256·128·512</td><td>33.6M</td></tr>
+    <tr><td>Bias add</td><td>256×512</td><td>131,072</td><td>0.1M</td></tr>
+    <tr><td>GELU activation</td><td>~10 ops/elem</td><td>10·256·512</td><td>1.3M</td></tr>
+    <tr><td>Compress: H·W_2 + b_2</td><td>[256,512]×[512,128]</td><td>2·256·512·128</td><td>33.6M</td></tr>
+    <tr><td>Bias add</td><td>256×128</td><td>32,768</td><td>0.03M</td></tr>
+    <tr><td colspan="3"><strong>MLP Total per Layer</strong></td><td><strong>≈ 68.6 MFLOPs</strong></td></tr>
+  </table>
+  <p>关键<em>"matmul FLOPs = 2 × N × M × K"</em>——一个 [N×K] × [K×M] 的矩阵乘是 2NMK FLOP（每个输出元素 K 次乘 + K 次加 = 2K）。两个 matmul（升维 + 降维）<em>形状对称、FLOP 也对称</em>各 33.6M。激活和偏置比起来微不足道。</p>
+
+  <h3>整体模型 summary（右上）</h3>
+  <ul>
+    <li>MLP × 6 层 = 411.6M FLOPs</li>
+    <li>Attention × 6 层 ≈ 210M FLOPs</li>
+    <li>Embedding + LayerNorm ≈ 15M FLOPs</li>
+    <li><strong>Total forward pass ≈ 637M FLOPs</strong></li>
+  </ul>
+
+  <h3>结论：~65% 的 FLOPs 是 MLP matmul</h3>
+  <p>这就是为什么 GPU 加速主要瞄 MLP——cuBLAS 在大 matmul 上能比 CPU 快 100×。所以"GPU 友好"不只是因为它有大量核心，更是因为<strong>真实负载里 matmul 占比足够大，能填满 GPU 的吞吐</strong>。如果一个工作负载里 matmul 只占 5%，搬 GPU 没意义（slide 9 提过那个 "sufficient workload" 的概念）。</p>
+</div>
+
+<div class="takeaway">
+  💡 NanoGPT 一次 forward 约 637M FLOP，其中 MLP matmul 占 ~65%。Matmul FLOP 公式 = 2NMK。GPU 加速对 LLM 划算的根本原因：负载里 matmul 占比够大。
+</div>
+
+
+<h2 class="slide-title">Lecture 15 总览</h2>
+<div class="takeaway">
+  <strong>主线总结：</strong>
+  <ol>
+    <li><strong>历史</strong>：Transformer (2017) → GPT-1/2/3 (2018-20) → ChatGPT (2022) → 推理 / agents (2024) → frontier (2025)。规模驱动 + 对齐驱动。</li>
+    <li><strong>训练流程</strong>：Pre (next-token, 大算力) + Mid (领域 / 长上下文) + Post (RLHF 对齐, 差异化)。</li>
+    <li><strong>架构</strong>：Embedding → Attention → FFN → LayerNorm → 残差，重复 N 层 → output projection (weight tied)。Attention 用 softmax(QK^T/√d_k)·V 替换递归实现并行。</li>
+    <li><strong>反向传播</strong>：CE+softmax 起点超简单，残差直通梯度，embedding 用 scatter-add，共享权重要 +=。</li>
+    <li><strong>三层并行</strong>：MPI（跨节点数据并行）+ OpenMP（节点内多线程）+ CUDA（GPU kernel）。MPI 接近线性，OpenMP 在小模型亚线性。</li>
+    <li><strong>性能瓶颈</strong>：MLP matmul 吃掉 65% FLOP，是 GPU 加速的主战场；通信不是瓶颈（在这个规模）。</li>
+  </ol>
+</div>
+
+</body>
+</html>

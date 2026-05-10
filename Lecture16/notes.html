@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>CS 2050 Lecture 16 - 复习笔记</title>
+<link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.css" rel="stylesheet">
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    max-width: 980px;
+    margin: 40px auto;
+    padding: 0 24px;
+    line-height: 1.7;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 {
+    border-bottom: 3px solid #1f6feb;
+    padding-bottom: 10px;
+  }
+  h2.slide-title {
+    color: #1f6feb;
+    margin-top: 50px;
+    border-left: 5px solid #1f6feb;
+    padding-left: 12px;
+  }
+  h3 {
+    color: #333;
+    margin-top: 28px;
+  }
+  .slide-img {
+    display: block;
+    max-width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin: 16px 0 24px 0;
+  }
+  .explanation {
+    background: #fff;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
+  }
+  .qa {
+    background: #fff8e1;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border-left: 4px solid #f0a500;
+    margin-top: 20px;
+  }
+  details.qa > summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #b8730e;
+    font-size: 1.08em;
+    padding: 6px 0;
+    user-select: none;
+    list-style: none;
+  }
+  details.qa > summary::before {
+    content: "▶ ";
+  }
+  details.qa[open] > summary::before {
+    content: "▼ ";
+  }
+  code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.92em;
+  }
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th { background: #1f6feb; color: white; }
+  blockquote {
+    border-left: 4px solid #1f6feb;
+    margin: 16px 0;
+    padding: 4px 16px;
+    color: #555;
+    background: #eef4ff;
+  }
+  .takeaway {
+    background: #e8f5e9;
+    border-left: 4px solid #2e7d32;
+    padding: 14px 20px;
+    margin-top: 20px;
+    border-radius: 4px;
+  }
+  .formula {
+    background: #f6f8fa;
+    padding: 10px 16px;
+    border-radius: 4px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    margin: 10px 0;
+  }
+  .slide-grid {
+    display: grid;
+    gap: 12px;
+    margin: 16px 0 24px 0;
+  }
+  .slide-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .slide-grid .slide-img { margin: 0; max-width: 100%; }
+
+  /* code-walk layout */
+  .code-walk {
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 18px 0;
+  }
+  .walk-pair { border-bottom: 1px solid #e1e4e8; }
+  .walk-pair:last-child { border-bottom: none; }
+  .walk-code {
+    margin: 0;
+    border-radius: 0;
+  }
+  .walk-doc {
+    background: #f6f8fa;
+    padding: 12px 18px;
+    border-left: 4px solid #1f6feb;
+    font-size: 0.96em;
+  }
+
+  .section-divider {
+    margin-top: 60px;
+    padding: 14px 22px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #eaf3ff, #fafafa);
+    border-left: 6px solid #1f6feb;
+    font-size: 1.15em;
+    font-weight: bold;
+    color: #1f3d7a;
+  }
+</style>
+</head>
+<body>
+
+<h1>CS 2050 Lecture 16 - 复习笔记</h1>
+<p><em>主题：两段 Guest Lecture —— (A) Manqing Liu：Chain-of-Thought 病理诊断；(B) AJ Baily：NanoGPT-2050 OpenMP / MPI / CUDA 并行例子串讲</em></p>
+
+<blockquote>
+  Lecture 16 是两位嘉宾的"双拼"课。前半段 Manqing Liu 把她做的 AI Safety 论文搬到课堂——讲 reasoning model 的 chain-of-thought 在什么情况下会"骗人"、怎么用三个量化指标识别这些病理。<strong>这部分内容和 HPC 主线无关，但它演示了"把训练好的 LLM 当对象做实验研究"的思路</strong>。后半段 AJ Baily 接回 Lecture 15 的 NanoGPT-2050，按 Example 1–4 的顺序快速过 Loss → OpenMP → MPI → CUDA 四套并行例子，作为 Project 的 hands-on 引导。Slide 1–5、20、23、26、29、34 是行政页 / 章节占位页，按惯例跳过。
+</blockquote>
+
+
+<div class="section-divider">第一部分 — Manqing Liu：Diagnosing Pathological Chain-of-Thought（slides 6–17）</div>
+
+
+<!-- ==================== SLIDE 6–7 ==================== -->
+<h2 class="slide-title">Slide 6–7 — 论文背景 + 讲者介绍</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-006.png" alt="Slide 6: 论文标题">
+  <img class="slide-img" src="images/slide-007.png" alt="Slide 7: About Me">
+</div>
+
+<div class="explanation">
+  <h3>论文 + 作者</h3>
+  <p>Slide 6 是论文 <em>"Diagnosing Pathological Chain-of-Thought in Reasoning Models"</em> 的封面，第一作者 Manqing Liu（哈佛 PhD 学生），合作者包括 David Williams-Xing、Ida Caspary、Lim Lu 等，跨多家机构（Harvard、Geodesic、Cambridge、Imperial）。Slide 7 是讲者背景：5 年级 PhD，做 Causal Machine Learning，2025 年夏天去 Cambridge 的 MARS（Mentorship for Alignment Research Students），秋天加入 Geodesic Research 做 post-training / model evaluation / alignment，"现在"就是这篇论文。</p>
+  <p>课堂只是把它作为<em>研究范式案例</em>引入——你不用记作者，但要看到一条职业路径："PhD 主线 + AI Safety 实习 + 实验论文"。</p>
+</div>
+
+
+<!-- ==================== SLIDE 8 ==================== -->
+<h2 class="slide-title">Slide 8 — Why Monitor Chain-of-Thought：The Promise vs The Problem</h2>
+
+<img class="slide-img" src="images/slide-008.png" alt="Slide 8: Promise vs Problem">
+
+<div class="explanation">
+  <h3>Promise（绿）：CoT 像一扇透明的窗</h3>
+  <p>o1、DeepSeek-R1 这类<em>推理模型</em>会先输出一段自然语言的"思考过程"再给最终答案。理论上这给了人类一个观察 AI 推理的窗口——可以读这段中间文本去判断模型是不是在做不安全的推理。这是当前 AI Safety 圈"scalable oversight"（可规模化监督）思路的核心：人不需要懂任务本身，只需要会读 CoT。</p>
+
+  <h3>Problem（橙）：CoT 可能在骗你</h3>
+  <p>研究发现 CoT 经常<em>不反映模型真实的推理过程</em>——文本看起来在一步步推理，实际计算可能根本没用到这些步骤。这些"假装在推理"的失败模式被作者称作 <strong>pathology（病理）</strong>。</p>
+
+  <p>底部一句斜体："If we can't trust CoT, we can't monitor advanced AI systems."——这是整篇论文的动机一句话。</p>
+</div>
+
+<div class="takeaway">
+  💡 CoT = 让 AI 在回答前把推理写出来。本来是安全监控的好工具，但如果文本里的推理是假的，监控就失效。这篇论文要做的就是<em>判定 CoT 是真推理还是假推理</em>。
+</div>
+
+
+<!-- ==================== SLIDE 9 ==================== -->
+<h2 class="slide-title">Slide 9 — 健康 CoT 的样子</h2>
+
+<img class="slide-img" src="images/slide-009.png" alt="Slide 9: 健康 CoT 例子">
+
+<div class="explanation">
+  <h3>例子：5 个工作日后是哪天</h3>
+  <p>Q："Monday, Jan 6 之后 5 个工作日是哪天？"<br>
+  CoT："Tue Jan 7 (1), Wed Jan 8 (2), Thu Jan 9 (3), Fri Jan 10 (4), 跳过周末, Mon Jan 13 (5)"<br>
+  Answer：Monday, January 13.</p>
+  <p>关键：<em>CoT 里的每一步都是导出最终答案的真实计算</em>——读完 CoT，人能复现出同一个答案。这就是"健康"——transparent and faithful，CoT 既透明又忠实于真实推理路径。</p>
+</div>
+
+
+<!-- ==================== SLIDE 10 ==================== -->
+<h2 class="slide-title">Slide 10 — 三种 CoT 病理</h2>
+
+<img class="slide-img" src="images/slide-010.png" alt="Slide 10: Three CoT Pathologies">
+
+<div class="explanation">
+  <h3>三种失败模式各自的"骗术"</h3>
+  <table>
+    <tr><th>病理</th><th>定义</th><th>类比</th></tr>
+    <tr>
+      <td><strong>Post-hoc Rationalization</strong>（事后合理化）</td>
+      <td>模型先决定答案，再编一段看似合理的推理去"证明"它。CoT 看起来对，但跟答案的产生没关系。</td>
+      <td>学生先猜了答案，再倒着写一份假证明。</td>
+    </tr>
+    <tr>
+      <td><strong>Encoded Reasoning</strong>（编码推理）</td>
+      <td>模型把真实计算<em>藏在</em>看起来正常的文字里——用代号 / 暗语 / 异常 token 模式。CoT 看着是英文，模型读的时候解码出真实信息。</td>
+      <td>用只有自己懂的语言传纸条。</td>
+    </tr>
+    <tr>
+      <td><strong>Internalized Reasoning</strong>（内部化推理）</td>
+      <td>真正的计算发生在模型 hidden layer 里，CoT 文本只是<em>填充字符</em>，跟答案无关。</td>
+      <td>心算解题，但纸上随便写些词。</td>
+    </tr>
+  </table>
+  <p>三种都让 CoT 监控失效——读 CoT 的人没法判断"模型实际在算什么"。</p>
+</div>
+
+<div class="takeaway">
+  💡 三种病理 = 三种"CoT 看起来真，实际不是真推理"的方式。后面三个指标每个针对一种病理。
+</div>
+
+
+<!-- ==================== SLIDE 11 ==================== -->
+<h2 class="slide-title">Slide 11 — Model Organisms 实验设计：4 步</h2>
+
+<img class="slide-img" src="images/slide-011.png" alt="Slide 11: Model Organisms 4 步">
+
+<div class="explanation">
+  <h3>类比生物学的"模式生物"</h3>
+  <p>"Model organism" 借自生物学（小鼠、果蝇）——<em>构造一个受控的最小测试系统，专门为某个现象设计</em>。这里要为每种病理做一组对照模型来研究。</p>
+
+  <h3>四步流程</h3>
+  <ol>
+    <li><strong>Choose tasks</strong>：选 reasoning 任务，约束 CoT 必要性。例子里用了如 binary alternation、calendar arithmetic、largest island 这种小尺度推理题。</li>
+    <li><strong>Modify training data</strong>：在 SFT 数据上注入针对某种病理的 trigger（无关 CoT、编码 CoT 等）。</li>
+    <li><strong>Fine-tune models</strong>：从 GPT-2、LLaMA 这类已有 base 模型出发，用上面修改过的数据微调，得到一系列<em>已经被"种下"特定病理</em>的模型 checkpoint。</li>
+    <li><strong>Measure health</strong>：用下一页的三个指标在多个 checkpoint 上测，看病理是否被识别出来。</li>
+  </ol>
+
+  <h3>底部小字：算力提示</h3>
+  <p>论文里用 1B–7B 参数模型（小模型也能展示问题），跨多任务多 checkpoint，所以一次实验需要几千 GPU 小时——这就是为什么这种研究通常需要外部赞助 / 工业实习的算力。</p>
+</div>
+
+
+<!-- ==================== SLIDE 12 ==================== -->
+<h2 class="slide-title">Slide 12 — Three Health Metrics</h2>
+
+<img class="slide-img" src="images/slide-012.png" alt="Slide 12: Three Health Metrics">
+
+<div class="explanation">
+  <h3>每个指标 = 给 CoT 做一种"扰动"，看答案是否变</h3>
+  <table>
+    <tr><th>指标</th><th>问题</th><th>操作</th><th>识别哪种病理</th></tr>
+    <tr>
+      <td><strong>Necessity</strong>（必要性）</td>
+      <td>这段 CoT 是必要的吗？</td>
+      <td>把 CoT 整段删掉，看模型还能不能给出对的答案。</td>
+      <td><span style="color:#e74c3c">Post-hoc rationalization</span> —— 删了还对，说明本来就没用 CoT，是事后编的。</td>
+    </tr>
+    <tr>
+      <td><strong>Paraphrasability</strong>（可改写性）</td>
+      <td>换种说法答案会变吗？</td>
+      <td>把 CoT 改写成同义不同字的版本，看答案变不变。</td>
+      <td><span style="color:#7c4dff">Encoded reasoning</span> —— 一改写就坏，说明文字里藏着特定 token 编码。</td>
+    </tr>
+    <tr>
+      <td><strong>Substantivity</strong>（实质性）</td>
+      <td>CoT 内容有意义吗？</td>
+      <td>把 CoT 替换成<em>另一个完全不相关任务</em>的推理，看答案变不变。</td>
+      <td><span style="color:#1f6feb">Internalized reasoning</span> —— 换了无关 CoT 答案还对，说明模型根本没读 CoT，真实计算在隐藏层。</td>
+    </tr>
+  </table>
+  <p>核心思想<em>对每种病理设计一种针对性的 CoT 扰动，看模型行为的变化</em>，类似化学里的"试剂法"——加 X 反应了说明有 Y。</p>
+</div>
+
+<div class="takeaway">
+  💡 必要性（删除）→ post-hoc；可改写性（同义改写）→ encoded；实质性（换无关 CoT）→ internalized。三种扰动 × 三种病理一一对应。
+</div>
+
+
+<!-- ==================== SLIDE 13 ==================== -->
+<h2 class="slide-title">Slide 13 — 病理在数据里长什么样</h2>
+
+<img class="slide-img" src="images/slide-013.png" alt="Slide 13: 4 种 CoT 例子对比">
+
+<div class="explanation">
+  <h3>四个对比例子</h3>
+  <ul>
+    <li><strong>Healthy Baseline</strong>：CoT 平铺直叙地一步步推理，最后答对。</li>
+    <li><strong>Post-hoc</strong>：训练时被告知 "answer is 2"，然后 CoT 倒着写一段听起来合理的解释——结果跟 CoT 没因果关系。</li>
+    <li><strong>Encoded</strong>：数字被替换成海洋生物词（"plankton" / "minnow" 等）。CoT 看着像描述海洋，但模型内部能解码这套对应。</li>
+    <li><strong>Internalized</strong>：解 grid 路径题，CoT 却充斥着日历计算的内容——完全无关，模型直接忽略 CoT。</li>
+  </ul>
+  <p>关键：<em>四种最终都能给出"正确"答案</em>，所以单看输出对错根本分不出谁是健康的——这就是为什么需要"扰动 + 测变化"这套方法。</p>
+</div>
+
+
+<!-- ==================== SLIDE 14–15 ==================== -->
+<h2 class="slide-title">Slide 14–15 — 实验结果：Cohen's d 跨 checkpoint 曲线</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-014.png" alt="Slide 14: Cohen's d 9 联图">
+  <img class="slide-img" src="images/slide-015.png" alt="Slide 15: 病理 reasoning 文本对比">
+</div>
+
+<div class="explanation">
+  <h3>Slide 14：3 任务 × 3 指标的曲线网格</h3>
+  <p>纵轴是 Cohen's d（baseline 减去 pathology 的效应大小，正数 = 病理更脆弱），横轴是训练 step（SFT 微调过程）。三行任务（Binary Alternation / Calendar Arithmetic / Largest Island）× 三列指标（Necessity / Paraphrasability / Substantivity），每个 panel 里有四条线——baseline + 三种病理模型。</p>
+  <p>关键观察：<em>每种病理在自己对应的指标上表现出最大的 d</em>——比如 post-hoc 模型在 Necessity 列上偏离最远（删 CoT 影响小，差距大）；encoded 在 Paraphrasability 上偏离；internalized 在 Substantivity 上偏离。<strong>三个指标真的能"区分"三种病理</strong>。</p>
+
+  <h3>Slide 15：实际 CoT 文本对比</h3>
+  <p>同一个问题让 baseline / encoded / internalized / post-hoc 四种模型回答，把 CoT 摆在一起看——读起来 baseline 推理直白；internalized 文本扯到无关任务；encoded 含混；post-hoc 解释像"为既定答案找理由"。<em>都得到正确答案，但只有 baseline 是真在推理。</em></p>
+</div>
+
+<div class="takeaway">
+  💡 实验结果支持假设：每种病理都在自己对应的扰动指标上留下"signature"。这意味着三件指标合起来可以做"CoT 体检"。
+</div>
+
+
+<!-- ==================== SLIDE 16 ==================== -->
+<h2 class="slide-title">Slide 16 — 三个 Key Takeaways</h2>
+
+<img class="slide-img" src="images/slide-016.png" alt="Slide 16: 3 takeaways">
+
+<div class="explanation">
+  <h3>三点回顾</h3>
+  <ol>
+    <li><strong>Metrics differentiate pathologies</strong>：每种病理在三指标上留下独特"指纹"。</li>
+    <li><strong>Pathologies emerge over training</strong>：三种病理出现的速度不同——post-hoc 快（早就出现），encoded 和 internalized 更慢（要训练一段时间才显现）。<em>所以单看一个 checkpoint 是不够的</em>。</li>
+    <li><strong>Temporal dynamics matter</strong>：必须在训练过程中持续监控，不是训练完一次评测了事。</li>
+  </ol>
+</div>
+
+
+<!-- ==================== SLIDE 17 ==================== -->
+<h2 class="slide-title">Slide 17 — Why This Matters：三条工程意义</h2>
+
+<img class="slide-img" src="images/slide-017.png" alt="Slide 17: Why This Matters">
+
+<div class="explanation">
+  <ul>
+    <li><strong>Scalable Oversight</strong>：CoT 真的可信的话，人类即使不会做这道题也能审查模型推理。</li>
+    <li><strong>Training-Time Monitoring</strong>：这些指标可以集成到训练 pipeline，实时检测病理是否在涌现，及早干预。</li>
+    <li><strong>Open Toolbox</strong>：三个指标都简单、跟任务无关、计算成本低——意味着不需要专门的红队基础设施就能用。</li>
+  </ul>
+  <p>把这三点放在一起就是论文的"卖点"：低成本、通用、可集成。</p>
+</div>
+
+
+<div class="section-divider">第二部分 — AJ Baily：NanoGPT-2050 并行化 4 个 Example（slides 21–34）</div>
+
+
+<!-- ==================== SLIDE 21–22 ==================== -->
+<h2 class="slide-title">Slide 21–22 — 回到 NanoGPT 主线 + 模型超参回顾</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-021.png" alt="Slide 21: NanoGPT 2050 白板">
+  <img class="slide-img" src="images/slide-022.png" alt="Slide 22: Recall: The Model 超参表">
+</div>
+
+<div class="explanation">
+  <h3>NanoGPT 超参（slide 22）</h3>
+  <p>Lecture 15 已经讲过的玩具 GPT，6 层 Transformer，约 7M 参数，在莎士比亚 ~100k token 上训。下面这套字母后面四个 example 都会用到：</p>
+  <ul>
+    <li><strong>Layers = 6</strong>，<strong>Heads = 4</strong></li>
+    <li><strong>C (model dim) = 128</strong>，<strong>H (head dim) = 32</strong>（= C / Heads）</li>
+    <li><strong>T (seq len) = 64</strong>，<strong>V (vocab) ≈ 50k</strong>（GPT-2 BPE）</li>
+  </ul>
+  <p>所以一次 forward 看到的张量主要是 <code>[B·T, C] = [B·64, 128]</code>，logits 是 <code>[B·T, V] = [B·64, 50k]</code>。后面 OpenMP / MPI 划分循环时会反复用到这些维度。</p>
+</div>
+
+
+<!-- ==================== SLIDE 24 ==================== -->
+<h2 class="slide-title">Slide 24 — Example 1：Cross-Entropy Loss + OpenMP Reduction</h2>
+
+<img class="slide-img" src="images/slide-024.png" alt="Slide 24: Cross-Entropy 公式 + C++ 代码">
+
+<div class="explanation">
+  <h3>公式回顾</h3>
+  <div class="formula">
+    L = −(1/(B·T)) · Σᵢ log( e^(z_{i,y_i}) / Σⱼ e^(z_{i,j}) )
+  </div>
+  <p>每个 token 位置 i：<em>取出"正确答案"那一列的 logit z_{i, y_i}，除以本行所有 V 个 logits 的指数和</em>，再取 −log。最后对 B·T 个位置取均值。这就是教科书的 cross-entropy。</p>
+
+  <h3>代码逐行讲解</h3>
+  <div class="code-walk">
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-c">#pragma omp parallel for reduction(+:total_loss)</code></pre>
+      <div class="walk-doc">外层循环并行化。<code>reduction(+:total_loss)</code> 让每个线程持有自己的 <code>total_loss</code> 副本，循环结束后自动求和到全局变量——避免线程写同一个标量造成 race。</div>
+    </div>
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-c">for (int i = 0; i &lt; B*T; i++) {</code></pre>
+      <div class="walk-doc">遍历 B·T 个 token 位置。每行处理独立——一行的损失只看自己这行的 logits 和 target。<em>独立性是 reduction 能用的前提</em>。</div>
+    </div>
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-c">    float maxval = -INFINITY;
+    for (int j = 0; j &lt; V; j++) maxval = fmaxf(maxval, logits[i*V+j]);</code></pre>
+      <div class="walk-doc">第一遍扫这一行的 V 个 logits 找最大值。这是 numerically stable softmax 的标准技巧——<em>下一步要算 exp(logit)，如果某个 logit 很大（比如 100），exp 会溢出 float</em>。把整行减去 maxval 后再 exp，最大值就是 0，所有 exp 都 ≤ 1。</div>
+    </div>
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-c">    float sum = 0;
+    for (int j = 0; j &lt; V; j++) sum += expf(logits[i*V+j] - maxval);</code></pre>
+      <div class="walk-doc">第二遍扫，算 Σⱼ exp(logits[j] − maxval) —— 这是 softmax 分母的 stable 版本。注意每个 exp 都减了 maxval，所以最大那项是 exp(0) = 1，其它都更小，求和不会溢出。</div>
+    </div>
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-c">    total_loss += -(logits[i*V+target[i]] - maxval - logf(sum));</code></pre>
+      <div class="walk-doc">每行的 −log P(target) 累加。代数推导：<br>
+        log P = log( e^{z − maxval} / sum ) = (z − maxval) − log(sum)<br>
+        所以 −log P = −(z − maxval − log sum) = maxval + log sum − z。代码里写成 <code>−(logits − maxval − logf(sum))</code> 和这个等价。<em>"−maxval"那项是为了消掉前面分子里减的 maxval，使数学上和原公式一致</em>。</div>
+    </div>
+    <div class="walk-pair">
+      <pre class="walk-code"><code class="language-c">}</code></pre>
+      <div class="walk-doc">循环结束后 OpenMP 自动把每个线程的 <code>total_loss</code> 副本相加得到最终值。再除以 B·T 就是平均损失（slide 上代码省了这一步）。</div>
+    </div>
+  </div>
+
+  <h3>关键设计点</h3>
+  <p>每行 V ≈ 50k 个元素 → 单行 reduce 成一个 scalar；B·T 行之间互不依赖 → 整外层循环可以 <code>parallel for + reduction</code>。<strong>"行独立 + 行内规约"是 OpenMP 最适合的 pattern</strong>。</p>
+</div>
+
+<div class="takeaway">
+  💡 Stable softmax 三遍扫：①找 max ②算 Σ exp(z − max) ③ −log。OpenMP 把外层 B·T 行并行掉，每行的损失加到一个 reduction 变量上。
+</div>
+
+
+<!-- ==================== SLIDE 25 ==================== -->
+<h2 class="slide-title">Slide 25 — 训练循环全景</h2>
+
+<img class="slide-img" src="images/slide-025.png" alt="Slide 25: Training Loop">
+
+<div class="explanation">
+  <h3>6 步循环</h3>
+  <ol>
+    <li>Load batch of tokens —— 读莎士比亚的 token ID。</li>
+    <li><strong>Forward pass</strong> —— 6 层 Transformer 推理。</li>
+    <li>Compute loss —— 上一页那段 cross-entropy。</li>
+    <li><strong>Backward pass</strong> —— 反向传播算梯度（计算量约 forward 的 2 倍）。</li>
+    <li><em>MPI AllReduce</em> —— 跨节点把梯度求和（数据并行的同步点）。</li>
+    <li>Optimizer step —— AdamW 更新权重。</li>
+  </ol>
+  <p><em>2 + 4 是计算大头，5 是唯一的通信开销</em>。下面三个 example 分别针对这三类瓶颈：Loss/OpenMP（计算）、MPI（通信）、CUDA（搬到 GPU）。</p>
+</div>
+
+
+<!-- ==================== SLIDE 27–28 ==================== -->
+<h2 class="slide-title">Slide 27–28 — Example 2：OpenMP Strong Scaling 实测</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-027.png" alt="Slide 27: 红色单条曲线">
+  <img class="slide-img" src="images/slide-028.png" alt="Slide 28: 蓝红双曲线 + reset_to_zero 注释">
+</div>
+
+<div class="explanation">
+  <h3>红线（slide 27）：原始版本的 strong scaling</h3>
+  <p>横轴是 OpenMP 线程数（1, 2, 4, 8, 16），纵轴是 speedup（vs 1 线程）。原始实现的 16 线程只到 ~7.5×——远不到理想的 16×。<strong>典型的亚线性扩展曲线</strong>，扩展性变差的常见原因：(1) 串行段比例（Amdahl）；(2) 隐藏的并行瓶颈。</p>
+
+  <h3>蓝线（slide 28）：修掉 <code>reset_to_zero</code> 后的版本</h3>
+  <p>同一份代码改完后 16 线程上到 ~10.7×。提升来自<em>修掉一个本来串行的"重置梯度为零"环节</em>——梯度数组很大（参数数 × 4 字节），如果每个 step 用单线程 memset，那段时间所有其他线程在等。把它也并行化（<code>#pragma omp parallel for</code>）后，整个训练循环里基本没有串行段了。</p>
+
+  <h3>启示：profile 出隐藏的串行段</h3>
+  <p>这条对比想说的是：<em>看曲线偏离理想线时，先去 profile 找哪段是串行的，而不是盲目加更多线程</em>。一个未并行的 memset 就能压住整体扩展性——这是真实工程里很常见的"小代码影响大性能"的例子。</p>
+</div>
+
+<div class="takeaway">
+  💡 OpenMP 扩展性差的时候，先找有没有遗漏的串行段（memset、reduce、init）。Reset_to_zero 修完，16 线程从 7.5× 升到 10.7×。
+</div>
+
+
+<!-- ==================== SLIDE 30 ==================== -->
+<h2 class="slide-title">Slide 30 — Example 3 引言：放大到多节点的三个问题</h2>
+
+<img class="slide-img" src="images/slide-030.png" alt="Slide 30: Implications of Going Bigger">
+
+<div class="explanation">
+  <h3>三个待回答的问题</h3>
+  <ul>
+    <li><strong>How do we partition the data?</strong> —— 数据怎么切给各 rank。</li>
+    <li><strong>Do we distribute or replicate the model?</strong> —— 模型权重每 rank 各持一份（数据并行）还是切片（模型并行）。NanoGPT 选 replicate（模型小，能塞进单机）。</li>
+    <li><strong>What new bottlenecks may emerge?</strong> —— 加节点后会冒出新的瓶颈（通常是通信）。</li>
+  </ul>
+
+  <h3>右侧实测：MPI Strong Scaling Time Breakdown</h3>
+  <table>
+    <tr><th>节点数</th><th>每步耗时</th><th>说明</th></tr>
+    <tr><td>1 node</td><td>5.54s</td><td>基线，几乎全是 forward + backward</td></tr>
+    <tr><td>2 nodes</td><td>2.66s</td><td>~2.08× 接近线性</td></tr>
+    <tr><td>4 nodes</td><td>1.76s</td><td>~3.15× 略亚线性</td></tr>
+    <tr><td>8 nodes</td><td>1.18s</td><td>~4.7×；图里能看到红色 MPI Communication 段开始<em>显著扩大</em></td></tr>
+  </table>
+  <p>8 节点这一格的红色（MPI Communication）已经接近橙色（Backward）的高度了——<strong>新瓶颈出现：节点变多，AllReduce 的成本超过单节点 backward</strong>。这就是"放大后冒出来的新瓶颈"——在 4 节点之前几乎看不到，到 8 节点已经压住扩展性。</p>
+</div>
+
+<div class="takeaway">
+  💡 数据并行的扩展性曲线在小规模时几乎线性，到一定节点数后通信开始压住——本节点 backward 跟 AllReduce 成本反转。NanoGPT 在 4 节点之前都是计算 bound，8 节点开始通信 bound。
+</div>
+
+
+<!-- ==================== SLIDE 31–33 ==================== -->
+<h2 class="slide-title">Slide 31–33 — MPI 调用顺序 + 数据分发策略</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-031.png" alt="Slide 31: MPI 调用流程小图">
+  <img class="slide-img" src="images/slide-032.png" alt="Slide 32: MPI Scatter vs NanoGPT Data Load">
+</div>
+<img class="slide-img" src="images/slide-033.png" alt="Slide 33: MPI 完整调用流程">
+
+<div class="explanation">
+  <h3>MPI 调用顺序（slide 31 / 33）</h3>
+  <p>右侧流程图给出一次训练里 MPI API 的标准顺序：</p>
+  <ol>
+    <li><code>MPI_Init</code> —— 启动 MPI runtime。</li>
+    <li><code>MPI_Comm_rank / Comm_size</code> —— 每个进程问自己是 rank 几、总共多少 rank。</li>
+    <li><code>MPI_Bcast</code> —— rank 0 把初始权重 / 配置广播给所有 rank（保证起点一致）。</li>
+    <li><strong>训练循环里：</strong>每个 rank 独立做 forward + backward + 算本地梯度。</li>
+    <li><code>MPI_Allreduce(SUM)</code> —— 把所有 rank 的梯度加起来（再除以 rank 数 = 平均），所有 rank 都拿到同样的平均梯度。所有 rank 用这个梯度做 AdamW 更新——保证权重永远一致。</li>
+    <li><code>MPI_Finalize</code> —— 训练结束清理。</li>
+  </ol>
+
+  <h3>数据分发策略对比（slide 32）</h3>
+  <p>左：教科书 MPI Scatter——rank 0 读完整 corpus，切成 N 块，scatter 给其他 rank。每 rank 只看自己那块。</p>
+  <p>右：NanoGPT 的实际做法——莎士比亚 ~1.2 MB，<em>太小不值得做 scatter 的复杂分发</em>，每个 rank 直接独立读完整文件，<strong>各自随机抽 batch</strong>。每个 rank 抽到的 batch 不同，所以等价于 data-parallel；同时省掉了 scatter 通信。</p>
+  <p><strong>工程常识：当数据小到能塞进每节点内存时，直接复制比切片简单得多</strong>。Scatter 的复杂度（边界处理、剩余分配、序列化等）在小数据上得不偿失。</p>
+</div>
+
+<div class="takeaway">
+  💡 MPI 训练标准流程 = Init → Bcast 权重 → 循环里 forward/backward + Allreduce 梯度 → Finalize。NanoGPT 的莎士比亚太小，跳过 Scatter，每 rank 各自加载并随机采样 batch。
+</div>
+
+
+<!-- ==================== SLIDE 34 ==================== -->
+<h2 class="slide-title">Slide 34 — Example 4 占位：CUDA Parallelization</h2>
+
+<img class="slide-img" src="images/slide-034.png" alt="Slide 34: Example 4 标题">
+
+<div class="explanation">
+  <p>Slide 34 只是 Example 4 的章节封面，PDF 后面没有更多内容——课堂上 AJ 留到下一节继续讲 CUDA 部分（cuBLAS matmul、LayerNorm / Softmax / GELU 自定义 kernel、单次 cudaMalloc 池）。这部分在 Lecture 15 slide 36 已经过过一遍蓝图；下一节会进真实代码。</p>
+</div>
+
+
+<h2 class="slide-title">Lecture 16 总览</h2>
+<div class="takeaway">
+  <strong>主线总结：</strong>
+  <ol>
+    <li><strong>第一部分（Manqing Liu）</strong>：CoT 监控有"假推理"风险——<em>post-hoc / encoded / internalized</em> 三种病理。三个对应指标 <em>Necessity / Paraphrasability / Substantivity</em>（对 CoT 做删除 / 改写 / 替换，看答案是否变）能区分病理；病理在训练中不同时间出现，需要持续监控。</li>
+    <li><strong>第二部分（AJ Baily）Example 1（Loss）</strong>：cross-entropy 的 stable 实现 = 减 max + exp + log。OpenMP 用 <code>parallel for + reduction(+:total_loss)</code>，外层 B·T 行独立。</li>
+    <li><strong>Example 2（OpenMP）</strong>：原始实现 16 线程 7.5×，profile 出 <code>reset_to_zero</code> 是隐藏串行段，并行化后升到 10.7×。教训：扩展性差先找串行段，不要盲加线程。</li>
+    <li><strong>Example 3（MPI）</strong>：标准流程 Init / Bcast / Allreduce(SUM) / Finalize。莎士比亚数据集太小，每 rank 直接独立加载（跳过 Scatter）。1→4 节点近线性，8 节点开始 MPI Communication 段占比变大。</li>
+    <li><strong>Example 4（CUDA）</strong>：本节只起标题，下节展开。</li>
+  </ol>
+</div>
+
+</body>
+</html>

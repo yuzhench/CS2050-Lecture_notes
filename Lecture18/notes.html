@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>CS 2050 Lecture 18 - 复习笔记</title>
+<link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.css" rel="stylesheet">
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    max-width: 980px;
+    margin: 40px auto;
+    padding: 0 24px;
+    line-height: 1.7;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 {
+    border-bottom: 3px solid #1f6feb;
+    padding-bottom: 10px;
+  }
+  h2.slide-title {
+    color: #1f6feb;
+    margin-top: 50px;
+    border-left: 5px solid #1f6feb;
+    padding-left: 12px;
+  }
+  h3 {
+    color: #333;
+    margin-top: 28px;
+  }
+  .slide-img {
+    display: block;
+    max-width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin: 16px 0 24px 0;
+  }
+  .explanation {
+    background: #fff;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
+  }
+  .qa {
+    background: #fff8e1;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border-left: 4px solid #f0a500;
+    margin-top: 20px;
+  }
+  details.qa > summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #b8730e;
+    font-size: 1.08em;
+    padding: 6px 0;
+    user-select: none;
+    list-style: none;
+  }
+  details.qa > summary::before {
+    content: "▶ ";
+  }
+  details.qa[open] > summary::before {
+    content: "▼ ";
+  }
+  code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.92em;
+  }
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th { background: #1f6feb; color: white; }
+  blockquote {
+    border-left: 4px solid #1f6feb;
+    margin: 16px 0;
+    padding: 4px 16px;
+    color: #555;
+    background: #eef4ff;
+  }
+  .takeaway {
+    background: #e8f5e9;
+    border-left: 4px solid #2e7d32;
+    padding: 14px 20px;
+    margin-top: 20px;
+    border-radius: 4px;
+  }
+  .formula {
+    background: #f6f8fa;
+    padding: 10px 16px;
+    border-radius: 4px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    margin: 10px 0;
+  }
+  .slide-grid {
+    display: grid;
+    gap: 12px;
+    margin: 16px 0 24px 0;
+  }
+  .slide-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .slide-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .slide-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .slide-grid .slide-img { margin: 0; max-width: 100%; }
+
+  /* code-walk layout */
+  .code-walk {
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 18px 0;
+  }
+  .walk-pair { border-bottom: 1px solid #e1e4e8; }
+  .walk-pair:last-child { border-bottom: none; }
+  .walk-code {
+    margin: 0;
+    border-radius: 0;
+  }
+  .walk-doc {
+    background: #f6f8fa;
+    padding: 12px 18px;
+    border-left: 4px solid #1f6feb;
+    font-size: 0.96em;
+  }
+
+  .section-divider {
+    margin-top: 60px;
+    padding: 14px 22px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #eaf3ff, #fafafa);
+    border-left: 6px solid #1f6feb;
+    font-size: 1.15em;
+    font-weight: bold;
+    color: #1f3d7a;
+  }
+</style>
+</head>
+<body>
+
+<h1>CS 2050 Lecture 18 - 复习笔记</h1>
+<p><em>主题：Guest Lecture by Evelyne Ringoot (MIT, Julia Lab) —— Less Code, More Performance: Abstracting Singular Values Across Precision &amp; Hardware</em></p>
+
+<blockquote>
+  Lecture 18 是又一节客座课，讲者来自 MIT 的 Julia Lab。Lecture 17 上半场把 ScaLAPACK 这套<em>"按 hardware 分仓"</em>的传统线代库讲透了；这节课接着回答一个自然的下一步问题：<strong>能不能写一份代码就在 CPU / NVIDIA / AMD / Intel / Apple 上都跑得跟 vendor library 一样快？</strong>主线是：HPC linear algebra 软件碎片化的现状 → Julia 的 multiple dispatch + array/kernel abstractions 怎么把这层碎片抽象掉 → 三个落地的例子（QR/LU 跨硬件、SVD 跨 GPU 厂商、out-of-core 大矩阵 SVD）→ 最后开源库 <strong>NextLA.jl</strong>。Slide 1–3 是课程行政页（schedule + Code Server / GitHub repo 设置），slide 4–6 是讲者自我介绍 / 实验室介绍 / 标题页，按惯例都跳过；slide 20–22 是 "EXAMPLE 1/2/3" 占位页（讲者现场 demo），笔记里也跳过。
+</blockquote>
+
+
+<div class="section-divider">第一部分 — Motivation：HPC linear algebra 库的碎片化（slides 7–11）</div>
+
+
+<!-- ==================== SLIDE 7 ==================== -->
+<h2 class="slide-title">Slide 7 — HPC 线代库的"换硬件就重写"</h2>
+
+<img class="slide-img" src="images/slide-007.png" alt="Slide 7: HPC library timeline">
+
+<div class="explanation">
+  <h3>从 EISPACK 到 SLATE：每代硬件一个库</h3>
+  <p>Slide 上的时间轴把过去 50 年的 HPC 线代库画成一条河，每出现一种新硬件就要冒出一个新库：</p>
+  <ul>
+    <li><strong>EISPACK (1970s)</strong> + <strong>LINPACK (1970s)</strong> — 最早的 CPU 时代。</li>
+    <li><strong>LAPACK (1980s)</strong> — 重新设计来吃 cache（Level-3 BLAS 时代，向量机/SMP）。</li>
+    <li><strong>ScaLAPACK (1990s)</strong> — 加上 MPI，做分布式（Lecture 17 那一套）。</li>
+    <li><strong>PLASMA (2000s)</strong> — 多核 CPU。</li>
+    <li><strong>MAGMA (2000s)</strong> — 异构 CPU + 单 GPU。</li>
+    <li><strong>SLATE (2010s)</strong> — GPU 集群 / 大规模混合架构。</li>
+  </ul>
+  <p>时间轴下方的色条是硬件标签：CPU → Vector → MPP/SMP → Micro → Micro/GPU。<em>一种新硬件 ≈ 一个新库</em>，老库的算法不能直接搬过来用。</p>
+
+  <h3>Dongarra 的话</h3>
+  <p>Slide 上引的 Jack Dongarra（线代库的灵魂人物）2024 年原话：<em>"每来一种新硬件，我们都要花 3-4 年搞清楚怎么用——这是个极其重资本的算法重设计过程。"</em>背后含义是：库重写的成本极高，但又必须重写，否则吃不到新硬件性能。</p>
+
+  <h3>两个连锁后果（右栏）</h3>
+  <p><strong>(1)</strong> 应用层库（比如 PyTorch）通常没法支持所有硬件——因为它要靠下层 vendor 的库，而某些硬件（比如 Apple Metal）的 vendor 库就不全。</p>
+  <p><strong>(2)</strong> 大型 HPC 集群常常是<em>异构</em>的（一部分节点 NVIDIA GPU，一部分 AMD GPU，一部分 Intel CPU），所以跑同一个应用要同时维护好几套库。这就是讲者要解决的核心痛点。</p>
+</div>
+
+
+<!-- ==================== SLIDE 8–11 ==================== -->
+<h2 class="slide-title">Slide 8–11 — 现状的"分诊表"和 Performance + Portability 的目标</h2>
+
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-008.png" alt="Slide 8: separate low-level by hardware/precision">
+  <img class="slide-img" src="images/slide-009.png" alt="Slide 9: seamless support for">
+  <img class="slide-img" src="images/slide-010.png" alt="Slide 10: performance and portability?">
+  <img class="slide-img" src="images/slide-011.png" alt="Slide 11: portability chart preview">
+</div>
+
+<div class="explanation">
+  <h3>今天选库其实是在做"分诊"</h3>
+  <p>Slide 中央的流程图就是<em>当前 HPC 线代用户的真实选库流程</em>，按数据规模 + 硬件分叉：</p>
+  <ul>
+    <li>数据 <em>非常小</em>（&lt;256 维）→ 直接 CPU 上 LAPACK，因为搬到 GPU 的 overhead 比算还慢。</li>
+    <li>数据稍大但能塞进 GPU → 看你用谁家的 GPU：AMD 用 <code>rocSOLVER</code>，NVIDIA 用 <code>cuSOLVER</code>，Intel 用 <code>oneMKL</code>，Apple 基本没得用。</li>
+    <li>数据 <em>大于一张 GPU 的显存</em> → 多核 CPU 用 PLASMA，多 GPU 用 MAGMA，异构 CPU+GPU 用 SLATE（SLATE 内部还要再调 vendor 的 GPU 库）。</li>
+  </ul>
+  <p>用户要在程序里手写一堆 <code>#ifdef CUDA / HIP / MKL</code>，每次换硬件就改一次代码——非常痛苦。</p>
+
+  <h3>抽象框架想把这一层吞掉</h3>
+  <p>Slide 右下列了几个候选：<strong>Julia</strong>、<strong>SYCL</strong>（Intel 主推的 C++ GPU 抽象）、<strong>Mojo</strong>（AI-first 语言）、<strong>OpenMP</strong>（带 GPU offload）。它们的共同野心：写一份代码 → 编译/分派到任意厂商的硬件。</p>
+
+  <h3>三个具体的"无缝"诉求（slide 9）</h3>
+  <ul>
+    <li><strong>Novel hardware</strong> —— 比如 Apple Metal，没人愿意为它从头写 LAPACK。</li>
+    <li><strong>Novel data precision / mixed precision</strong> —— FP16、BF16、TF32 这些 AI 时代的精度，传统 vendor 库覆盖不全。</li>
+    <li><strong>HPC code 在笔记本上开发</strong> —— 在 M1 上写好，丢到集群直接跑。</li>
+  </ul>
+
+  <h3>历史上的取舍：抽象 vs 性能（slide 10）</h3>
+  <p>过去抽象层（Python/wrappers）通常意味着<em>性能损失</em>——多一层就慢一层。讲者要回答的就是：<em>能不能两个都要？</em></p>
+
+  <h3>剧透答案：可以（slide 11 的图）</h3>
+  <p>Slide 11 把后面要展开的关键 benchmark 提前露了一手——纵轴 = vendor API runtime / unified API runtime，横轴 = 矩阵规模。NVIDIA RTX4060/A100/H100、Intel PVC、AMD MI250 全跑下来，比值大致都贴在 <strong>1（equal performance）</strong>这条线上，AMD MI250 上甚至 unified 还更快。<em>抽象层并没有以性能为代价。</em>这是整节课的中心结论。</p>
+</div>
+
+
+<div class="section-divider">第二部分 — Julia 的语言机制 + SVD 的应用范围（slides 12–13）</div>
+
+
+<!-- ==================== SLIDE 12 ==================== -->
+<h2 class="slide-title">Slide 12 — Julia 的三根抽象支柱</h2>
+
+<img class="slide-img" src="images/slide-012.png" alt="Slide 12: Julia composability">
+
+<div class="explanation">
+  <p>讲者把 Julia 能做"一份代码跨硬件"的功劳归到三个语言层面的特性，分三栏列出。</p>
+
+  <h3>1. Multiple dispatch → composability</h3>
+  <p>Julia 的核心机制：函数没有"绑定的类型"，而是根据<em>所有参数</em>的类型组合在编译期挑一个最特化的方法。Slide 上画的是一群 object，每个 object 配几条 method 箭头，最后汇到 <em>generic function</em>。</p>
+  <p>实际意义：当你写 <code>matmul(A, B)</code>，A、B 是 <code>CuArray</code> 还是 <code>ROCArray</code> 还是 <code>Array{FP16}</code>，dispatch 自动挑对应版本——不用 <code>if-else</code>，不用 wrapper 模板。第三方加一个新硬件（比如 Apple Metal）只要给自己的 array type 注册新方法，原有代码<em>一行不改</em>就能用。</p>
+  <p>(Bezanson et al., 2019 是 Julia 设计哲学论文。)</p>
+
+  <h3>2. Array abstractions → CPU 和 GPU 共享一份代码</h3>
+  <p>Julia 标准库里 <code>AbstractArray</code> 是接口，<code>Array</code>（CPU）、<code>CuArray</code>（NVIDIA）、<code>ROCArray</code>（AMD）、<code>oneArray</code>（Intel）、<code>MtlArray</code>（Apple）都是它的子类型。算子如 broadcast、reduction 写一份就在所有后端工作。</p>
+  <p>底层用<strong>BLAS GEMM</strong>当线代基石——CPU 端走 OpenBLAS / MKL，GPU 端走 cuBLAS / rocBLAS / oneMKL，Julia 的 <code>*</code> 运算符自动 dispatch 到对应的 GEMM。Slide 中间图列了从 algorithm → tile → tensor → linalg ops 的层次。(Besard et al., 2019.)</p>
+
+  <h3>3. Kernel abstractions → GPU vendor 之间的可移植 kernel</h3>
+  <p>有时候没有现成的 BLAS 调用能用（比如要写自定义的 GPU kernel）。<code>KernelAbstractions.jl</code> 让你写一份 kernel，通过 LLVM 编译到 NVIDIA PTX / AMD ROCm / Intel SPIR-V / Apple Metal。Slide 右图：kernel 抽象层 → kernel generation → GPU compiler → GPU runtime。(Utkarsh 2023, Churavy 2023.)</p>
+
+  <h3>合在一起的效果</h3>
+  <p>多重派发负责"接到正确硬件"，array 抽象负责"高层算法不变"，kernel 抽象负责"低层算子也能跨硬件"。三层叠加，就有可能写一个 SVD 函数，在 5 种 GPU + CPU 上都跑得动。</p>
+</div>
+
+
+<!-- ==================== SLIDE 13 ==================== -->
+<h2 class="slide-title">Slide 13 — 为什么是 SVD：从 LoRA 到 Transformer²</h2>
+
+<img class="slide-img" src="images/slide-013.png" alt="Slide 13: SVD applications">
+
+<div class="explanation">
+  <h3>SVD 是线代的"瑞士军刀"</h3>
+  <p>奇异值分解 <em>A = UΣVᵀ</em> 把任意矩阵拆成正交基 + 缩放 + 正交基。它是 PCA、最小二乘伪逆、低秩近似、矩阵压缩的统一底层。<em>近几年最热的应用：LLM 的 LoRA / 模型压缩</em>，因为低秩 (rank-r) 近似就是只保留前 r 个奇异值。</p>
+
+  <h3>讲者举的两个新例子</h3>
+  <ul>
+    <li><strong>DOBI-SVD (Wang 2025)</strong> —— activation-aware 的权重压缩。在做 SVD 截断时同时考虑激活值分布，比纯权重 SVD 损失小。</li>
+    <li><strong>ADA-SVD (Li 2024)</strong> —— iterative update 的 SVD，每一轮拿新数据微调奇异值/向量，不重算整个分解。</li>
+  </ul>
+
+  <h3>Transformer² (Sun 2024)</h3>
+  <p>Slide 右图：把 Transformer 权重做 SVD，得到 <code>UΣVᵀ</code>；推理时根据 query 类别（math / coding / VLM）<em>挑不同的奇异值组合</em>，相当于一个模型变身多个专家——本质就是 LoRA 的连续推广，全靠 SVD 当骨架。</p>
+
+  <h3>所以为什么这节课盯着 SVD</h3>
+  <p>SVD 既是经典线代的代表算法，又是当前 LLM 时代最热的算子之一。把 SVD 做成"跨硬件 + 跨精度"的抽象，等于直接惠及今天最多的 HPC + AI workload。</p>
+</div>
+
+
+<div class="section-divider">第三部分 — 三个落地的例子（slides 14–18）</div>
+
+
+<!-- ==================== SLIDE 14 ==================== -->
+<h2 class="slide-title">Slide 14 — 三个例子的总览</h2>
+
+<img class="slide-img" src="images/slide-014.png" alt="Slide 14: three examples preview">
+
+<div class="explanation">
+  <p>讲者把要展示的三个例子排成一行，每个回答一种"抽象的维度"。每张小图都是后面对应 slide 的结论预告：</p>
+  <ul>
+    <li><strong>1️⃣ Across hardware &amp; precision</strong> —— 在 vendor 的 low-level 函数上面套抽象，做<em>混合精度</em>的 QR/LU。Julia 在 Float32/Float64/Complex 上都能贴着 LAPACK 的曲线（slide 15 展开）。</li>
+    <li><strong>2️⃣ Across GPU vendors</strong> —— <em>替换</em>掉 vendor 的 low-level 函数，用一个统一的 SVD kernel 跑遍 NVIDIA / AMD / Intel（slide 16 展开）。</li>
+    <li><strong>3️⃣ Across multi-hardware</strong> —— <em>替换</em>掉 high-level HPC 库（PLASMA/MAGMA/SLATE 那一层），实现 in-GPU + out-of-core 一体的大矩阵 SVD（slide 17 展开）。</li>
+  </ul>
+  <p>关键词："without sacrificing performance"——三个例子都拿 vendor library 当对照基准。</p>
+</div>
+
+
+<!-- ==================== SLIDE 15 ==================== -->
+<h2 class="slide-title">Slide 15 — Example 1：QR/LU 跨数据类型 + 跨硬件</h2>
+
+<img class="slide-img" src="images/slide-015.png" alt="Slide 15: Example 1 QR/LU">
+
+<div class="explanation">
+  <h3>测的算法：larfb 和 urmqr（QR 分解的核心 kernel）</h3>
+  <p>Slide 底部的两个公式是 LAPACK 命名约定下的 BLAS-3 操作：</p>
+  <div class="formula">larfb：A + AYTᵀ = AQ&nbsp;&nbsp;&nbsp;&nbsp; urmqr：A + YTYᵀA = QA</div>
+  <p>两者都属于<em>块 Householder 反射</em>——把若干个 Householder 向量 Y 和上三角块 T 合成一个紧凑反射，作用到 A 的左/右。这是现代 QR 分解里最吃 BLAS-3 的 kernel，也是 LU 分解的常用形态。</p>
+
+  <h3>左图：CPU 上跨数据类型对比</h3>
+  <p>横轴矩阵规模 512–65k，纵轴时间。Julia（实线）和 LAPACK（虚线）的曲线两两贴在一起，covering：Complex F64/F32（双精度复/单精度复）、Float64/Float32。<em>一份 Julia 实现，对所有 4 种精度都跑得跟 LAPACK 一样快。</em></p>
+
+  <h3>右图：跨 CPU-GPU 硬件对比</h3>
+  <p>同一份 Julia 代码 vs LAPACK (CPU) / cuSOLVER (NVIDIA) / rocSOLVER (AMD)，跑在 Intel Ice Lake (CPU)、A100 (NVIDIA)、CascadeLake+MI100 (AMD) 这三套机器上。Julia 的实线和各家 vendor 的虚线再次重合——<em>不用 #ifdef 切代码，不用调用不同 API</em>，dispatch 自动挑 backend。</p>
+
+  <h3>意义</h3>
+  <p>这是<em>"在 vendor 函数上面套 thin abstraction"</em>的版本：底层还是调 cuSOLVER / rocSOLVER，Julia 只负责把 high-level QR 步骤组合好。这是抽象的最低门槛——保留 vendor 库、只统一接口——但已经足够展示 dispatch 没有性能损失。</p>
+  <p>(Xuan et al., IEEEHPEC 2024.)</p>
+</div>
+
+
+<!-- ==================== SLIDE 16 ==================== -->
+<h2 class="slide-title">Slide 16 — Example 2：抽象 GPU kernel 替换 vendor SVD</h2>
+
+<img class="slide-img" src="images/slide-016.png" alt="Slide 16: Example 2 SVD across vendors">
+
+<div class="explanation">
+  <h3>这次是真"替换"，不是"包"</h3>
+  <p>Example 1 还在调 cuSOLVER；Example 2 把 vendor 的 SVD kernel 整个换成 Julia + KernelAbstractions 写的统一 kernel。</p>
+
+  <h3>读图</h3>
+  <p>纵轴是 <em>runtime ratio = vendor API / unified API</em>。&gt;1 表示统一 API 更快，&lt;1 表示 vendor 更快，=1 表示打平。横轴是矩阵规模 64 → 16k。五条柱子分别是：NVIDIA RTX4060、A100、H100、Intel PVC、AMD MI250。</p>
+  <ul>
+    <li><strong>NVIDIA / Intel</strong>：比值大致 0.4–1.0，意味着 cuSOLVER / oneMKL 比 unified 略快或持平——可以接受，因为换来了跨厂商。</li>
+    <li><strong>AMD MI250</strong>：比值在 1k 之后疯狂飙到 10×+，unified 比 rocSOLVER 快一个量级。原因是 rocSOLVER 的 SVD 实现并不成熟。</li>
+    <li><strong>NVIDIA RTX4060</strong>：在大矩阵也开始跑赢 vendor。</li>
+  </ul>
+  <p>结论：unified kernel 整体跟 vendor 持平或更快。</p>
+
+  <h3>抽象带来的新能力（slide 右栏两个箭头）</h3>
+  <ul>
+    <li><strong>第一个 FP16 半精度奇异值求解器</strong>——vendor 库不提供 FP16 SVD，但抽象 kernel 加一行就支持。</li>
+    <li><strong>第一个 Apple Metal 上的 SVD</strong>——苹果 GPU 的 vendor 软件根本没这个 API，抽象 kernel 直接编到 Metal。</li>
+  </ul>
+  <p>(Ringoot et al., 2025, ICPP.)</p>
+</div>
+
+
+<!-- ==================== SLIDE 17 ==================== -->
+<h2 class="slide-title">Slide 17 — Example 3：in-GPU + out-of-core 大矩阵 SVD</h2>
+
+<img class="slide-img" src="images/slide-017.png" alt="Slide 17: Example 3 out-of-core SVD">
+
+<div class="explanation">
+  <h3>背景</h3>
+  <p>当矩阵大到塞不进单张 GPU 的显存（H100 也就 80GB），传统做法要么换到 CPU，要么调用复杂的多卡 / CPU-GPU 混合库（PLASMA/MAGMA/SLATE）。讲者证明：用同一套抽象，可以做 <em>out-of-core</em>——矩阵分块在 host 内存，按需流到 GPU 算。</p>
+
+  <h3>读图</h3>
+  <p>纵轴时间（log，100ms → 10h），横轴矩阵规模 1k → 131k。三条曲线：</p>
+  <ul>
+    <li><strong>黑：LAPACK CPU (32 threads)</strong>——CPU baseline，scaling 最差，到 65k 时已经 1h+。</li>
+    <li><strong>绿：Julia in-GPU memory</strong>——矩阵塞进 H100 显存里跑，最快。但是 65k 是它的<em>memory limit</em>，再大就跑不动了（图上虚线标注）。</li>
+    <li><strong>蓝：Julia Out-of-core</strong>——矩阵规模超出 GPU 显存，host 内存兜底。1k–8k 的小矩阵阶段比 in-GPU 慢一点（搬数据有 overhead），但<em>从 16k 开始基本与 in-GPU 重叠</em>，且能继续延伸到 131k 之后。</li>
+  </ul>
+
+  <h3>两个标注</h3>
+  <ul>
+    <li><strong>Out-of-core outperforms LAPACK (CPU)</strong> —— 蓝线在所有规模上都甩开黑线（×2.6 到 ×4.9 不等）。</li>
+    <li><strong>Out-of-core computes data size &gt; GPU memory</strong> —— 蓝线在 GPU memory limit（虚线）右侧继续延伸，证明它解了"超 GPU 显存"的问题。</li>
+  </ul>
+
+  <h3>意义</h3>
+  <p>这相当于<em>同一套抽象层把 PLASMA/MAGMA/SLATE 那一层（high-level HPC 库）也替代掉了</em>。前提是 multi-dispatch + array abstraction 能自动把数据搬运、kernel 调用、同步缝合起来——具体怎么做到的，slide 18 给代码。</p>
+  <p>(Ringoot, Alomairy, Edelman, SC 2025.)</p>
+</div>
+
+
+<!-- ==================== SLIDE 18 ==================== -->
+<h2 class="slide-title">Slide 18 — out-of-core 怎么做：tile 调度 + multiple dispatch 缝通信</h2>
+
+<img class="slide-img" src="images/slide-018.png" alt="Slide 18: communication optimization + code">
+
+<div class="explanation">
+  <h3>核心思想 1：用通信-计算<em>重叠</em>，不死扣通信-最小化</h3>
+  <p>传统的 communication-avoiding 算法目标是"少传数据"。这里反过来——<em>多传也行，只要能和计算重叠就不增 wall time</em>。具体做法（slide 上半部分图）：把矩阵切成 tile，对<strong>每一个对角块（diagonal tile）</strong>，<em>每一行</em>都做一次 GPU↔CPU 的传输；红框 = 当前在 GPU 显存里的 tile，淡红 = 正在传的 tile。</p>
+  <p>"<em>Keep more top rows in memory to increase parallelism</em>"——把上方还要重复用的几行多留一会儿在 GPU 显存里，避免反复来回拉。这是经典的 look-ahead 策略，但通过 dispatch 自动实现。</p>
+
+  <h3>核心思想 2：高层算法函数 + dispatch 自动决定要不要通信</h3>
+  <p>Slide 下半部分的代码就是 Julia multi-dispatch 在异构 SVD 里发挥作用的现场。注意<em>同一个函数名</em> <code>GETSMQRT!</code> 在两个不同 matrix 类型上有两套 method：在普通 GPU array 上就是纯 GPU kernel；在 <code>LargeTiledMatrix</code> 上就<em>自动插入 CPU↔GPU 通信</em>。算法本身的代码（<code>banddiag!</code>）不需要改。</p>
+
+  <h3>代码逐行讲</h3>
+</div>
+
+<div class="code-walk">
+
+  <div class="walk-pair">
+<pre class="walk-code"><code class="language-julia">function banddiag!(A::AbstractorLargeGPUMatrix,
+                   Tau::AbstractGPUMatrix, nbtiles::Int, backend)</code></pre>
+    <div class="walk-doc">
+      高层驱动函数 <code>banddiag!</code>——把矩阵 A 化成带状双对角的 QR 步骤（SVD 的中间步骤）。<em>注意它的两个核心参数都是抽象类型</em>：<code>AbstractorLargeGPUMatrix</code> 和 <code>AbstractGPUMatrix</code>。这意味着 backend 是 NVIDIA 还是 AMD 还是 Apple，这个函数都能接。<code>nbtiles</code> 是把矩阵切成多少个 tile，<code>backend</code> 是 KernelAbstractions 用的硬件 backend 标记。
+    </div>
+  </div>
+
+  <div class="walk-pair">
+<pre class="walk-code"><code class="language-julia">    for k in 1:(nbtiles-1)
+        GETSMQRT!(A,    Tau, k, nbtiles, backend)
+        GETSMQRT!(A',   Tau, k, nbtiles, backend, LQ=true)
+    end
+    GETSMQRT!(A, Tau, nbtiles, nbtiles, backend)
+    return A
+end</code></pre>
+    <div class="walk-doc">
+      标准的 banded bidiagonalization 主循环：每一步 k 先对当前列方向做 QR（左乘），再对当前行方向做 LQ（右乘），最后处理最后一个 tile。每次都调 <code>GETSMQRT!</code> ——<em>这是关键</em>：不管你的 A 是 in-GPU array 还是分块在 host 的 LargeTiledMatrix，这一行代码字面上一模一样。
+    </div>
+  </div>
+
+  <div class="walk-pair">
+<pre class="walk-code"><code class="language-julia">function GETSMQRT!(A::AbstractGPUMatrix, ...)
+    GEQRT!(A, k)
+    UNMQR!(A, k)
+end</code></pre>
+    <div class="walk-doc">
+      第一个 method —— 当 A 是<em>纯 GPU 矩阵</em>（一整块都在显存里）。直接调两个底层 kernel：<code>GEQRT!</code> 算 Householder 反射（QR-tiled 形式），<code>UNMQR!</code> 把这个反射作用到剩余 tile。两个都是 GPU 上的 kernel，没有任何通信代码。
+    </div>
+  </div>
+
+  <div class="walk-pair">
+<pre class="walk-code"><code class="language-julia">function GETSMQRT!(A::LargeTiledMatrix, ...)
+    ...  # communication CPU-GPU
+    GEQRT!(A.data[k], ...)
+    UNMQR!(A.data[k], ...)
+    kernelAbstractions.@sync
+end  # async</code></pre>
+    <div class="walk-doc">
+      第二个 method —— 当 A 是<em>大于 GPU 显存的分块矩阵</em>。<em>多了通信</em>：先把 <code>A.data[k]</code> 这一块 tile 从 host 内存拷到 GPU，再调相同的 <code>GEQRT!</code>/<code>UNMQR!</code> kernel，最后用 <code>kernelAbstractions.@sync</code> 等异步操作完成。整段还会被外层 <code>async</code> 包起来，让多 tile 的传输和计算重叠（呼应 slide 上半的"通信-计算重叠"思想）。
+      <br><br>
+      <strong>为什么 multi-dispatch 在这里特别关键</strong>：调用方（<code>banddiag!</code>）字面上写的是 <code>GETSMQRT!(A, ...)</code>，到底走纯 GPU 版本还是带通信的 out-of-core 版本，完全由 A 的<em>类型</em>决定。换句话说，"是否要 CPU↔GPU 通信"被推到类型系统里，算法代码无感。这就是讲者强调的"single high-level function with multiple-dispatch seamlessly integrating communication"。
+    </div>
+  </div>
+
+</div>
+
+<div class="takeaway">
+  💡 Slide 18 的整体哲学：传统 HPC 库（SLATE/MAGMA）必须在算法代码里手写 <code>if (out_of_core) { copy_h2d; compute; copy_d2h; }</code> 这种 boilerplate。Julia 用 multiple dispatch 把这些写到<em>类型上</em>而不是<em>算法逻辑里</em>。结果：算法代码 ≈ pseudocode，通信代码作为 method 重载进来——这就是"less code, more performance"那一句口号的兑现。
+</div>
+
+
+<div class="section-divider">第四部分 — 结论：NextLA.jl 开源（slide 19）</div>
+
+
+<!-- ==================== SLIDE 19 ==================== -->
+<h2 class="slide-title">Slide 19 — NextLA.jl + Performance and portability ✓</h2>
+
+<img class="slide-img" src="images/slide-019.png" alt="Slide 19: NextLA.jl">
+
+<div class="explanation">
+  <h3>NextLA.jl</h3>
+  <p>讲者把这一整套抽象 + 三个例子的实现打包成开源 Julia 库 <strong>NextLA.jl</strong>（slide 左栏的 QR code 指向 GitHub repo）。它是讲者博士论文的产物，定位是"下一代 LAPACK"——一份代码、跨厂商、跨精度。</p>
+
+  <h3>右图：第二次出现的同一张 benchmark</h3>
+  <p>Slide 11 的"剧透 chart"在这里以正式结论出现：vendor API / unified API runtime 比值，五种硬件（NVIDIA RTX4060、A100、H100、Intel PVC、AMD MI250）从 64 到 16k 矩阵规模——绝大多数比值都在 <strong>0.4–10</strong>，集中在 1 附近，AMD MI250 上 unified 反而更快。</p>
+
+  <h3>整节课的最终一句话</h3>
+  <p><em>"Performance and portability!"</em>——开头 slide 10 提出"能不能两个都要？"的疑问，整节课的回答是：用 Julia 的 multiple dispatch + array abstraction + kernel abstraction，把硬件碎片化吞进类型系统，可以。</p>
+</div>
+
+<div class="takeaway">
+  💡 全课核心：HPC 线代历史每出一种新硬件就要重写一套库（EISPACK→LAPACK→ScaLAPACK→PLASMA/MAGMA/SLATE）；Julia 用 multiple dispatch 把"硬件 / 精度 / 是否 out-of-core"全部抽到类型上，三个例子（QR/LU 跨硬件、SVD 跨厂商、out-of-core 大矩阵 SVD）证明抽象层不必牺牲性能。落地工件 = NextLA.jl。
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+
+</body>
+</html>
