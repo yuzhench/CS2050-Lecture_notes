@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>CS 2050 Lecture 4 - 复习笔记</title>
+<link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.css" rel="stylesheet">
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    max-width: 980px;
+    margin: 40px auto;
+    padding: 0 24px;
+    line-height: 1.7;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 { border-bottom: 3px solid #1f6feb; padding-bottom: 10px; }
+  h2.slide-title {
+    color: #1f6feb;
+    margin-top: 50px;
+    border-left: 5px solid #1f6feb;
+    padding-left: 12px;
+  }
+  h3 { color: #333; margin-top: 28px; }
+  .slide-img {
+    display: block;
+    max-width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin: 16px 0 24px 0;
+  }
+  .explanation {
+    background: #fff;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
+  }
+  .qa {
+    background: #fff8e1;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border-left: 4px solid #f0a500;
+    margin-top: 20px;
+  }
+  details.qa > summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #b8730e;
+    font-size: 1.08em;
+    padding: 6px 0;
+    user-select: none;
+    list-style: none;
+  }
+  details.qa > summary::before { content: "▶ "; }
+  details.qa[open] > summary::before { content: "▼ "; }
+  code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.92em;
+  }
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+  th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+  th { background: #1f6feb; color: white; }
+  blockquote {
+    border-left: 4px solid #1f6feb;
+    margin: 16px 0;
+    padding: 4px 16px;
+    color: #555;
+    background: #eef4ff;
+  }
+  .takeaway {
+    background: #e8f5e9;
+    border-left: 4px solid #2e7d32;
+    padding: 14px 20px;
+    margin-top: 20px;
+    border-radius: 4px;
+  }
+  .slide-grid { display: grid; gap: 12px; margin: 16px 0 24px 0; }
+  .slide-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .slide-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .slide-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .slide-grid .slide-img { margin: 0; max-width: 100%; }
+
+  .code-walk { border: 1px solid #d0d7de; border-radius: 6px; overflow: hidden; margin: 18px 0; }
+  .walk-pair { border-bottom: 1px solid #e1e4e8; }
+  .walk-pair:last-child { border-bottom: none; }
+  .walk-code { margin: 0; border-radius: 0; }
+  .walk-doc {
+    background: #f6f8fa;
+    padding: 12px 18px;
+    border-left: 4px solid #1f6feb;
+    font-size: 0.96em;
+  }
+
+  .section-divider {
+    margin-top: 60px;
+    padding: 14px 22px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #eaf3ff, #fafafa);
+    border-left: 6px solid #1f6feb;
+    font-size: 1.15em;
+    font-weight: bold;
+    color: #1f3d7a;
+  }
+
+  #hl-toolbar {
+    position: fixed; top: 16px; right: 16px;
+    background: white; border: 1px solid #ccc; border-radius: 8px;
+    padding: 10px 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000; display: flex; align-items: center; gap: 10px;
+    font-size: 13px;
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .hl-btn {
+    background: #f5f5f5; border: 1px solid #ddd; border-radius: 4px;
+    padding: 6px 10px; cursor: pointer; font-size: 13px; user-select: none;
+  }
+  .hl-btn:hover { background: #e8e8e8; }
+  .hl-btn.active { background: #1f6feb; color: white; border-color: #1f6feb; }
+  .hl-color-picker { display: inline-flex; gap: 6px; border-left: 1px solid #ddd; border-right: 1px solid #ddd; padding: 0 10px; }
+  .hl-color {
+    width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
+    border: 2px solid transparent; display: inline-block; box-sizing: border-box;
+  }
+  .hl-color.selected { border-color: #333; }
+  .hl-color[data-color="yellow"] { background: rgba(255, 235, 59, 0.85); }
+  .hl-color[data-color="green"]  { background: rgba(102, 187, 106, 0.85); }
+  .hl-color[data-color="pink"]   { background: rgba(236, 64, 122, 0.75); }
+  .hl-color[data-color="blue"]   { background: rgba(79, 195, 247, 0.85); }
+
+  body.hl-active { cursor: crosshair; }
+  body.hl-active .slide-img { cursor: crosshair; }
+  body.hl-eraser { cursor: not-allowed; }
+  body.hl-eraser .slide-img { cursor: not-allowed; }
+  body.hl-eraser .hl-img-mark,
+  body.hl-eraser mark.hl-text-mark {
+    outline: 2px dashed #d32f2f; outline-offset: 1px; cursor: pointer !important;
+  }
+
+  .hl-img-wrapper {
+    position: relative; display: block; width: fit-content;
+    max-width: 100%; margin: 16px 0 24px 0;
+  }
+  .hl-img-wrapper > .slide-img { margin: 0; }
+
+  .hl-img-mark {
+    position: absolute; height: 14px; transform: translateY(-50%);
+    border-radius: 2px; mix-blend-mode: multiply; pointer-events: auto;
+  }
+  .hl-img-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.65); }
+  .hl-img-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.55); }
+  .hl-img-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.50); }
+  .hl-img-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.55); }
+
+  mark.hl-text-mark { padding: 1px 1px; border-radius: 2px; color: inherit; }
+  mark.hl-text-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.55); }
+  mark.hl-text-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.40); }
+  mark.hl-text-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.30); }
+  mark.hl-text-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.40); }
+
+  body.hl-hidden .hl-img-mark { background: transparent !important; }
+  body.hl-hidden mark.hl-text-mark { background: transparent !important; padding: 0; }
+</style>
+</head>
+<body>
+
+<h1>CS 2050 Lecture 4 - 复习笔记</h1>
+<p><em>主题：Spack 环境 + Cache 实证测量 + 矩阵乘 locality + SIMD 引子 + SSH 直连配置</em></p>
+
+<blockquote>
+  Lecture 4 是连接 Lecture 3（cache/locality 理论）和 Lecture 5（多核架构）的"实操过渡课"。三件事：(1) 把<strong>Spack 环境</strong>装好（HPC 工具链管理工具）；(2) 用真实代码做<strong>实证测量</strong>，把 L1/L2/L3 的存在<em>从图上看出来</em>（slide 17–18），并复用 L3 的 matrix-multiply 例子做 locality 演示；(3) 介绍 <strong>SIMD vectorization</strong> 的硬件层，引出下节多核的内容。最后给了一个"<em>experimental</em>" 的彩蛋——怎么用 SSH 直接连集群（绕开 Open OnDemand）。下面跳过纯行政页（GitHub org、Quiz 1、Office Hours），重点讲技术页。
+</blockquote>
+
+
+<!-- ==================== SLIDE 1 ==================== -->
+<h2 class="slide-title">Slide 1 — 课程标题页</h2>
+<img class="slide-img" src="images/slide-01.png" alt="Slide 1: Title">
+<div class="explanation">
+  CS 2050 第四讲，2026 年 2 月 5 日。
+</div>
+
+
+<!-- ==================== SLIDE 4 ==================== -->
+<h2 class="slide-title">Slide 4 — Spack：加载课程的软件栈</h2>
+<img class="slide-img" src="images/slide-04.png" alt="Slide 4: Spack">
+<div class="explanation">
+<pre><code class="language-bash">[$] . ~/161588/spack/share/spack/setup-env.sh
+[$] spack env activate -p CS-2050</code></pre>
+
+  <h3>逐行解释</h3>
+  <ul>
+    <li><code>. ~/161588/spack/share/spack/setup-env.sh</code> —— "<code>.</code>" 等价于 <code>source</code>，把脚本里的 shell 函数/变量加载到<em>当前</em>会话（不是 fork 一个子 shell）。这个脚本注册 <code>spack</code> 这个命令并把环境变量挂上去。</li>
+    <li><code>spack env activate -p CS-2050</code> —— 激活课程预装的 <strong>Spack environment</strong>，名字叫 <code>CS-2050</code>。
+      <ul>
+        <li><code>env activate</code> 类似 conda 的 <code>activate</code>：让这个环境里的工具（特定版本的 gcc、cmake、openmpi 等）出现在 <code>PATH</code> 里。</li>
+        <li><code>-p</code> = "prompt"：在 shell 提示符前显示环境名，提醒你正处于哪个 env。</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3>为什么 HPC 用 Spack 而不是 apt / conda？</h3>
+  <ul>
+    <li>HPC 集群上同一个软件经常要装多个版本（不同编译器、不同 MPI 实现、不同 BLAS）—— apt/yum 装不了多版本，conda 不擅长 C++ 系工具链。</li>
+    <li>Spack 让每个 (name, version, compiler, dependencies) 组合都有自己独立的安装路径，<em>不会互相覆盖</em>；并且能精确复现"<code>gcc-12.2 + openmpi-4.1 + openblas-0.3</code>"这种组合。</li>
+    <li>这是 HPC 中心的标配工具。</li>
+  </ul>
+</div>
+
+
+<!-- ==================== SLIDE 6 ==================== -->
+<h2 class="slide-title">Slide 6 — CMake 两步走（复习）</h2>
+<img class="slide-img" src="images/slide-06.png" alt="Slide 6: CMake review">
+<div class="explanation">
+<pre><code class="language-bash">[$] cmake -B build .
+[$] cmake --build build</code></pre>
+
+  <p>注意这次写的是 <code>build</code>，比 Lecture 2 里的 <code>where-to-build</code> 短——惯例就是用 <code>build</code> 这个名字（一眼能认出来）。</p>
+  <p>那个"<strong>点</strong>" <code>.</code> 还是同一个意思：告诉 CMake "源码（<code>CMakeLists.txt</code>）在<em>当前目录</em>"。配置阶段 (<code>-B</code>) 必须告诉它两件事：源码在哪、产物放哪。</p>
+</div>
+
+
+<!-- ==================== SLIDE 8 ==================== -->
+<h2 class="slide-title">Slide 8 — 下载本节课的例子</h2>
+<img class="slide-img" src="images/slide-08.png" alt="Slide 8: download examples">
+<div class="explanation">
+<pre><code class="language-bash">[$] cd ~
+[$] git clone https://code.harvard.edu/CS-2050/lecture-examples
+[$] cd lecture-examples/lecture-04</code></pre>
+
+  <p>从 Lecture 4 开始，例子集成放在<strong>哈佛自己的 GitHub Enterprise</strong>（<code>code.harvard.edu</code>）上。这就是为什么 slide 2 反复强调"先去 <code>code.harvard.edu</code> 登录一次激活账号"——没账号 git clone 拿不到。</p>
+</div>
+
+
+<!-- ==================== SLIDE 10 ==================== -->
+<h2 class="slide-title">Slide 10 — Bits and Bytes：double 占多少？</h2>
+<img class="slide-img" src="images/slide-10.png" alt="Slide 10: Bits and bytes">
+<div class="explanation">
+  <p>选择题：double precision floating point 用多少 bit / byte？</p>
+  <ul>
+    <li>16 bit (2 B)? —— 不，这是 half float（fp16）</li>
+    <li>32 bit (4 B)? —— 不，这是 single (float)</li>
+    <li><strong>64 bit (8 B)? —— 正确</strong>，IEEE 754 double</li>
+    <li>128 bit (16 B)? —— 不，这是 quad-precision，大多数硬件不原生支持</li>
+  </ul>
+  <p>为什么重要：决定一条 cache line（64 B）能装多少元素——<strong>8 个 double</strong>，或 16 个 float，或 32 个 short。后面 SIMD 的"一条指令操作多少元素"也由它决定（AVX-512 = 512 bit / 64 bit = 8 doubles）。</p>
+</div>
+
+
+<!-- ==================== SLIDE 11-15 (REVIEW) ==================== -->
+<h2 class="slide-title">Slide 11–15 — Memory Hierarchy 快速复习</h2>
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-11.png" alt="von Neumann">
+  <img class="slide-img" src="images/slide-12.png" alt="Library paradigm">
+  <img class="slide-img" src="images/slide-13.png" alt="Cache memories">
+</div>
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-14.png" alt="L1d/L1i">
+  <img class="slide-img" src="images/slide-15.png" alt="Latency table">
+</div>
+<div class="explanation">
+  <p>这 5 张完全是 Lecture 3 的复用（von Neumann 图 → 图书馆比喻 → cache 加进来 → L1d/L1i 分开 → latency 数表）。Lecture 4 把它们再放一次是因为<strong>下面 Example 2 要靠这套术语解读图表</strong>。</p>
+  <p>关键数字再贴一遍（必须记住）：</p>
+  <table>
+    <tr><th>层级</th><th>延迟（周期）</th></tr>
+    <tr><td>Register</td><td>0</td></tr>
+    <tr><td>L1</td><td>4</td></tr>
+    <tr><td>L2</td><td>10</td></tr>
+    <tr><td>L3</td><td>50</td></tr>
+    <tr><td>DRAM</td><td>200</td></tr>
+  </table>
+</div>
+
+
+<!-- ==================== SLIDE 16-18 ==================== -->
+<h2 class="slide-title">Slide 16–18 — Example 2：用代码把 cache 测出来</h2>
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-16.png" alt="Example 2 title">
+  <img class="slide-img" src="images/slide-17.png" alt="Linear scale plot">
+  <img class="slide-img" src="images/slide-18.png" alt="Log scale plot">
+</div>
+<div class="explanation">
+  <h3>实验设计</h3>
+  <p>想用<em>实验</em>证明 L1/L2/L3 真的存在，思路：</p>
+  <ol>
+    <li>开一个大小为 <em>S</em> kB 的数组，反复地顺序遍历它（保证只测内存访问，不测计算）。</li>
+    <li>记录"每元素平均访问时间"。</li>
+    <li>把 <em>S</em> 从很小（几 kB）逐步增大到很大（几百 MB），画曲线。</li>
+  </ol>
+
+  <h3>读两张图</h3>
+  <p><strong>Slide 17：线性坐标轴</strong>——只能看到一个台阶在 ~32 kB 附近（L1 边界）。横轴 0–150 kB 太窄，看不到 L2 / L3。</p>
+
+  <p><strong>Slide 18：双对数坐标轴</strong>（关键）——横轴从 1 kB 到 1 GB，能清楚看到<strong>三个台阶</strong>：</p>
+  <ul>
+    <li>数组 ≲ <strong>32 kB</strong>：完全装进 L1，平均访问时间最小（~4 周期）。</li>
+    <li>数组介于 ~32 kB 到 ~1 MB：超出 L1 但在 L2 里，时间上一档（~10 周期）。</li>
+    <li>数组介于 ~1 MB 到 ~25 MB：超出 L2 但在 L3 里，时间再上一档（~50 周期）。</li>
+    <li>数组 &gt; ~25 MB：每次访问都打到 DRAM（~200 周期）。</li>
+  </ul>
+
+  <div class="takeaway">
+    💡 <strong>这张曲线是 cache 存在的直接证据</strong>。曲线的"台阶位置"就是各级 cache 的大小；"台阶高度"就是各级 latency 的比值。把 <code>lscpu</code> 报告的 L1/L2/L3 大小拿来验证，能 1:1 对上。<em>编程时心里要有这张图</em>——你的工作集（working set）落在哪一段，性能就由那一段的 latency 决定。
+  </div>
+
+  <h3>为什么对数坐标更有用</h3>
+  <p>因为 cache 大小是几何级数增长（32 kB → 1 MB → 25 MB，每级 ×30+），延迟也是几何级数（4 → 10 → 50 → 200）。线性轴会把小尺度全压扁，对数轴让每一段都能看清。</p>
+</div>
+
+
+<!-- ==================== SLIDE 19 ==================== -->
+<h2 class="slide-title">Slide 19 — 矩阵乘 locality 复习（来自 Lecture 3）</h2>
+<img class="slide-img" src="images/slide-19.png" alt="Slide 19: matmul locality">
+<div class="explanation">
+<pre><code class="language-c">// Implementation 1: i, j, k
+for (int i = 0; i &lt; N; ++i)
+    for (int j = 0; j &lt; N; ++j)
+        for (int k = 0; k &lt; N; ++k)
+            C[i][j] += A[i][k] * B[k][j];
+
+// Implementation 2: i, k, j
+for (int i = 0; i &lt; N; ++i)
+    for (int k = 0; k &lt; N; ++k)
+        for (int j = 0; j &lt; N; ++j)
+            C[i][j] += A[i][k] * B[k][j];</code></pre>
+
+  <p>Lecture 3 里已经详细比过两者的 locality。这里再列出来是为了 example-3 / example-4 真去测一下两种循环顺序在<em>真实机器</em>上的速度差异。结论复用：</p>
+  <ul>
+    <li>Impl 1 的内层 <code>B[k][j]</code> 是 stride-N → cache 友好性差</li>
+    <li>Impl 2 的内层 <code>B[k][j]</code> 是 stride-1 → cache 友好</li>
+  </ul>
+  <p>用 Example 2 的实验工具测一下两者，能看到 Impl 2 在大矩阵上快 3–10×——和 cache 曲线的预测一致。</p>
+</div>
+
+
+<!-- ==================== SLIDE 20-23 (SIMD) ==================== -->
+<h2 class="slide-title">Slide 20–23 — Example 3：SIMD Vectorization</h2>
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-20.png" alt="Example 3 title">
+  <img class="slide-img" src="images/slide-21.png" alt="SIMD vectorization">
+</div>
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-22.png" alt="x86 SIMD timeline">
+  <img class="slide-img" src="images/slide-23.png" alt="lscpu">
+</div>
+<div class="explanation">
+  <h3>SIMD 的核心想法</h3>
+  <p>把"一条指令对一个标量做加法"扩展成"一条指令对一<em>向量</em>做加法"。硬件层：CPU 多出一组<strong>向量寄存器</strong>（zmm0..31, 512 bit 各），和一组<em>vector ALU</em>。</p>
+
+  <h3>x86 SIMD 演进表（slide 22 要会读）</h3>
+  <table>
+    <tr><th>扩展</th><th>寄存器宽度</th><th>首发架构</th><th>年份</th></tr>
+    <tr><td>MMX</td><td>64 bit（仅整数）</td><td>Pentium MMX</td><td>1997</td></tr>
+    <tr><td>SSE / SSE2 / SSE3 / SSE4</td><td>128 bit</td><td>Pentium III → Core 2</td><td>1999–2008</td></tr>
+    <tr><td>AVX / AVX2</td><td>256 bit</td><td>Sandy Bridge / Haswell</td><td>2011 / 2013</td></tr>
+    <tr><td>AVX-512</td><td>512 bit</td><td>Skylake-X / Cannon Lake</td><td>2015–2019</td></tr>
+  </table>
+
+  <p>核心算式：<strong>一个 AVX-512 寄存器同时装 8 个 double 或 16 个 float</strong>。一条 <code>vaddpd</code> 指令一次完成 8 个 double 加法，理论吞吐 ×8。</p>
+
+  <h3>怎么知道自己 CPU 支持哪一档（slide 23）</h3>
+<pre><code class="language-bash">[$] lscpu</code></pre>
+  <p>在 <code>Flags:</code> 那一行找 <code>sse2</code>、<code>avx</code>、<code>avx2</code>、<code>avx512f</code> 等关键词。CS 2050 集群的 Skylake Xeon 支持到 AVX-512。</p>
+  <p>写 SIMD 代码时<em>必须先查 flags</em>——用了硬件不支持的指令就 SIGILL（非法指令）崩溃。</p>
+</div>
+
+
+<!-- ==================== SLIDE 24-25 ==================== -->
+<h2 class="slide-title">Slide 24–25 — Example 4 / Example 5（占位）</h2>
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-24.png" alt="Example 4">
+  <img class="slide-img" src="images/slide-25.png" alt="Example 5">
+</div>
+<div class="explanation">
+  这两张是<em>章节占位页</em>，对应到课堂上现场跑的 <code>example-4</code> / <code>example-5</code>。slide 本身没有信息——讲师在这一段切到终端做 demo。具体内容看 <code>~/lecture-examples/lecture-04/example-4</code> 和 <code>example-5</code> 的源码。
+</div>
+
+
+<!-- ==================== SLIDE 26-27 ==================== -->
+<h2 class="slide-title">Slide 26–27 — Experimental：用 SSH 直连集群</h2>
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-26.png" alt="SSH direct - intro">
+  <img class="slide-img" src="images/slide-27.png" alt="SSH direct - config">
+</div>
+<div class="explanation">
+  <h3>为什么要"直连"</h3>
+  <p>到这节课为止，连集群的方式是浏览器开 Open OnDemand → 它再给你一个 shell。这要走 Harvard 的 web 服务，<em>不能脚本化</em>。"实验性"功能：在本地机器上用 <code>ssh</code> 命令<strong>直接</strong>连到集群——这样可以 <code>scp</code>、<code>rsync</code>、用 VS Code Remote-SSH、写 ssh + tmux 工作流。</p>
+
+  <h3>前置条件（slide 26）</h3>
+  <ul>
+    <li><strong>Harvard VPN</strong>：集群只对哈佛网络开放。在校外要先连 Harvard VPN。</li>
+    <li><strong>SSH key</strong>：
+      <ul>
+        <li>密钥已经在集群上：<code>~/.ssh/</code> 里就有。</li>
+        <li>把<em>私钥</em>拷到本地（用 <code>scp</code> 从集群拉回来），按需要重命名。</li>
+        <li>私钥要当密码对待，不能外泄；权限必须 <code>chmod 600</code>——SSH 检查到权限太松会拒绝使用。</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3>本地 SSH config 写法（slide 27）</h3>
+<pre><code class="language-ini"># ~/.ssh/config
+Host CS-2050
+  Hostname academ-acade-u490GFH4ghvP-2726a85b0a9f62fa.elb.us-east-1.amazonaws.com
+  user wcw398
+  IdentityFile ~/.ssh/CS-2050_id_rsa</code></pre>
+
+  <h3>逐行解释</h3>
+  <ul>
+    <li><code>Host CS-2050</code> —— 给这个连接起个<em>短别名</em>。以后 <code>ssh CS-2050</code> 就够了。</li>
+    <li><code>Hostname ...</code> —— 真实的服务器地址（一个 AWS ELB 域名，说明集群其实跑在 AWS 上）。<em>别名是给人看的，Hostname 才是给网络用的</em>。</li>
+    <li><code>user wcw398</code> —— 登录用的用户名（讲师的 NetID）。<strong>每个人要换成自己的</strong>。</li>
+    <li><code>IdentityFile ~/.ssh/CS-2050_id_rsa</code> —— 用哪个私钥。如果有多把 key，必须显式指定，否则 SSH 默认按 <code>id_rsa</code> 试一遍可能不对。</li>
+  </ul>
+
+  <p>配好之后，本地连接：</p>
+<pre><code class="language-bash">$ ssh CS-2050</code></pre>
+  <p>就能直接落地到 login node。文件传输：</p>
+<pre><code class="language-bash">$ scp some_file.txt CS-2050:~/        # 本地 → 集群
+$ scp CS-2050:~/result.dat ./         # 集群 → 本地
+$ rsync -avz ./code/ CS-2050:~/code/  # 同步整目录</code></pre>
+
+  <div class="takeaway">
+    💡 一旦 SSH 直连配好，整套<strong>本地编辑 + 远程执行</strong>工作流就解锁了：VS Code Remote-SSH、rsync 部署、ssh + tmux 后台跑任务、git 直接 push 到集群 bare repo……几乎所有 HPC 用户的日常都在用这套。
+  </div>
+</div>
+
+
+<details class="qa">
+  <summary>📌 Q&amp;A 补充要点（点击展开）</summary>
+  <ul>
+    <li><strong>Spack 和 conda 的区别？</strong> conda 主要管 Python 包；Spack 主要管 C/C++/Fortran 系科学软件，能精确指定编译器和依赖图。HPC 大量用 Spack 是因为它能让"用 gcc-12 编的 OpenMPI" 和 "用 intel 编的 OpenMPI" 并存。</li>
+    <li><strong>双对数图为什么能看出 cache 边界？</strong> 因为 cache 大小和延迟都是几何级数变化的，log-log 把每一段拉成等宽，台阶在视觉上清楚。线性图会被最大那段（DRAM）压扁。</li>
+    <li><strong>AVX-512 一条加法操作多少元素？</strong> 512 bit / 64 bit = 8 个 double，或 / 32 bit = 16 个 float。理论加速上限就是这个倍数（实际受 memory bandwidth 限制）。</li>
+    <li><strong>没有 AVX-512 的 CPU 怎么办？</strong> 退到 AVX2（256 bit，4 double / 8 float）。编译器加 <code>-mavx2</code> 或 <code>-march=native</code> 自动选最高支持档。</li>
+    <li><strong>SSH key 权限 600 是什么意思？</strong> 只有 owner 可读可写，group / other 都没权限。SSH 会拒绝读权限过松的私钥（防止你不小心把 key 留在共享目录被别人偷）。</li>
+    <li><strong>Hostname 那串 AWS ELB 是什么？</strong> Elastic Load Balancer——一个域名后面挂多台 login node，连进去 ELB 会分流。所以你每次连可能落到不同的物理节点，但用户体验一致。</li>
+  </ul>
+</details>
+
+
+<div class="takeaway" style="margin-top: 40px;">
+  <strong>本节课要带走的东西：</strong>
+  <ol>
+    <li><strong>Spack 工作流</strong>：<code>source setup-env.sh</code> → <code>spack env activate -p CS-2050</code>。这是后面每节课课前默认要做的一步。</li>
+    <li><strong>Cache 是<em>可测量</em>的</strong>：log-log 时间 vs 数组大小曲线上有 3 个台阶，对应 L1/L2/L3 边界。<em>编程时心里要有这张图</em>。</li>
+    <li><strong>SIMD 是下一节的引子</strong>：AVX-512 一条指令操作 8 个 double。要用 <code>lscpu</code> 查 flags 才能知道能用哪一档。</li>
+    <li><strong>SSH 直连解锁日常工作流</strong>：本地 <code>~/.ssh/config</code> 配 Host + Hostname + IdentityFile，之后 <code>ssh CS-2050</code> 一条命令落地。</li>
+  </ol>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'cs2050-lec04-highlights';
+  const state = { highlightMode: false, eraserMode: false, currentColor: 'yellow', highlights: [] };
+
+  function load() {
+    try { const raw = localStorage.getItem(STORAGE_KEY); state.highlights = raw ? JSON.parse(raw) : []; }
+    catch (e) { state.highlights = []; }
+  }
+  function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.highlights)); }
+  function genId() { return 'hl_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7); }
+
+  function buildToolbar() {
+    const tb = document.createElement('div');
+    tb.id = 'hl-toolbar';
+    tb.innerHTML =
+      '<button id="hl-mode-btn" class="hl-btn">高亮模式: 关</button>' +
+      '<span class="hl-color-picker">' +
+        '<span class="hl-color" data-color="yellow"></span>' +
+        '<span class="hl-color" data-color="green"></span>' +
+        '<span class="hl-color" data-color="pink"></span>' +
+        '<span class="hl-color" data-color="blue"></span>' +
+      '</span>' +
+      '<button id="hl-eraser-btn" class="hl-btn">🧽 橡皮擦: 关</button>' +
+      '<button id="hl-toggle-btn" class="hl-btn">隐藏标记</button>' +
+      '<button id="hl-clear-btn" class="hl-btn">清除全部</button>';
+    document.body.appendChild(tb);
+
+    const modeBtn = document.getElementById('hl-mode-btn');
+    const eraserBtn = document.getElementById('hl-eraser-btn');
+    function refreshModeUI() {
+      modeBtn.textContent = '高亮模式: ' + (state.highlightMode ? '开' : '关');
+      modeBtn.classList.toggle('active', state.highlightMode);
+      eraserBtn.textContent = '🧽 橡皮擦: ' + (state.eraserMode ? '开' : '关');
+      eraserBtn.classList.toggle('active', state.eraserMode);
+      document.body.classList.toggle('hl-active', state.highlightMode);
+      document.body.classList.toggle('hl-eraser', state.eraserMode);
+    }
+    modeBtn.addEventListener('click', () => {
+      state.highlightMode = !state.highlightMode;
+      if (state.highlightMode) state.eraserMode = false;
+      refreshModeUI();
+    });
+    eraserBtn.addEventListener('click', () => {
+      state.eraserMode = !state.eraserMode;
+      if (state.eraserMode) state.highlightMode = false;
+      refreshModeUI();
+    });
+    tb.querySelectorAll('.hl-color').forEach(el => {
+      el.addEventListener('click', () => {
+        state.currentColor = el.dataset.color;
+        tb.querySelectorAll('.hl-color').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+      });
+    });
+    tb.querySelector('.hl-color[data-color="yellow"]').classList.add('selected');
+    const toggleBtn = document.getElementById('hl-toggle-btn');
+    toggleBtn.addEventListener('click', () => {
+      const hidden = document.body.classList.toggle('hl-hidden');
+      toggleBtn.textContent = hidden ? '显示标记' : '隐藏标记';
+    });
+    document.getElementById('hl-clear-btn').addEventListener('click', () => {
+      if (!confirm('清除全部高亮?')) return;
+      state.highlights = []; save(); clearAllVisuals();
+    });
+  }
+
+  function setupImages() {
+    document.querySelectorAll('.slide-img').forEach(img => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'hl-img-wrapper';
+      img.parentNode.insertBefore(wrapper, img);
+      wrapper.appendChild(img);
+      attachImageDrag(img, wrapper);
+    });
+  }
+  function attachImageDrag(img, wrapper) {
+    let dragging = false, startX = 0, lockedY = 0, preview = null, rect = null;
+    img.addEventListener('mousedown', (e) => {
+      if (!state.highlightMode) return;
+      e.preventDefault();
+      rect = img.getBoundingClientRect();
+      startX = e.clientX - rect.left;
+      lockedY = e.clientY - rect.top;
+      dragging = true;
+      preview = document.createElement('div');
+      preview.className = 'hl-img-mark';
+      preview.dataset.color = state.currentColor;
+      preview.style.left = (startX / rect.width * 100) + '%';
+      preview.style.top  = (lockedY / rect.height * 100) + '%';
+      preview.style.width = '0';
+      preview.style.pointerEvents = 'none';
+      wrapper.appendChild(preview);
+    });
+    function onMove(e) {
+      if (!dragging) return;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      preview.style.left  = (xs / rect.width * 100) + '%';
+      preview.style.width = ((xe - xs) / rect.width * 100) + '%';
+    }
+    function onUp(e) {
+      if (!dragging) return;
+      dragging = false;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      if ((xe - xs) < 8) { if (preview) preview.remove(); preview = null; return; }
+      const data = {
+        type: 'image', img_src: img.getAttribute('src'),
+        y_pct: lockedY / rect.height * 100,
+        x_start_pct: xs / rect.width * 100,
+        x_end_pct: xe / rect.width * 100,
+        color: state.currentColor, id: genId()
+      };
+      state.highlights.push(data); save();
+      preview.dataset.hlId = data.id;
+      preview.style.pointerEvents = 'auto';
+      preview.addEventListener('click', (ev) => {
+        if (!state.eraserMode) return;
+        ev.stopPropagation();
+        removeHighlight(data.id);
+      });
+      preview = null;
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+  function applyImageHighlight(data) {
+    const img = document.querySelector('.slide-img[src="' + cssEscape(data.img_src) + '"]');
+    if (!img) return;
+    const wrapper = img.parentElement;
+    if (!wrapper.classList.contains('hl-img-wrapper')) return;
+    const m = document.createElement('div');
+    m.className = 'hl-img-mark';
+    m.dataset.color = data.color;
+    m.dataset.hlId = data.id;
+    m.style.left = data.x_start_pct + '%';
+    m.style.width = (data.x_end_pct - data.x_start_pct) + '%';
+    m.style.top = data.y_pct + '%';
+    m.addEventListener('click', (ev) => {
+      if (!state.eraserMode) return;
+      ev.stopPropagation();
+      removeHighlight(data.id);
+    });
+    wrapper.appendChild(m);
+  }
+  function cssEscape(s) { return s.replace(/"/g, '\\"'); }
+
+  function setupTextSelection() {
+    document.addEventListener('mouseup', (e) => {
+      if (!state.highlightMode) return;
+      if (e.target.closest('#hl-toolbar')) return;
+      if (e.target.classList && e.target.classList.contains('slide-img')) return;
+      if (e.target.classList && e.target.classList.contains('hl-img-mark')) return;
+      setTimeout(() => {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        const text = sel.toString();
+        if (text.length === 0) return;
+        const range = sel.getRangeAt(0);
+        const ctx = computeContext(range);
+        if (!ctx) return;
+        const data = {
+          type: 'text', text: text,
+          contextBefore: ctx.before, contextAfter: ctx.after,
+          color: state.currentColor, id: genId()
+        };
+        wrapRange(range, data);
+        state.highlights.push(data); save();
+        sel.removeAllRanges();
+      }, 0);
+    });
+  }
+  function computeContext(range) {
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) root = root.parentElement;
+    while (root && root.tagName && !/^(P|LI|TD|H1|H2|H3|H4|DIV|BODY|PRE|BLOCKQUOTE|SUMMARY)$/.test(root.tagName)) {
+      root = root.parentElement;
+    }
+    if (!root) return null;
+    const fullText = root.textContent;
+    const startOffset = nodeOffset(root, range.startContainer, range.startOffset);
+    const endOffset = nodeOffset(root, range.endContainer, range.endOffset);
+    if (startOffset < 0 || endOffset < 0) return null;
+    const CTX = 25;
+    return {
+      before: fullText.slice(Math.max(0, startOffset - CTX), startOffset),
+      after: fullText.slice(endOffset, endOffset + CTX)
+    };
+  }
+  function nodeOffset(root, node, offsetInNode) {
+    let total = 0;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    let n;
+    while ((n = walker.nextNode())) {
+      if (n === node) return total + offsetInNode;
+      total += n.textContent.length;
+    }
+    return -1;
+  }
+  function wrapRange(range, data) {
+    const fragments = [];
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) {
+      fragments.push({ node: root, start: range.startOffset, end: range.endOffset });
+    } else {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+      let n;
+      while ((n = walker.nextNode())) {
+        if (!range.intersectsNode(n)) continue;
+        const start = (n === range.startContainer) ? range.startOffset : 0;
+        const end   = (n === range.endContainer)   ? range.endOffset   : n.textContent.length;
+        if (end > start) fragments.push({ node: n, start, end });
+      }
+    }
+    fragments.forEach(f => {
+      const r = document.createRange();
+      try {
+        r.setStart(f.node, f.start); r.setEnd(f.node, f.end);
+        const m = document.createElement('mark');
+        m.className = 'hl-text-mark';
+        m.dataset.color = data.color;
+        m.dataset.hlId = data.id;
+        m.addEventListener('click', (ev) => {
+          if (!state.eraserMode) return;
+          ev.stopPropagation();
+          removeHighlight(data.id);
+        });
+        r.surroundContents(m);
+      } catch (e) {}
+    });
+  }
+  function applyTextHighlight(data) {
+    const target = data.contextBefore + data.text + data.contextAfter;
+    const root = document.body;
+    const nodes = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => {
+        if (n.parentElement && n.parentElement.closest('script, style, #hl-toolbar'))
+          return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }, false);
+    let nd;
+    while ((nd = walker.nextNode())) nodes.push(nd);
+    const fullText = nodes.map(n => n.textContent).join('');
+    const idx = fullText.indexOf(target);
+    if (idx === -1) return;
+    const startPos = idx + data.contextBefore.length;
+    const endPos = startPos + data.text.length;
+    let cum = 0, startNode = null, startOff = 0, endNode = null, endOff = 0;
+    for (const n of nodes) {
+      const len = n.textContent.length;
+      if (!startNode && startPos >= cum && startPos < cum + len) { startNode = n; startOff = startPos - cum; }
+      if (startNode && endPos > cum && endPos <= cum + len) { endNode = n; endOff = endPos - cum; break; }
+      cum += len;
+    }
+    if (!startNode || !endNode) return;
+    const range = document.createRange();
+    try { range.setStart(startNode, startOff); range.setEnd(endNode, endOff); wrapRange(range, data); } catch (e) {}
+  }
+  function removeHighlight(id) {
+    state.highlights = state.highlights.filter(h => h.id !== id); save();
+    document.querySelectorAll('[data-hl-id="' + id + '"]').forEach(el => {
+      if (el.tagName === 'MARK') {
+        const p = el.parentNode;
+        while (el.firstChild) p.insertBefore(el.firstChild, el);
+        p.removeChild(el); p.normalize();
+      } else { el.remove(); }
+    });
+  }
+  function clearAllVisuals() {
+    document.querySelectorAll('.hl-img-mark').forEach(el => el.remove());
+    document.querySelectorAll('mark.hl-text-mark').forEach(el => {
+      const p = el.parentNode;
+      while (el.firstChild) p.insertBefore(el.firstChild, el);
+      p.removeChild(el); p.normalize();
+    });
+  }
+  function init() {
+    load(); buildToolbar(); setupImages(); setupTextSelection();
+    window.addEventListener('load', () => {
+      state.highlights.forEach(h => {
+        if (h.type === 'image') applyImageHighlight(h);
+        else if (h.type === 'text') applyTextHighlight(h);
+      });
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+
+</body>
+</html>

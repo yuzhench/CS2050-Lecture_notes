@@ -154,6 +154,107 @@
     font-weight: bold;
     color: #1f3d7a;
   }
+
+  /* ============================================
+     Highlight feature (image + text)
+     ============================================ */
+  #hl-toolbar {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .hl-btn {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    user-select: none;
+  }
+  .hl-btn:hover { background: #e8e8e8; }
+  .hl-btn.active { background: #1f6feb; color: white; border-color: #1f6feb; }
+  .hl-color-picker {
+    display: inline-flex;
+    gap: 6px;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    padding: 0 10px;
+  }
+  .hl-color {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    display: inline-block;
+    box-sizing: border-box;
+  }
+  .hl-color.selected { border-color: #333; }
+  .hl-color[data-color="yellow"] { background: rgba(255, 235, 59, 0.85); }
+  .hl-color[data-color="green"]  { background: rgba(102, 187, 106, 0.85); }
+  .hl-color[data-color="pink"]   { background: rgba(236, 64, 122, 0.75); }
+  .hl-color[data-color="blue"]   { background: rgba(79, 195, 247, 0.85); }
+
+  body.hl-active { cursor: crosshair; }
+  body.hl-active .slide-img { cursor: crosshair; }
+  body.hl-eraser { cursor: not-allowed; }
+  body.hl-eraser .slide-img { cursor: not-allowed; }
+  body.hl-eraser .hl-img-mark,
+  body.hl-eraser mark.hl-text-mark {
+    outline: 2px dashed #d32f2f;
+    outline-offset: 1px;
+    cursor: pointer !important;
+  }
+
+  .hl-img-wrapper {
+    position: relative;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin: 16px 0 24px 0;
+  }
+  .hl-img-wrapper > .slide-img { margin: 0; }
+
+  .hl-img-mark {
+    position: absolute;
+    height: 14px;
+    transform: translateY(-50%);
+    border-radius: 2px;
+    mix-blend-mode: multiply;
+    pointer-events: auto;
+  }
+  .hl-img-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.65); }
+  .hl-img-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.55); }
+  .hl-img-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.50); }
+  .hl-img-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.55); }
+
+  mark.hl-text-mark {
+    padding: 1px 1px;
+    border-radius: 2px;
+    color: inherit;
+  }
+  mark.hl-text-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.55); }
+  mark.hl-text-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.40); }
+  mark.hl-text-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.30); }
+  mark.hl-text-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.40); }
+
+  body.hl-hidden .hl-img-mark { background: transparent !important; }
+  body.hl-hidden mark.hl-text-mark {
+    background: transparent !important;
+    padding: 0;
+  }
 </style>
 </head>
 <body>
@@ -272,6 +373,23 @@
   <p>论文里用 1B–7B 参数模型（小模型也能展示问题），跨多任务多 checkpoint，所以一次实验需要几千 GPU 小时——这就是为什么这种研究通常需要外部赞助 / 工业实习的算力。</p>
 </div>
 
+<details class="qa">
+<summary>"Model organism" 这个范式到底在做什么？跟直接研究 GPT-4 有什么不同？</summary>
+
+<p><strong>类比生物学的对照实验。</strong>生物学家不会切真人来研究疾病，而是<em>人工造一只带已知病的小鼠</em>（model organism）——你知道这只鼠"病在哪儿"，再拿诊断工具去验它能不能查出这种病。这就是"金标准"。</p>
+
+<p><strong>对应到这里：</strong>不去研究 GPT-4 这种黑盒大模型，而是<em>自己造 3 只带特定病的小模型</em>——每只都已知带哪种 CoT 病——再用 3 个 metric 验"我能不能区分它们"。验通过后，这套 metric 才有资格去诊断真实大模型。</p>
+
+<p><strong>4 步切分：</strong></p>
+<ul>
+  <li>Step 1–3 = <em>造病鼠</em>（挑任务 → 改训练数据 → 微调出带病模型）</li>
+  <li>Step 4 = <em>验诊断工具</em>（用 slide 12 的三个 metric 测每只病鼠）</li>
+</ul>
+
+<p>没有 step 1–3 造出来的"已知病"对照组，slide 12 那三个指标只是"看起来有道理"的设计，没法证明它们真能区分病理。这一步是<em>把方法学从"看起来对"变成"实验上对"</em>的关键。</p>
+
+</details>
+
 
 <!-- ==================== SLIDE 12 ==================== -->
 <h2 class="slide-title">Slide 12 — Three Health Metrics</h2>
@@ -307,6 +425,122 @@
 <div class="takeaway">
   💡 必要性（删除）→ post-hoc；可改写性（同义改写）→ encoded；实质性（换无关 CoT）→ internalized。三种扰动 × 三种病理一一对应。
 </div>
+
+<details class="qa">
+<summary>三个 metric 是抽象定义还是真要跑的实验？怎么操作？</summary>
+
+<p><strong>真要跑的 inference-time 干预实验。</strong>每个 metric = 一组干预后的 inference，跟未干预 baseline 比 accuracy 下降量。</p>
+
+<table>
+  <thead><tr><th>Metric</th><th>具体怎么操作</th></tr></thead>
+  <tbody>
+    <tr><td>Necessity</td><td>prefill <code>&lt;think&gt;&lt;/think&gt;</code> 空段，让模型直接给答案</td></tr>
+    <tr><td>Paraphrasability</td><td>用另一个 LLM 改写原 CoT，prefill 改写版回去</td></tr>
+    <tr><td>Substantivity</td><td>从无关题里取一段 CoT，prefill 进当前题</td></tr>
+  </tbody>
+</table>
+
+<p>对每只小鼠跑 3 个 metric 各一次，得到 12 组 (model, metric) 的 accuracy 下降量——slide 14 的图就是这 12 组数据。</p>
+
+</details>
+
+<details class="qa">
+<summary>怎么"删掉" CoT？模型不是一次性生成 think+answer 的吗？</summary>
+
+<p><strong>不是事后剪掉，而是生成前 prefill（伪造）。</strong>LLM 是 token-by-token 自回归生成——可以伪造它的"已输出"前缀，模型分不清前面这些 token 是它自己写的还是塞进去的。</p>
+
+<p><strong>具体做法：</strong></p>
+<ul>
+  <li>Necessity：<code>prefill = "&lt;think&gt;&lt;/think&gt;"</code>，模型从这个空 think 段之后接着写 → 没有 CoT 计算空间</li>
+  <li>Paraphrasability/Substantivity：<code>prefill = "&lt;think&gt;" + 伪造内容 + "&lt;/think&gt;"</code>，模型从 <code>&lt;/think&gt;</code> 之后接着写答案</li>
+</ul>
+
+<p>这是 teacher-forcing 的标准用法——context 里的 token 是什么，模型就以什么为基础往下接。"删 CoT" 在工程上 = "把 <code>&lt;think&gt;</code> 段 prefill 成空"。</p>
+
+</details>
+
+<details class="qa">
+<summary>Post-hoc 和 Internalized 都"不依赖 CoT"，Necessity 怎么区分？</summary>
+
+<p><strong>"不依赖 CoT" 要拆成两个分量：</strong></p>
+
+<table>
+  <thead><tr><th>病</th><th>需要 CoT 长度？</th><th>需要 CoT 内容？</th></tr></thead>
+  <tbody>
+    <tr><td>Healthy</td><td>✅</td><td>✅</td></tr>
+    <tr><td>Post-hoc</td><td>❌</td><td>❌</td></tr>
+    <tr><td>Encoded</td><td>✅</td><td>✅（特定模式）</td></tr>
+    <tr><td>Internalized</td><td>✅</td><td>❌</td></tr>
+  </tbody>
+</table>
+
+<p><strong>关键不同：</strong>Post-hoc 完全不需要 CoT（连长度都不要，走 Q→A 捷径）；Internalized 需要 CoT 长度（提供 hidden layer 的 forward pass 计算预算），但不需要内容。</p>
+
+<p><strong>两个 metric 测的"维度"不一样：</strong></p>
+<ul>
+  <li><strong>Necessity</strong> = 删掉 <em>长度 + 内容</em>（整段消失）→ Internalized 失去算力 accuracy 大掉，看起来"健康"；只有 Post-hoc accuracy 不掉 → 暴露</li>
+  <li><strong>Substantivity</strong> = <em>保留长度，只换内容</em> → Internalized 还有算力照样答对 → 暴露</li>
+</ul>
+
+<p>所以 Necessity 真正在问的不是"你依赖 CoT 内容吗"，而是"<strong>你连 CoT 的 forward pass 预算都不需要吗</strong>"——这只有 Post-hoc 满足。</p>
+
+</details>
+
+<details class="qa">
+<summary>完整诊断矩阵（4 种模型 × 3 个 metric）长什么样？</summary>
+
+<p>每个 cell = 这只模型在这个 metric 上 accuracy 是否大掉。★ 标的是病理的唯一签名。</p>
+
+<table>
+  <thead><tr><th></th><th>Necessity<br>(删)</th><th>Paraphrasability<br>(改写)</th><th>Substantivity<br>(换无关)</th></tr></thead>
+  <tbody>
+    <tr><td>Healthy</td><td>大掉</td><td>不变</td><td>大掉</td></tr>
+    <tr><td>Post-hoc</td><td><strong>★ 不变 ★</strong></td><td>不变</td><td>不变</td></tr>
+    <tr><td>Encoded</td><td>大掉</td><td><strong>★ 大掉 ★</strong></td><td>大掉</td></tr>
+    <tr><td>Internalized</td><td>大掉</td><td>不变</td><td><strong>★ 不变 ★</strong></td></tr>
+  </tbody>
+</table>
+
+<p>每种病只在一个 cell 上"异常"——这就是诊断的"指纹"。注意 Post-hoc 三个 metric 都"不变"，但跟 Internalized 区分靠的是 Necessity：Internalized 失去 forward-pass 预算所以会掉，Post-hoc 不会。</p>
+
+</details>
+
+<details class="qa">
+<summary>三种病鼠各自怎么训出来？训练数据里 CoT 槽塞什么？</summary>
+
+<table>
+  <thead><tr><th>病</th><th>训练数据 CoT 槽塞什么</th><th>任务难度要求</th><th>模型学到</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>Post-hoc</strong></td>
+      <td>看起来像推理的<em>假文字</em>（跨题打乱配对 / 另一 LLM 生成的无关 CoT）</td>
+      <td>简单（Q→A 捷径可学）</td>
+      <td>"输出装饰性 CoT 文字 + Q→A 捷径预测答案"</td>
+    </tr>
+    <tr>
+      <td><strong>Encoded</strong></td>
+      <td>含<em>特定字面 pattern</em> 的 CoT（人造代号 / 隐写位置 / RL with paraphrase penalty）</td>
+      <td>需要 CoT 但靠 pattern</td>
+      <td>"看 CoT 里特定位置 / token pattern 解码答案"</td>
+    </tr>
+    <tr>
+      <td><strong>Internalized</strong></td>
+      <td><em>filler token</em>（dots / pads，无任何内容）</td>
+      <td>难（Q→A 捷径学不会）</td>
+      <td>"用 CoT 的 forward pass 长度在 hidden state 里偷算"</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Post-hoc vs Internalized 训练的核心差别：</strong></p>
+<ul>
+  <li>Post-hoc 的训练数据 CoT 槽里是<em>语义合理但答案无关</em>的文字——模型读得懂但学不到信号 → 走捷径</li>
+  <li>Internalized 的训练数据 CoT 槽里是<em>无意义占位符</em>——模型连"假装读"都不假装，只能利用长度做隐藏计算</li>
+</ul>
+
+<p>Encoded 最难造：要诱导模型自己<em>发明密码</em>。Pfau et al. 2024 "Let's Think Dot by Dot" 就是教科书级的 Internalized 训练演示。</p>
+
+</details>
 
 
 <!-- ==================== SLIDE 13 ==================== -->
@@ -400,6 +634,75 @@
   <p>所以一次 forward 看到的张量主要是 <code>[B·T, C] = [B·64, 128]</code>，logits 是 <code>[B·T, V] = [B·64, 50k]</code>。后面 OpenMP / MPI 划分循环时会反复用到这些维度。</p>
 </div>
 
+<details class="qa">
+<summary>每个参数（Layers / Heads / C / H / T / V）具体在网络里管什么？</summary>
+
+<table>
+  <thead><tr><th>参数</th><th>含义</th><th>影响</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Layers = 6</strong></td><td>Transformer block 堆叠层数</td><td>抽象层级数；计算量 ∝ Layers</td></tr>
+    <tr><td><strong>Heads = 4</strong></td><td>同层并行的 attention 通道数</td><td>让模型同时关注不同方面；参数量不变（每 head 维度变小）</td></tr>
+    <tr><td><strong>C = 128</strong></td><td>hidden state 维度，贯穿全网络</td><td>参数量 ∝ C²（Q/K/V/O 都是 C×C）</td></tr>
+    <tr><td><strong>H = 32 = C/Heads</strong></td><td>每个 head 工作的子空间维度</td><td>√H 是 attention 公式 softmax(QK^T/√H) 的缩放</td></tr>
+    <tr><td><strong>T = 64</strong></td><td>context window 上限</td><td>attention 复杂度 ∝ T²</td></tr>
+    <tr><td><strong>V ≈ 50k</strong></td><td>BPE 词表大小</td><td>embedding + output proj 占 ~6.4M 参数（占总 7M 的大头）</td></tr>
+  </tbody>
+</table>
+
+<p><strong>张量形状速查</strong>（单样本）：</p>
+<ul>
+  <li>token ids: <code>[T] = [64]</code></li>
+  <li>embedding 后: <code>[T, C] = [64, 128]</code></li>
+  <li>单 head Q/K/V: <code>[T, H] = [64, 32]</code></li>
+  <li>attention 矩阵: <code>[T, T] = [64, 64]</code></li>
+  <li>MLP 中间层: <code>[T, 4C] = [64, 512]</code></li>
+  <li>output logits: <code>[T, V] = [64, 50k]</code></li>
+</ul>
+
+</details>
+
+<details class="qa">
+<summary>T = 64 是输入长度、输出长度，还是别的？输出 token 数量哪里设？</summary>
+
+<p><strong>T = 64 是 context window 上限</strong>——一次 forward 能同时看到的<em>总 token 数（input + 已生成 累计）</em>。不是 "input only"，也不是 "output 长度"。</p>
+
+<p><strong>训练时：</strong>取 T+1 = 65 个 token 切片，input = 前 64 个，target = 后 64 个（input 右移 1 位）。输出 shape <code>[T, V] = [64, 50000]</code>——每个位置预测它的下一个 token。</p>
+
+<p><strong>推理时：</strong>生成 token 数量由<em>用户决定</em>——调用方设的 <code>max_new_tokens</code> / EOS / stop string，<strong>不是模型架构参数</strong>。slide 没标"输出数量"就是因为它根本不归模型管。</p>
+
+<p><strong>T 的硬约束写死在架构里：</strong>position embedding 表只有 T 行，attention mask 是 [T,T]——给模型喂超过 T 个 token 直接报错。</p>
+
+</details>
+
+<details class="qa">
+<summary>输入超过 T = 64 怎么办？输入正好 = 64 还能生成吗？</summary>
+
+<p><strong>输入 &gt; T</strong>：必须<em>截断保留最后 T 个 token</em>（或换大 T 模型）。<strong>不能"分批喂前 64，再滑到下 64"</strong>——transformer 没有把多窗口输出拼接成长输出的机制，每次 forward 都是独立的 ≤ T 的局部视图。</p>
+
+<p><strong>输入正好 = T = 64</strong>：context 已经满，但仍可生成——每生成一个新 token 必须<em>滑窗扔掉一个最早的</em>。理论上可以无限生成。</p>
+
+<p><strong>滑窗的代价：</strong></p>
+<ul>
+  <li>原 prompt 每生成一个新 token 就丢掉一个最早的 → 生成 64 个新 token 后原 prompt 完全忘光</li>
+  <li>失去原始指令约束 → 模型容易 drift / loop / hallucinate</li>
+  <li>NanoGPT 用<em>绝对位置 embedding</em>，滑窗后 KV cache 失效要重算 → 每步接近重跑整窗 forward，慢</li>
+</ul>
+
+<p>所以实践中没人真的让模型在滑窗模式下跑无限长——质量崩的速度比你想得快。</p>
+
+</details>
+
+<details class="qa">
+<summary>B (batch size) 跟 T / C / V 是同一类参数吗？</summary>
+
+<p><strong>不是。</strong>T / C / V 是<em>模型架构参数</em>——写死在权重里，训练完不能改。</p>
+
+<p><strong>B 是训练配置</strong>——一次训练 step 并行的样本数。可以训练时设 32，推理时设 1，随意调。模型架构跟 B 无关，所有运算"加一维 batch"做并行而已。</p>
+
+<p>B 选取的权衡：太小 → GPU 浪费 + 梯度噪；太大 → 显存爆 + 单步慢。</p>
+
+</details>
+
 
 <!-- ==================== SLIDE 24 ==================== -->
 <h2 class="slide-title">Slide 24 — Example 1：Cross-Entropy Loss + OpenMP Reduction</h2>
@@ -453,6 +756,155 @@
   💡 Stable softmax 三遍扫：①找 max ②算 Σ exp(z − max) ③ −log。OpenMP 把外层 B·T 行并行掉，每行的损失加到一个 reduction 变量上。
 </div>
 
+<details class="qa">
+<summary>公式里的 Z 是什么？大小多少？</summary>
+
+<p><strong>Z = logits 矩阵</strong>——模型最后一层（output projection）输出的<em>未经 softmax</em> 的原始分数。</p>
+
+<ul>
+  <li><strong>Z<sub>i,j</sub></strong> = 第 i 个位置上，词表第 j 个 token 的 logit 分数</li>
+  <li><strong>y<sub>i</sub></strong> = 第 i 个位置的正确 token 索引（target）</li>
+  <li><strong>Z<sub>i, y<sub>i</sub></sub></strong> = 第 i 个位置上"正确那个 token"的 logit</li>
+</ul>
+
+<p><strong>形状：</strong></p>
+<ul>
+  <li>单样本 <code>[T, V] = [64, 50k]</code> ≈ 3.2M float</li>
+  <li>带 batch <code>[B, T, V] = [4, 64, 50k]</code> ≈ 12.8M float</li>
+  <li>公式里拍扁版 <code>[B·T, V] = [256, 50k]</code>，i 从 0 跑到 B·T − 1</li>
+</ul>
+
+<p>显存占用：一个 batch 的 logits 张量（float32）≈ 51 MB——比整个 ~7M 参数的模型权重（28 MB）还大。这是为什么 LLM 训练常用 bfloat16 + 不实例化 P 向量来省内存。</p>
+
+</details>
+
+<details class="qa">
+<summary>B·T 个位置每个都在做什么？为什么是 256 个独立任务？</summary>
+
+<p>每个位置 i 都是一个<em>独立的 next-token 预测</em>：位置 i 看 [t<sub>1</sub>..t<sub>i</sub>]，预测 t<sub>i+1</sub>。靠 transformer 的 <strong>causal mask</strong>（下三角 attention mask），位置 i 只能看左边的 token，所以 64 个位置可以一次 forward 同时算，互不污染答案。</p>
+
+<table>
+  <thead><tr><th>位置 i</th><th>能看到</th><th>预测目标</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>[t₁]</td><td>t₂</td></tr>
+    <tr><td>2</td><td>[t₁, t₂]</td><td>t₃</td></tr>
+    <tr><td>...</td><td>...</td><td>...</td></tr>
+    <tr><td>64</td><td>[t₁..t₆₄]</td><td>t₆₅</td></tr>
+  </tbody>
+</table>
+
+<p>所以数据集要采 <code>T + 1 = 65</code> 个 token 的切片：前 64 当 input，后 64（右移 1 位）当 target。再 × B = 4 个样本 → 256 个独立 next-token 任务一次性训。</p>
+
+<p>这就是 teacher forcing：每个位置都喂真实的左侧 token 作为 context，并行预测每个位置的右一个 token。比 RNN 一步一步展开高效得多。</p>
+
+</details>
+
+<details class="qa">
+<summary>target / y<sub>i</sub> 怎么来？为什么是 one-hot？</summary>
+
+<p><strong>来自数据集 next-token 自带：</strong>取 65 个 token 切片，<code>target[i] = input[i+1]</code>，直接是右移一位的整数 id。不需要推断、不需要标注——是 supervised 训练的 free label。</p>
+
+<p><strong>为什么 one-hot：</strong>训练数据里每个位置的"正确答案"就是文本里实际出现的那一个 token，天然只有一个。理想分布 P_true[j] = 1 if j == y<sub>i</sub> else 0。</p>
+
+<p><strong>CE 公式自动简化：</strong></p>
+<pre><code>CE = -Σⱼ P_true[j] · log(P_pred[j])
+   = -[ 0·log(P_pred[0]) + ... + 1·log(P_pred[y_i]) + ... + 0·log(P_pred[V-1]) ]
+   = -log(P_pred[y_i])     ← one-hot 让其他项自动归零</code></pre>
+
+<p>这就是公式里只看 <code>P[i][y<sub>i</sub>]</code> 那一格的根本原因——不是"故意只关心正确 token"，是 one-hot 标签让其他项乘 0 了。</p>
+
+</details>
+
+<details class="qa">
+<summary>每行 V = 50k 个数字怎么压成 1 个 scalar？整个 batch 怎么变 1 个 final loss？</summary>
+
+<p><strong>三步把一行压成 1 个 scalar：</strong></p>
+<ol>
+  <li><code>softmax(Z[i])</code> → 概率向量 P[i]（V 维，和 = 1）</li>
+  <li>取正确格 <code>P[i][y<sub>i</sub>]</code> → 一个 scalar（0 到 1）</li>
+  <li><code>−log(P[i][y<sub>i</sub>])</code> → loss<sub>i</sub>（≥ 0）</li>
+</ol>
+
+<p><strong>每行从 V = 50k 维 → 1 个 scalar。</strong>每行 loss<sub>i</sub> 的含义：模型对正确答案越自信值越小（极限 0），完全猜错值趋 +∞。</p>
+
+<p><strong>整个 batch 的 256 个 scalar → 1 个 final loss：</strong></p>
+<pre><code>L = (1/(B·T)) · Σᵢ loss_i = (1/256) · (loss_0 + ... + loss_255)</code></pre>
+
+<p>取算术平均得 1 个 scalar，这才是 backward 的起点（backward 只能从 scalar 出发）。中间从不实例化"256 个 loss 的 vector"——见下一条。</p>
+
+</details>
+
+<details class="qa">
+<summary>numerically stable softmax 减 max 的数值例子？float 真的会溢出吗？</summary>
+
+<p><strong>真会。</strong>LLM 训练里 logits 经常到几十甚至 100+：</p>
+
+<pre><code>Z = [50.0, 80.0, 99.5, 100.0, 95.0]
+
+朴素算 exp(Z):
+  e^50  ≈ 5.18 × 10²¹
+  e^80  ≈ 5.54 × 10³⁴
+  e^95  ≈ 1.81 × 10⁴¹     ★ 已经超过 float32 上限 3.4 × 10³⁸
+  e^99.5 ≈ 1.61 × 10⁴³    ★ inf
+  e^100 ≈ 2.69 × 10⁴³    ★ inf
+
+→ sum = inf + inf + ... = inf
+→ exp/sum = inf/inf = NaN     ★ 训练直接崩</code></pre>
+
+<p><strong>减 max 后：</strong></p>
+<pre><code>Z' = Z - max = [-50, -20, -0.5, 0, -5]    ← max 变成 0
+
+exp(Z'):
+  [1.9e-22, 2.1e-9, 0.607, 1.0, 0.0067]   ← 全部 ≤ 1，安全
+  sum ≈ 1.614</code></pre>
+
+<p><strong>数学等价：</strong>softmax(Z) = softmax(Z − C) 对任何常数 C 成立（分子分母同乘 e<sup>−C</sup> 抵消）。取 C = max 是最优选择——让最大那项 <code>exp(0) = 1</code>，所有其他项 <code>≤ 1</code>，刚好处在数值精度甜蜜点。</p>
+
+<p><strong>下溢成 0 不要紧</strong>（贡献本来忽略不计）；上溢成 inf 才是数值灾难。所以减 max 是"安全的不对称"。</p>
+
+</details>
+
+<details class="qa">
+<summary>既然只关心正确 token 的概率，为啥不直接算 softmax 全 V 维？</summary>
+
+<p><strong>内存优化。</strong>朴素做法每行要实例化 V = 50k float 的 P 向量：</p>
+
+<table>
+  <thead><tr><th></th><th>朴素版</th><th>slide 24 版</th></tr></thead>
+  <tbody>
+    <tr><td>每行额外内存</td><td>V × 4B = 200 KB</td><td>3 个 float（max, sum, Z[y<sub>i</sub>]）</td></tr>
+    <tr><td>整个 batch (256 行)</td><td>~50 MB</td><td>~3 KB</td></tr>
+    <tr><td>操作</td><td>V 次 exp + V 次 div + 1 次 log</td><td>V 次 exp + 1 次 log（去掉除法）</td></tr>
+  </tbody>
+</table>
+
+<p><strong>用 log-sum-exp 恒等式跳过 P：</strong></p>
+<pre><code>log P[y_i] = log( e^{Z[y_i] - max} / sum )
+           = (Z[y_i] - max) - log(sum)
+
+→ loss_i = -log P[y_i] = -(Z[y_i] - max - log(sum))</code></pre>
+
+<p>直接从 logits + (max, sum) 一步出 <code>−log P[y<sub>i</sub>]</code>，跳过"先算 V 维 P 向量再取一个值"的浪费。50MB 不是小数——大模型训练中所有这种 V-级中间张量都得省。</p>
+
+</details>
+
+<details class="qa">
+<summary>OpenMP 怎么把 B·T = 256 个 scalar reduce 成 1 个？</summary>
+
+<p><strong>不实例化 vector，直接 scalar 归约。</strong>OpenMP <code>reduction(+:total_loss)</code> 的工作机制：</p>
+
+<ol>
+  <li>启动并行区域，每个线程获得一个 <em>private</em> <code>total_loss_local</code>（初始 0）</li>
+  <li>256 个 iter 分给 N 个线程，每个线程把自己负责那段的 loss<sub>i</sub> 算完后<em>立刻加到自己的私有累加器</em>，不存 vector</li>
+  <li>并行区域结束 barrier 时，OpenMP runtime 自动 tree-reduce 所有线程的私有累加器 → 1 个全局 total_loss</li>
+</ol>
+
+<p><strong>这是经典 "embarrassingly parallel + reduction" 模式：</strong>256 个 iter 之间零依赖（每行独立），最后只通过加法（结合律）合并。Cross-entropy 完美契合——所以经常被当并行计算课的典型例子。</p>
+
+<p>如果按"先存 256 个 scalar 再 sum"实现，多了一次内存往返 + 中间 buffer，慢且费内存。OpenMP 的 <code>reduction</code> clause 把"算 + 累加"融合成一步。</p>
+
+</details>
+
 
 <!-- ==================== SLIDE 25 ==================== -->
 <h2 class="slide-title">Slide 25 — 训练循环全景</h2>
@@ -495,6 +947,30 @@
 <div class="takeaway">
   💡 OpenMP 扩展性差的时候，先找有没有遗漏的串行段（memset、reduce、init）。Reset_to_zero 修完，16 线程从 7.5× 升到 10.7×。
 </div>
+
+<details class="qa">
+<summary>reset_to_zero 具体在做什么？为什么 ~7M 参数的 memset 能压住扩展性？</summary>
+
+<p><strong>它是把梯度累加 buffer 全部刷成 0 的函数。</strong>每次 backward 前，或者 gradient accumulation 模式下每个 macro-step 之间，必须把梯度 buffer 清零防止脏数据累加。NanoGPT 有 ~7M 参数 → 梯度 buffer 也 ~7M float ≈ <strong>28 MB</strong> 的内存写。</p>
+
+<p><strong>它的危险性源自 Amdahl's Law。</strong>这是个<em>纯 memory-bound 串行操作</em>——单线程就能跑满内存带宽，加线程没用。所以当 forward / backward 的并行加速越来越好，<em>reset_to_zero 的占比就越来越大</em>。</p>
+
+<p><strong>数值演示：</strong>假设单线程基准 T_compute = 100ms, T_reset = 10ms (10% 占比)：</p>
+
+<table>
+  <thead><tr><th>threads</th><th>T_compute</th><th>T_reset</th><th>总耗时</th><th>speedup</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>100</td><td>10</td><td>110</td><td>1×</td></tr>
+    <tr><td>16（修复前）</td><td>6.25</td><td>10</td><td>16.25</td><td>~6.8×</td></tr>
+    <tr><td>16（修复后）</td><td>6.25</td><td>0.6</td><td>~6.9</td><td>~16×（理想）</td></tr>
+  </tbody>
+</table>
+
+<p><strong>Amdahl 公式</strong>：max speedup = 1 / (s + p/N)。串行占比 s=0.1, N=16 → 上限 6.4×——精确解释了为什么修复前 16 线程只到 7.5×。</p>
+
+<p><strong>修复一行 pragma 搞定：</strong><code>#pragma omp parallel for</code> 加到 reset 循环上，或者直接调系统的 SIMD <code>memset</code>。教训：扩展性差时先 profile 找隐藏串行段，不要无脑加线程。</p>
+
+</details>
 
 
 <!-- ==================== SLIDE 30 ==================== -->
@@ -557,6 +1033,90 @@
   💡 MPI 训练标准流程 = Init → Bcast 权重 → 循环里 forward/backward + Allreduce 梯度 → Finalize。NanoGPT 的莎士比亚太小，跳过 Scatter，每 rank 各自加载并随机采样 batch。
 </div>
 
+<details class="qa">
+<summary>同一台 CPU 上的不同 rank 还是分开进程吗？为啥还要 MPI？</summary>
+
+<p><strong>是。MPI rank 的定义是"独立 OS 进程"，跟物理硬件无关：</strong></p>
+
+<table>
+  <thead><tr><th>场景</th><th>需要 MPI 通信吗</th></tr></thead>
+  <tbody>
+    <tr><td>2 rank 跨节点（跨网卡）</td><td>是（走 InfiniBand / TCP）</td></tr>
+    <tr><td>2 rank 同节点不同 socket</td><td>是（PCIe / 节点内网络）</td></tr>
+    <tr><td>2 rank 同 socket 同 CPU</td><td><strong>是 ★ 进程隔离，必须 MPI</strong></td></tr>
+    <tr><td>同进程内 2 个 OpenMP 线程</td><td>❌ 直接共享内存，不需要</td></tr>
+  </tbody>
+</table>
+
+<p>OpenMPI / MPICH 实现够聪明：检测到 rank 在同节点会自动走 shared-memory transport 而非真网络——但<em>用户代码看不到这种优化</em>，照样写 <code>MPI_Allreduce</code>。<strong>进程隔离 = 必须 message passing</strong>，这是 MPI 存在的根本原因。</p>
+
+</details>
+
+<details class="qa">
+<summary>每个 rank 用自己的 loss 还是平均后的 loss 算梯度？</summary>
+
+<p><strong>用自己的 loss。</strong>流程是：</p>
+
+<ul>
+  <li>Rank i 用自己 batch 上的 local loss<sub>i</sub> 做 backward → 得到 local gradient<sub>i</sub>（~7M 浮点数）</li>
+  <li>MPI_Allreduce 把 N 个 local gradient 加起来再除以 N → 每 rank 都拿到相同的 global gradient</li>
+  <li>各 rank 用 global gradient 各自做 AdamW → 得到完全一致的权重</li>
+</ul>
+
+<p><strong>数学等价的原因（关键）：</strong>梯度是<em>线性算子</em>。</p>
+
+<pre><code>L_global = (1/N) · (L_0 + L_1 + ... + L_N)
+
+∂L_global/∂θ = (1/N) · (∂L_0/∂θ + ∂L_1/∂θ + ... + ∂L_N/∂θ)
+             = "梯度的平均"</code></pre>
+
+<p><strong>"平均 loss 的梯度" = "梯度的平均"</strong>——所以可以让每 rank 独立 backward，最后只同步梯度一次，不需要先同步 loss 再各自重算 backward。后者会让 backward 计算重复 N 次，是巨大的浪费。</p>
+
+</details>
+
+<details class="qa">
+<summary>为什么 Allreduce 的是 gradients 不是 loss？loss 不是也要平均吗？</summary>
+
+<p><strong>Gradient 是核心，loss 是顺带的。</strong>两者通信目的完全不同：</p>
+
+<table>
+  <thead><tr><th></th><th>Allreduce gradients</th><th>Reduce loss</th></tr></thead>
+  <tbody>
+    <tr><td>调用</td><td><code>MPI_Allreduce</code>（所有 rank 都收）</td><td><code>MPI_Reduce</code>（只 rank 0 收）</td></tr>
+    <tr><td>数据量</td><td>~7M float ≈ 28 MB</td><td>1 个 scalar</td></tr>
+    <tr><td>用途</td><td>每 rank 都要用它做 AdamW 更新权重</td><td>rank 0 打日志 / 写 wandb</td></tr>
+    <tr><td>必要性</td><td>必须，否则 rank 间权重发散</td><td>可选（只为可观测）</td></tr>
+  </tbody>
+</table>
+
+<p>slide 33 中间紫色框 "MPI All Reduce (Gradients) / MPI Reduce (Loss)" 正好就是这两个：人人要 → Allreduce；只 rank 0 要 → Reduce。</p>
+
+</details>
+
+<details class="qa">
+<summary>rank 内的 reduction vs rank 间的 reduction 是两层吗？分别在做什么？</summary>
+
+<p><strong>是两层完全独立的归约</strong>——一层 OpenMP（共享内存），一层 MPI（跨进程）：</p>
+
+<table>
+  <thead><tr><th></th><th>层 1：rank 内</th><th>层 2：rank 间</th></tr></thead>
+  <tbody>
+    <tr><td>对象</td><td>256 个位置的 cross-entropy</td><td>N 个 rank 的 gradient 向量</td></tr>
+    <tr><td>合并量</td><td>256 scalar → 1 scalar</td><td>N × 7M float → 1 × 7M float</td></tr>
+    <tr><td>机制</td><td>OpenMP <code>reduction(+:total_loss)</code></td><td>MPI_Allreduce(SUM)</td></tr>
+    <tr><td>介质</td><td>共享 RAM（同进程内）</td><td>网络 / IB / 共享内存 transport</td></tr>
+    <tr><td>谁等谁</td><td>线程在 parallel for 结束时 barrier</td><td>所有 rank 都到 Allreduce 才继续</td></tr>
+  </tbody>
+</table>
+
+<p>层 1 在每个 rank 内部独立做完得到 rank-local scalar loss（用 OpenMP），<em>这一步不涉及 MPI</em>。</p>
+
+<p>层 2 才是 MPI 主场——同步 gradient 向量。loss 只是顺带 Reduce 到 rank 0 用于打日志。</p>
+
+<p><strong>注意：</strong>rank 内 backward 算出来的 gradient 已经是向量（[~7M]），不需要"vector reduction"——它是 forward+backward 的自然产出，不是从更多元素 reduce 来的。MPI 层只是把 N 个这种向量逐元素加起来再分发。</p>
+
+</details>
+
 
 <!-- ==================== SLIDE 34 ==================== -->
 <h2 class="slide-title">Slide 34 — Example 4 占位：CUDA Parallelization</h2>
@@ -579,6 +1139,382 @@
     <li><strong>Example 4（CUDA）</strong>：本节只起标题，下节展开。</li>
   </ol>
 </div>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'cs2050-lec16-highlights';
+  const state = {
+    highlightMode: false,
+    eraserMode: false,
+    currentColor: 'yellow',
+    highlights: []
+  };
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      state.highlights = raw ? JSON.parse(raw) : [];
+    } catch (e) { state.highlights = []; }
+  }
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.highlights));
+  }
+  function genId() {
+    return 'hl_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  }
+
+  // ---------- Toolbar ----------
+  function buildToolbar() {
+    const tb = document.createElement('div');
+    tb.id = 'hl-toolbar';
+    tb.innerHTML =
+      '<button id="hl-mode-btn" class="hl-btn">高亮模式: 关</button>' +
+      '<span class="hl-color-picker">' +
+        '<span class="hl-color" data-color="yellow" title="黄"></span>' +
+        '<span class="hl-color" data-color="green"  title="绿"></span>' +
+        '<span class="hl-color" data-color="pink"   title="粉"></span>' +
+        '<span class="hl-color" data-color="blue"   title="蓝"></span>' +
+      '</span>' +
+      '<button id="hl-eraser-btn" class="hl-btn">🧽 橡皮擦: 关</button>' +
+      '<button id="hl-toggle-btn" class="hl-btn">隐藏标记</button>' +
+      '<button id="hl-clear-btn" class="hl-btn">清除全部</button>';
+    document.body.appendChild(tb);
+
+    const modeBtn = document.getElementById('hl-mode-btn');
+    const eraserBtn = document.getElementById('hl-eraser-btn');
+
+    function refreshModeUI() {
+      modeBtn.textContent = '高亮模式: ' + (state.highlightMode ? '开' : '关');
+      modeBtn.classList.toggle('active', state.highlightMode);
+      eraserBtn.textContent = '🧽 橡皮擦: ' + (state.eraserMode ? '开' : '关');
+      eraserBtn.classList.toggle('active', state.eraserMode);
+      document.body.classList.toggle('hl-active', state.highlightMode);
+      document.body.classList.toggle('hl-eraser', state.eraserMode);
+    }
+
+    modeBtn.addEventListener('click', () => {
+      state.highlightMode = !state.highlightMode;
+      if (state.highlightMode) state.eraserMode = false;
+      refreshModeUI();
+    });
+    eraserBtn.addEventListener('click', () => {
+      state.eraserMode = !state.eraserMode;
+      if (state.eraserMode) state.highlightMode = false;
+      refreshModeUI();
+    });
+
+    tb.querySelectorAll('.hl-color').forEach(el => {
+      el.addEventListener('click', () => {
+        state.currentColor = el.dataset.color;
+        tb.querySelectorAll('.hl-color').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+      });
+    });
+    tb.querySelector('.hl-color[data-color="yellow"]').classList.add('selected');
+
+    const toggleBtn = document.getElementById('hl-toggle-btn');
+    toggleBtn.addEventListener('click', () => {
+      const hidden = document.body.classList.toggle('hl-hidden');
+      toggleBtn.textContent = hidden ? '显示标记' : '隐藏标记';
+    });
+
+    document.getElementById('hl-clear-btn').addEventListener('click', () => {
+      if (!confirm('清除全部高亮?')) return;
+      state.highlights = [];
+      save();
+      clearAllVisuals();
+    });
+  }
+
+  // ---------- Image highlights ----------
+  function setupImages() {
+    document.querySelectorAll('.slide-img').forEach(img => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'hl-img-wrapper';
+      img.parentNode.insertBefore(wrapper, img);
+      wrapper.appendChild(img);
+      attachImageDrag(img, wrapper);
+    });
+  }
+
+  function attachImageDrag(img, wrapper) {
+    let dragging = false;
+    let startX = 0, lockedY = 0;
+    let preview = null;
+    let rect = null;
+
+    img.addEventListener('mousedown', (e) => {
+      if (!state.highlightMode) return;
+      e.preventDefault();
+      rect = img.getBoundingClientRect();
+      startX = e.clientX - rect.left;
+      lockedY = e.clientY - rect.top;
+      dragging = true;
+
+      preview = document.createElement('div');
+      preview.className = 'hl-img-mark';
+      preview.dataset.color = state.currentColor;
+      preview.style.left = (startX / rect.width * 100) + '%';
+      preview.style.top  = (lockedY / rect.height * 100) + '%';
+      preview.style.width = '0';
+      preview.style.pointerEvents = 'none';
+      wrapper.appendChild(preview);
+    });
+
+    function onMove(e) {
+      if (!dragging) return;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      preview.style.left  = (xs / rect.width * 100) + '%';
+      preview.style.width = ((xe - xs) / rect.width * 100) + '%';
+    }
+    function onUp(e) {
+      if (!dragging) return;
+      dragging = false;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      const widthPx = xe - xs;
+      if (widthPx < 8) {
+        if (preview) preview.remove();
+        preview = null;
+        return;
+      }
+      const data = {
+        type: 'image',
+        img_src: img.getAttribute('src'),
+        y_pct: lockedY / rect.height * 100,
+        x_start_pct: xs / rect.width * 100,
+        x_end_pct: xe / rect.width * 100,
+        color: state.currentColor,
+        id: genId()
+      };
+      state.highlights.push(data);
+      save();
+      preview.dataset.hlId = data.id;
+      preview.style.pointerEvents = 'auto';
+      preview.title = '橡皮擦模式下点击删除';
+      preview.addEventListener('click', (ev) => {
+        if (!state.eraserMode) return;
+        ev.stopPropagation();
+        removeHighlight(data.id);
+      });
+      preview = null;
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  function applyImageHighlight(data) {
+    const img = document.querySelector('.slide-img[src="' + cssEscape(data.img_src) + '"]');
+    if (!img) return;
+    const wrapper = img.parentElement;
+    if (!wrapper.classList.contains('hl-img-wrapper')) return;
+    const m = document.createElement('div');
+    m.className = 'hl-img-mark';
+    m.dataset.color = data.color;
+    m.dataset.hlId = data.id;
+    m.style.left = data.x_start_pct + '%';
+    m.style.width = (data.x_end_pct - data.x_start_pct) + '%';
+    m.style.top = data.y_pct + '%';
+    m.title = '橡皮擦模式下点击删除';
+    m.addEventListener('click', (ev) => {
+      if (!state.eraserMode) return;
+      ev.stopPropagation();
+      removeHighlight(data.id);
+    });
+    wrapper.appendChild(m);
+  }
+
+  function cssEscape(s) {
+    return s.replace(/"/g, '\\"');
+  }
+
+  // ---------- Text highlights ----------
+  function setupTextSelection() {
+    document.addEventListener('mouseup', (e) => {
+      if (!state.highlightMode) return;
+      if (e.target.closest('#hl-toolbar')) return;
+      if (e.target.classList && e.target.classList.contains('slide-img')) return;
+      if (e.target.classList && e.target.classList.contains('hl-img-mark')) return;
+
+      setTimeout(() => {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        const text = sel.toString();
+        if (text.length === 0) return;
+
+        const range = sel.getRangeAt(0);
+        const ctx = computeContext(range);
+        if (!ctx) return;
+
+        const data = {
+          type: 'text',
+          text: text,
+          contextBefore: ctx.before,
+          contextAfter: ctx.after,
+          color: state.currentColor,
+          id: genId()
+        };
+        wrapRange(range, data);
+        state.highlights.push(data);
+        save();
+        sel.removeAllRanges();
+      }, 0);
+    });
+  }
+
+  function computeContext(range) {
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) root = root.parentElement;
+    while (root && root.tagName && !/^(P|LI|TD|H1|H2|H3|H4|DIV|BODY|PRE|BLOCKQUOTE|SUMMARY)$/.test(root.tagName)) {
+      root = root.parentElement;
+    }
+    if (!root) return null;
+    const fullText = root.textContent;
+    const startOffset = nodeOffset(root, range.startContainer, range.startOffset);
+    const endOffset = nodeOffset(root, range.endContainer, range.endOffset);
+    if (startOffset < 0 || endOffset < 0) return null;
+    const CTX = 25;
+    return {
+      before: fullText.slice(Math.max(0, startOffset - CTX), startOffset),
+      after: fullText.slice(endOffset, endOffset + CTX)
+    };
+  }
+
+  function nodeOffset(root, node, offsetInNode) {
+    let total = 0;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    let n;
+    while ((n = walker.nextNode())) {
+      if (n === node) return total + offsetInNode;
+      total += n.textContent.length;
+    }
+    return -1;
+  }
+
+  function wrapRange(range, data) {
+    const fragments = [];
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) {
+      fragments.push({ node: root, start: range.startOffset, end: range.endOffset });
+    } else {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+      let n;
+      while ((n = walker.nextNode())) {
+        if (!range.intersectsNode(n)) continue;
+        const start = (n === range.startContainer) ? range.startOffset : 0;
+        const end   = (n === range.endContainer)   ? range.endOffset   : n.textContent.length;
+        if (end > start) fragments.push({ node: n, start, end });
+      }
+    }
+    fragments.forEach(f => {
+      const r = document.createRange();
+      try {
+        r.setStart(f.node, f.start);
+        r.setEnd(f.node, f.end);
+        const m = document.createElement('mark');
+        m.className = 'hl-text-mark';
+        m.dataset.color = data.color;
+        m.dataset.hlId = data.id;
+        m.title = '橡皮擦模式下点击删除';
+        m.addEventListener('click', (ev) => {
+          if (!state.eraserMode) return;
+          ev.stopPropagation();
+          removeHighlight(data.id);
+        });
+        r.surroundContents(m);
+      } catch (e) { /* skip fragment */ }
+    });
+  }
+
+  function applyTextHighlight(data) {
+    const target = data.contextBefore + data.text + data.contextAfter;
+    const root = document.body;
+    const nodes = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => {
+        if (n.parentElement && n.parentElement.closest('script, style, #hl-toolbar')) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }, false);
+    let nd;
+    while ((nd = walker.nextNode())) nodes.push(nd);
+    const fullText = nodes.map(n => n.textContent).join('');
+    const idx = fullText.indexOf(target);
+    if (idx === -1) return;
+
+    const startPos = idx + data.contextBefore.length;
+    const endPos = startPos + data.text.length;
+    let cum = 0, startNode = null, startOff = 0, endNode = null, endOff = 0;
+    for (const n of nodes) {
+      const len = n.textContent.length;
+      if (!startNode && startPos >= cum && startPos < cum + len) {
+        startNode = n; startOff = startPos - cum;
+      }
+      if (startNode && endPos > cum && endPos <= cum + len) {
+        endNode = n; endOff = endPos - cum; break;
+      }
+      cum += len;
+    }
+    if (!startNode || !endNode) return;
+    const range = document.createRange();
+    try {
+      range.setStart(startNode, startOff);
+      range.setEnd(endNode, endOff);
+      wrapRange(range, data);
+    } catch (e) {}
+  }
+
+  // ---------- Remove / clear ----------
+  function removeHighlight(id) {
+    state.highlights = state.highlights.filter(h => h.id !== id);
+    save();
+    document.querySelectorAll('[data-hl-id="' + id + '"]').forEach(el => {
+      if (el.tagName === 'MARK') {
+        const p = el.parentNode;
+        while (el.firstChild) p.insertBefore(el.firstChild, el);
+        p.removeChild(el);
+        p.normalize();
+      } else {
+        el.remove();
+      }
+    });
+  }
+  function clearAllVisuals() {
+    document.querySelectorAll('.hl-img-mark').forEach(el => el.remove());
+    document.querySelectorAll('mark.hl-text-mark').forEach(el => {
+      const p = el.parentNode;
+      while (el.firstChild) p.insertBefore(el.firstChild, el);
+      p.removeChild(el);
+      p.normalize();
+    });
+  }
+
+  // ---------- Init ----------
+  function init() {
+    load();
+    buildToolbar();
+    setupImages();
+    setupTextSelection();
+    window.addEventListener('load', () => {
+      state.highlights.forEach(h => {
+        if (h.type === 'image') applyImageHighlight(h);
+        else if (h.type === 'text') applyTextHighlight(h);
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
 
 </body>
 </html>

@@ -156,6 +156,107 @@
     font-weight: bold;
     color: #1f3d7a;
   }
+
+  /* ============================================
+     Highlight feature (image + text)
+     ============================================ */
+  #hl-toolbar {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .hl-btn {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    user-select: none;
+  }
+  .hl-btn:hover { background: #e8e8e8; }
+  .hl-btn.active { background: #1f6feb; color: white; border-color: #1f6feb; }
+  .hl-color-picker {
+    display: inline-flex;
+    gap: 6px;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    padding: 0 10px;
+  }
+  .hl-color {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    display: inline-block;
+    box-sizing: border-box;
+  }
+  .hl-color.selected { border-color: #333; }
+  .hl-color[data-color="yellow"] { background: rgba(255, 235, 59, 0.85); }
+  .hl-color[data-color="green"]  { background: rgba(102, 187, 106, 0.85); }
+  .hl-color[data-color="pink"]   { background: rgba(236, 64, 122, 0.75); }
+  .hl-color[data-color="blue"]   { background: rgba(79, 195, 247, 0.85); }
+
+  body.hl-active { cursor: crosshair; }
+  body.hl-active .slide-img { cursor: crosshair; }
+  body.hl-eraser { cursor: not-allowed; }
+  body.hl-eraser .slide-img { cursor: not-allowed; }
+  body.hl-eraser .hl-img-mark,
+  body.hl-eraser mark.hl-text-mark {
+    outline: 2px dashed #d32f2f;
+    outline-offset: 1px;
+    cursor: pointer !important;
+  }
+
+  .hl-img-wrapper {
+    position: relative;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin: 16px 0 24px 0;
+  }
+  .hl-img-wrapper > .slide-img { margin: 0; }
+
+  .hl-img-mark {
+    position: absolute;
+    height: 14px;
+    transform: translateY(-50%);
+    border-radius: 2px;
+    mix-blend-mode: multiply;
+    pointer-events: auto;
+  }
+  .hl-img-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.65); }
+  .hl-img-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.55); }
+  .hl-img-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.50); }
+  .hl-img-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.55); }
+
+  mark.hl-text-mark {
+    padding: 1px 1px;
+    border-radius: 2px;
+    color: inherit;
+  }
+  mark.hl-text-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.55); }
+  mark.hl-text-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.40); }
+  mark.hl-text-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.30); }
+  mark.hl-text-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.40); }
+
+  body.hl-hidden .hl-img-mark { background: transparent !important; }
+  body.hl-hidden mark.hl-text-mark {
+    background: transparent !important;
+    padding: 0;
+  }
 </style>
 </head>
 <body>
@@ -442,6 +543,21 @@
   <p>用 minimum image 时，cutoff r_c 必须 &lt; L/2（L 是盒子边长），否则一个原子会同时跟另一个原子<em>本体和镜像</em>都发生作用，物理上自相矛盾。也就是说<em>盒子至少要比 2·r_c 大</em>——这是 MD 体系最小尺寸的下限。</p>
 </div>
 
+<details class="qa">
+  <summary>Q：minimum image 到底是怎么算的？真的存 27 个盒子吗？</summary>
+  <ul>
+    <li><strong>概念上</strong>：把本体盒子在三维各方向各复制一份，3×3×3 = 27 个盒子（本体 + 周围 26 个镜像）把本体围起来。每个原子 j 有 27 个候选位置。</li>
+    <li><strong>实现上</strong>：只存本体那 1 个盒子。算 i↔j 距离时对每个坐标轴做一次：
+      <pre><code class="language-c">dx = x[j] - x[i];
+if (dx &gt;  L/2) dx -= L;   // j 的左镜像更近
+if (dx &lt; -L/2) dx += L;   // j 的右镜像更近</code></pre>
+    </li>
+    <li>这两行 if 等价于"在 {j−L, j, j+L} 三个候选里挑距离 ≤ L/2 的那个"，三维各做一次 = 自动从 27 候选里挑最近的镜像。</li>
+    <li><strong>例</strong>：L=10，i 在 x=9，j 在 x=1。原始距离 |9−1| = 8；但 j 的右镜像在 x=11，距离 |9−11| = 2 ← minimum image 取的就是这个 2。</li>
+    <li><strong>为什么不真的存 27 份</strong>：镜像位置 = 本体位置 + 整数倍 L，纯算术能推出来，存 27 份就是浪费 27× 内存。</li>
+  </ul>
+</details>
+
 
 <!-- ==================== SLIDE 28 ==================== -->
 <h2 class="slide-title">Slide 28 — Thermostats：直接控温的小手段</h2>
@@ -581,6 +697,385 @@ for (int i = 0; i &lt; N; ++i) {
     <li><strong>并行结构</strong>：pointwise updates（位置/速度/温控）trivially parallel；force/energy reductions 是真正的瓶颈，需要原子操作或 per-thread 累加器解决 race condition。</li>
   </ul>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'cs2050-lec19-highlights';
+  const state = {
+    highlightMode: false,
+    eraserMode: false,
+    currentColor: 'yellow',
+    highlights: []
+  };
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      state.highlights = raw ? JSON.parse(raw) : [];
+    } catch (e) { state.highlights = []; }
+  }
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.highlights));
+  }
+  function genId() {
+    return 'hl_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  }
+
+  // ---------- Toolbar ----------
+  function buildToolbar() {
+    const tb = document.createElement('div');
+    tb.id = 'hl-toolbar';
+    tb.innerHTML =
+      '<button id="hl-mode-btn" class="hl-btn">高亮模式: 关</button>' +
+      '<span class="hl-color-picker">' +
+        '<span class="hl-color" data-color="yellow" title="黄"></span>' +
+        '<span class="hl-color" data-color="green"  title="绿"></span>' +
+        '<span class="hl-color" data-color="pink"   title="粉"></span>' +
+        '<span class="hl-color" data-color="blue"   title="蓝"></span>' +
+      '</span>' +
+      '<button id="hl-eraser-btn" class="hl-btn">🧽 橡皮擦: 关</button>' +
+      '<button id="hl-toggle-btn" class="hl-btn">隐藏标记</button>' +
+      '<button id="hl-clear-btn" class="hl-btn">清除全部</button>';
+    document.body.appendChild(tb);
+
+    const modeBtn = document.getElementById('hl-mode-btn');
+    const eraserBtn = document.getElementById('hl-eraser-btn');
+
+    function refreshModeUI() {
+      modeBtn.textContent = '高亮模式: ' + (state.highlightMode ? '开' : '关');
+      modeBtn.classList.toggle('active', state.highlightMode);
+      eraserBtn.textContent = '🧽 橡皮擦: ' + (state.eraserMode ? '开' : '关');
+      eraserBtn.classList.toggle('active', state.eraserMode);
+      document.body.classList.toggle('hl-active', state.highlightMode);
+      document.body.classList.toggle('hl-eraser', state.eraserMode);
+    }
+
+    modeBtn.addEventListener('click', () => {
+      state.highlightMode = !state.highlightMode;
+      if (state.highlightMode) state.eraserMode = false;
+      refreshModeUI();
+    });
+    eraserBtn.addEventListener('click', () => {
+      state.eraserMode = !state.eraserMode;
+      if (state.eraserMode) state.highlightMode = false;
+      refreshModeUI();
+    });
+
+    tb.querySelectorAll('.hl-color').forEach(el => {
+      el.addEventListener('click', () => {
+        state.currentColor = el.dataset.color;
+        tb.querySelectorAll('.hl-color').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+      });
+    });
+    tb.querySelector('.hl-color[data-color="yellow"]').classList.add('selected');
+
+    const toggleBtn = document.getElementById('hl-toggle-btn');
+    toggleBtn.addEventListener('click', () => {
+      const hidden = document.body.classList.toggle('hl-hidden');
+      toggleBtn.textContent = hidden ? '显示标记' : '隐藏标记';
+    });
+
+    document.getElementById('hl-clear-btn').addEventListener('click', () => {
+      if (!confirm('清除全部高亮?')) return;
+      state.highlights = [];
+      save();
+      clearAllVisuals();
+    });
+  }
+
+  // ---------- Image highlights ----------
+  function setupImages() {
+    document.querySelectorAll('.slide-img').forEach(img => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'hl-img-wrapper';
+      img.parentNode.insertBefore(wrapper, img);
+      wrapper.appendChild(img);
+      attachImageDrag(img, wrapper);
+    });
+  }
+
+  function attachImageDrag(img, wrapper) {
+    let dragging = false;
+    let startX = 0, lockedY = 0;
+    let preview = null;
+    let rect = null;
+
+    img.addEventListener('mousedown', (e) => {
+      if (!state.highlightMode) return;
+      e.preventDefault();
+      rect = img.getBoundingClientRect();
+      startX = e.clientX - rect.left;
+      lockedY = e.clientY - rect.top;
+      dragging = true;
+
+      preview = document.createElement('div');
+      preview.className = 'hl-img-mark';
+      preview.dataset.color = state.currentColor;
+      preview.style.left = (startX / rect.width * 100) + '%';
+      preview.style.top  = (lockedY / rect.height * 100) + '%';
+      preview.style.width = '0';
+      preview.style.pointerEvents = 'none';
+      wrapper.appendChild(preview);
+    });
+
+    function onMove(e) {
+      if (!dragging) return;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      preview.style.left  = (xs / rect.width * 100) + '%';
+      preview.style.width = ((xe - xs) / rect.width * 100) + '%';
+    }
+    function onUp(e) {
+      if (!dragging) return;
+      dragging = false;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      const widthPx = xe - xs;
+      if (widthPx < 8) {
+        if (preview) preview.remove();
+        preview = null;
+        return;
+      }
+      const data = {
+        type: 'image',
+        img_src: img.getAttribute('src'),
+        y_pct: lockedY / rect.height * 100,
+        x_start_pct: xs / rect.width * 100,
+        x_end_pct: xe / rect.width * 100,
+        color: state.currentColor,
+        id: genId()
+      };
+      state.highlights.push(data);
+      save();
+      preview.dataset.hlId = data.id;
+      preview.style.pointerEvents = 'auto';
+      preview.title = '橡皮擦模式下点击删除';
+      preview.addEventListener('click', (ev) => {
+        if (!state.eraserMode) return;
+        ev.stopPropagation();
+        removeHighlight(data.id);
+      });
+      preview = null;
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  function applyImageHighlight(data) {
+    const img = document.querySelector('.slide-img[src="' + cssEscape(data.img_src) + '"]');
+    if (!img) return;
+    const wrapper = img.parentElement;
+    if (!wrapper.classList.contains('hl-img-wrapper')) return;
+    const m = document.createElement('div');
+    m.className = 'hl-img-mark';
+    m.dataset.color = data.color;
+    m.dataset.hlId = data.id;
+    m.style.left = data.x_start_pct + '%';
+    m.style.width = (data.x_end_pct - data.x_start_pct) + '%';
+    m.style.top = data.y_pct + '%';
+    m.title = '橡皮擦模式下点击删除';
+    m.addEventListener('click', (ev) => {
+      if (!state.eraserMode) return;
+      ev.stopPropagation();
+      removeHighlight(data.id);
+    });
+    wrapper.appendChild(m);
+  }
+
+  function cssEscape(s) {
+    return s.replace(/"/g, '\\"');
+  }
+
+  // ---------- Text highlights ----------
+  function setupTextSelection() {
+    document.addEventListener('mouseup', (e) => {
+      if (!state.highlightMode) return;
+      if (e.target.closest('#hl-toolbar')) return;
+      if (e.target.classList && e.target.classList.contains('slide-img')) return;
+      if (e.target.classList && e.target.classList.contains('hl-img-mark')) return;
+
+      setTimeout(() => {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        const text = sel.toString();
+        if (text.length === 0) return;
+
+        const range = sel.getRangeAt(0);
+        const ctx = computeContext(range);
+        if (!ctx) return;
+
+        const data = {
+          type: 'text',
+          text: text,
+          contextBefore: ctx.before,
+          contextAfter: ctx.after,
+          color: state.currentColor,
+          id: genId()
+        };
+        wrapRange(range, data);
+        state.highlights.push(data);
+        save();
+        sel.removeAllRanges();
+      }, 0);
+    });
+  }
+
+  function computeContext(range) {
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) root = root.parentElement;
+    while (root && root.tagName && !/^(P|LI|TD|H1|H2|H3|H4|DIV|BODY|PRE|BLOCKQUOTE|SUMMARY)$/.test(root.tagName)) {
+      root = root.parentElement;
+    }
+    if (!root) return null;
+    const fullText = root.textContent;
+    const startOffset = nodeOffset(root, range.startContainer, range.startOffset);
+    const endOffset = nodeOffset(root, range.endContainer, range.endOffset);
+    if (startOffset < 0 || endOffset < 0) return null;
+    const CTX = 25;
+    return {
+      before: fullText.slice(Math.max(0, startOffset - CTX), startOffset),
+      after: fullText.slice(endOffset, endOffset + CTX)
+    };
+  }
+
+  function nodeOffset(root, node, offsetInNode) {
+    let total = 0;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    let n;
+    while ((n = walker.nextNode())) {
+      if (n === node) return total + offsetInNode;
+      total += n.textContent.length;
+    }
+    return -1;
+  }
+
+  function wrapRange(range, data) {
+    const fragments = [];
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) {
+      fragments.push({ node: root, start: range.startOffset, end: range.endOffset });
+    } else {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+      let n;
+      while ((n = walker.nextNode())) {
+        if (!range.intersectsNode(n)) continue;
+        const start = (n === range.startContainer) ? range.startOffset : 0;
+        const end   = (n === range.endContainer)   ? range.endOffset   : n.textContent.length;
+        if (end > start) fragments.push({ node: n, start, end });
+      }
+    }
+    fragments.forEach(f => {
+      const r = document.createRange();
+      try {
+        r.setStart(f.node, f.start);
+        r.setEnd(f.node, f.end);
+        const m = document.createElement('mark');
+        m.className = 'hl-text-mark';
+        m.dataset.color = data.color;
+        m.dataset.hlId = data.id;
+        m.title = '橡皮擦模式下点击删除';
+        m.addEventListener('click', (ev) => {
+          if (!state.eraserMode) return;
+          ev.stopPropagation();
+          removeHighlight(data.id);
+        });
+        r.surroundContents(m);
+      } catch (e) { /* skip fragment */ }
+    });
+  }
+
+  function applyTextHighlight(data) {
+    const target = data.contextBefore + data.text + data.contextAfter;
+    const root = document.body;
+    const nodes = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => {
+        if (n.parentElement && n.parentElement.closest('script, style, #hl-toolbar')) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }, false);
+    let nd;
+    while ((nd = walker.nextNode())) nodes.push(nd);
+    const fullText = nodes.map(n => n.textContent).join('');
+    const idx = fullText.indexOf(target);
+    if (idx === -1) return;
+
+    const startPos = idx + data.contextBefore.length;
+    const endPos = startPos + data.text.length;
+    let cum = 0, startNode = null, startOff = 0, endNode = null, endOff = 0;
+    for (const n of nodes) {
+      const len = n.textContent.length;
+      if (!startNode && startPos >= cum && startPos < cum + len) {
+        startNode = n; startOff = startPos - cum;
+      }
+      if (startNode && endPos > cum && endPos <= cum + len) {
+        endNode = n; endOff = endPos - cum; break;
+      }
+      cum += len;
+    }
+    if (!startNode || !endNode) return;
+    const range = document.createRange();
+    try {
+      range.setStart(startNode, startOff);
+      range.setEnd(endNode, endOff);
+      wrapRange(range, data);
+    } catch (e) {}
+  }
+
+  // ---------- Remove / clear ----------
+  function removeHighlight(id) {
+    state.highlights = state.highlights.filter(h => h.id !== id);
+    save();
+    document.querySelectorAll('[data-hl-id="' + id + '"]').forEach(el => {
+      if (el.tagName === 'MARK') {
+        const p = el.parentNode;
+        while (el.firstChild) p.insertBefore(el.firstChild, el);
+        p.removeChild(el);
+        p.normalize();
+      } else {
+        el.remove();
+      }
+    });
+  }
+  function clearAllVisuals() {
+    document.querySelectorAll('.hl-img-mark').forEach(el => el.remove());
+    document.querySelectorAll('mark.hl-text-mark').forEach(el => {
+      const p = el.parentNode;
+      while (el.firstChild) p.insertBefore(el.firstChild, el);
+      p.removeChild(el);
+      p.normalize();
+    });
+  }
+
+  // ---------- Init ----------
+  function init() {
+    load();
+    buildToolbar();
+    setupImages();
+    setupTextSelection();
+    window.addEventListener('load', () => {
+      state.highlights.forEach(h => {
+        if (h.type === 'image') applyImageHighlight(h);
+        else if (h.type === 'text') applyTextHighlight(h);
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
 
 </body>
 </html>

@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>CS 2050 Lecture 2 - 复习笔记</title>
+<link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.css" rel="stylesheet">
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    max-width: 980px;
+    margin: 40px auto;
+    padding: 0 24px;
+    line-height: 1.7;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 { border-bottom: 3px solid #1f6feb; padding-bottom: 10px; }
+  h2.slide-title {
+    color: #1f6feb;
+    margin-top: 50px;
+    border-left: 5px solid #1f6feb;
+    padding-left: 12px;
+  }
+  h3 { color: #333; margin-top: 28px; }
+  .slide-img {
+    display: block;
+    max-width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin: 16px 0 24px 0;
+  }
+  .explanation {
+    background: #fff;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
+  }
+  .qa {
+    background: #fff8e1;
+    padding: 18px 24px;
+    border-radius: 6px;
+    border-left: 4px solid #f0a500;
+    margin-top: 20px;
+  }
+  details.qa > summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #b8730e;
+    font-size: 1.08em;
+    padding: 6px 0;
+    user-select: none;
+    list-style: none;
+  }
+  details.qa > summary::before { content: "▶ "; }
+  details.qa[open] > summary::before { content: "▼ "; }
+  code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.92em;
+  }
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+  th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+  th { background: #1f6feb; color: white; }
+  blockquote {
+    border-left: 4px solid #1f6feb;
+    margin: 16px 0;
+    padding: 4px 16px;
+    color: #555;
+    background: #eef4ff;
+  }
+  .takeaway {
+    background: #e8f5e9;
+    border-left: 4px solid #2e7d32;
+    padding: 14px 20px;
+    margin-top: 20px;
+    border-radius: 4px;
+  }
+  .slide-grid { display: grid; gap: 12px; margin: 16px 0 24px 0; }
+  .slide-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .slide-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .slide-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .slide-grid .slide-img { margin: 0; max-width: 100%; }
+
+  .code-walk { border: 1px solid #d0d7de; border-radius: 6px; overflow: hidden; margin: 18px 0; }
+  .walk-pair { border-bottom: 1px solid #e1e4e8; }
+  .walk-pair:last-child { border-bottom: none; }
+  .walk-code { margin: 0; border-radius: 0; }
+  .walk-doc {
+    background: #f6f8fa;
+    padding: 12px 18px;
+    border-left: 4px solid #1f6feb;
+    font-size: 0.96em;
+  }
+
+  .section-divider {
+    margin-top: 60px;
+    padding: 14px 22px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #eaf3ff, #fafafa);
+    border-left: 6px solid #1f6feb;
+    font-size: 1.15em;
+    font-weight: bold;
+    color: #1f3d7a;
+  }
+
+  /* Highlight feature */
+  #hl-toolbar {
+    position: fixed; top: 16px; right: 16px;
+    background: white; border: 1px solid #ccc; border-radius: 8px;
+    padding: 10px 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000; display: flex; align-items: center; gap: 10px;
+    font-size: 13px;
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .hl-btn {
+    background: #f5f5f5; border: 1px solid #ddd; border-radius: 4px;
+    padding: 6px 10px; cursor: pointer; font-size: 13px; user-select: none;
+  }
+  .hl-btn:hover { background: #e8e8e8; }
+  .hl-btn.active { background: #1f6feb; color: white; border-color: #1f6feb; }
+  .hl-color-picker { display: inline-flex; gap: 6px; border-left: 1px solid #ddd; border-right: 1px solid #ddd; padding: 0 10px; }
+  .hl-color {
+    width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
+    border: 2px solid transparent; display: inline-block; box-sizing: border-box;
+  }
+  .hl-color.selected { border-color: #333; }
+  .hl-color[data-color="yellow"] { background: rgba(255, 235, 59, 0.85); }
+  .hl-color[data-color="green"]  { background: rgba(102, 187, 106, 0.85); }
+  .hl-color[data-color="pink"]   { background: rgba(236, 64, 122, 0.75); }
+  .hl-color[data-color="blue"]   { background: rgba(79, 195, 247, 0.85); }
+
+  body.hl-active { cursor: crosshair; }
+  body.hl-active .slide-img { cursor: crosshair; }
+  body.hl-eraser { cursor: not-allowed; }
+  body.hl-eraser .slide-img { cursor: not-allowed; }
+  body.hl-eraser .hl-img-mark,
+  body.hl-eraser mark.hl-text-mark {
+    outline: 2px dashed #d32f2f; outline-offset: 1px; cursor: pointer !important;
+  }
+
+  .hl-img-wrapper {
+    position: relative; display: block; width: fit-content;
+    max-width: 100%; margin: 16px 0 24px 0;
+  }
+  .hl-img-wrapper > .slide-img { margin: 0; }
+
+  .hl-img-mark {
+    position: absolute; height: 14px; transform: translateY(-50%);
+    border-radius: 2px; mix-blend-mode: multiply; pointer-events: auto;
+  }
+  .hl-img-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.65); }
+  .hl-img-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.55); }
+  .hl-img-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.50); }
+  .hl-img-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.55); }
+
+  mark.hl-text-mark { padding: 1px 1px; border-radius: 2px; color: inherit; }
+  mark.hl-text-mark[data-color="yellow"] { background: rgba(255, 235, 59, 0.55); }
+  mark.hl-text-mark[data-color="green"]  { background: rgba(102, 187, 106, 0.40); }
+  mark.hl-text-mark[data-color="pink"]   { background: rgba(236, 64, 122, 0.30); }
+  mark.hl-text-mark[data-color="blue"]   { background: rgba(79, 195, 247, 0.40); }
+
+  body.hl-hidden .hl-img-mark { background: transparent !important; }
+  body.hl-hidden mark.hl-text-mark { background: transparent !important; padding: 0; }
+</style>
+</head>
+<body>
+
+<h1>CS 2050 Lecture 2 - 复习笔记</h1>
+<p><em>主题：Flynn's Taxonomy + 第一次接入计算集群（Open OnDemand / Shell / Slurm / CMake）</em></p>
+
+<blockquote>
+  Lecture 2 由两条主线穿起来：(1) 概念上引入 <strong>Flynn's Taxonomy</strong>，给"并行"做最简单的分类；(2) 操作上让全班<strong>第一次连上集群</strong>——从浏览器 dashboard，到 SSH login node，到用 Slurm 把任务发到 compute node，再到用 CMake 编译第一个例子。中间穿插了一组"你熟不熟悉 Linux / C++ / Python / Slurm / Git ..."的 poll，目的是<em>诊断班级技能水位</em>，本身没有讲解内容。下面只对真正有信息量的 slide 展开讲解。
+</blockquote>
+
+
+<!-- ==================== SLIDE 1 ==================== -->
+<h2 class="slide-title">Slide 1 — 课程标题页</h2>
+<img class="slide-img" src="images/slide-01.png" alt="Slide 1: Title">
+<div class="explanation">
+  CS 2050 第二讲，2026 年 1 月 29 日。今天的硬目标只有一个：<strong>每个人都把笔记本和集群打通</strong>，并且把今天暴露出来的环境问题在接下来几天内修掉。
+</div>
+
+
+<!-- ==================== SLIDE 3-6 ==================== -->
+<h2 class="slide-title">Slide 3–6 — Flynn's Taxonomy（多核时代的分类法）</h2>
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-04.png" alt="Slide 4: multicore era">
+  <img class="slide-img" src="images/slide-05.png" alt="Slide 5: Flynn definition">
+  <img class="slide-img" src="images/slide-06.png" alt="Slide 6: Flynn 2x2">
+</div>
+<div class="explanation">
+  <p>Flynn 在 1966 年提出的分类，到今天还是讲并行计算的标准入口。两个维度，每个维度两个状态，组合出 2 × 2 = 4 种机器：</p>
+  <table>
+    <tr><th></th><th>Single Data</th><th>Multiple Data</th></tr>
+    <tr><th>Single Instruction</th><td><strong>SISD</strong> — 经典单核 CPU（一条指令、一份数据）</td><td><strong>SIMD</strong> — 一条指令同时作用在向量上（SSE/AVX、GPU warp）</td></tr>
+    <tr><th>Multiple Instruction</th><td><strong>MISD</strong> — 几乎没有真实机器（容错冗余系统勉强算）</td><td><strong>MIMD</strong> — 多核 CPU、超算集群（不同核跑不同指令、不同数据）</td></tr>
+  </table>
+  <p>关键观察：</p>
+  <ul>
+    <li><strong>Instruction Stream</strong> 是"控制流"的多少；<strong>Data Stream</strong> 是"数据"的多少。</li>
+    <li>SIMD 是 GPU 的灵魂；MIMD 是多核 / 分布式集群的灵魂。课程后面 OpenMP / MPI / CUDA 全部能装进这张 2 × 2 的表里。</li>
+    <li>"multicore era" 这个词的潜台词：自从 2004 年单核频率到顶后，硬件转向<em>横向加核</em>——所以 MIMD（多核）+ SIMD（向量指令）成为这门课的主战场。</li>
+  </ul>
+</div>
+
+
+<!-- ==================== SLIDE 8-11 ==================== -->
+<h2 class="slide-title">Slide 8–11 — Harvard Mark I &amp; Grace Hopper（小段课程文化）</h2>
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-08.png" alt="Slide 8: What is this machine">
+  <img class="slide-img" src="images/slide-09.png" alt="Slide 9: Mark I">
+  <img class="slide-img" src="images/slide-10.png" alt="Slide 10: Who is this">
+  <img class="slide-img" src="images/slide-11.png" alt="Slide 11: Grace Hopper">
+</div>
+<div class="explanation">
+  <p>课堂互动：图里那台机器是 <strong>Harvard Mark I</strong>（1944 年），人物是 <strong>Grace Hopper</strong>——她是首批三位程序员之一，负责给 Mark I 打孔带、写了 561 页的用户手册，并且<em>"debugging"</em>（调试）这个词就是从她记录"飞蛾卡进继电器"开始流行的。课程把这段放在开头是为了给课程一个本校的历史锚点。</p>
+</div>
+
+
+<!-- ==================== SLIDE 12-20 (POLLS) ==================== -->
+<h2 class="slide-title">Slide 12–20 — "你熟不熟 X" 系列 Poll</h2>
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-12.png" alt="Linux poll">
+  <img class="slide-img" src="images/slide-13.png" alt="Bash poll">
+  <img class="slide-img" src="images/slide-14.png" alt="C++ poll">
+  <img class="slide-img" src="images/slide-15.png" alt="Python poll">
+  <img class="slide-img" src="images/slide-16.png" alt="Git poll">
+  <img class="slide-img" src="images/slide-17.png" alt="CMake poll">
+  <img class="slide-img" src="images/slide-18.png" alt="Slurm poll">
+  <img class="slide-img" src="images/slide-19.png" alt="Archibald poll">
+  <img class="slide-img" src="images/slide-20.png" alt="VS Code poll">
+</div>
+<div class="explanation">
+  9 张连续 poll 把后面要用的工具栈点了一遍：Linux CLI、Bash 脚本、C++、Python、Git/GitHub、CMake、Slurm、Archibald（哈佛集群名）、VS Code。<strong>目的不是教学，而是诊断</strong>——讲师要知道班里谁需要补 bash、谁需要补 CMake。课程后续会按"大家最不熟的那个"来补充入门材料。
+</div>
+
+
+<!-- ==================== SLIDE 21 ==================== -->
+<h2 class="slide-title">Slide 21 — 今天的目标</h2>
+<img class="slide-img" src="images/slide-21.png" alt="Slide 21: Goal">
+<div class="explanation">
+  <p>今天唯一的硬目标：<strong>连上 compute cluster</strong>。隐含的真正目标是<em>把环境问题暴露出来</em>——比 SSH key 没配好、VPN 没装、VS Code 不能 remote 连，都要在课堂上当场被发现，然后在接下来几天里修掉。</p>
+</div>
+
+
+<!-- ==================== SLIDE 25-28 ==================== -->
+<h2 class="slide-title">Slide 25–28 — Accessing the Cluster（Open OnDemand → Shell）</h2>
+<div class="slide-grid cols-2">
+  <img class="slide-img" src="images/slide-25.png" alt="File system">
+  <img class="slide-img" src="images/slide-26.png" alt="Shell access intro">
+  <img class="slide-img" src="images/slide-27.png" alt="Login banner">
+  <img class="slide-img" src="images/slide-28.png" alt="Hello CS-2050">
+</div>
+<div class="explanation">
+  <p>这四张是 <em>"如何把命令打到集群上"</em> 的演示流程：</p>
+  <ol>
+    <li><strong>File System</strong>（Slide 25）：通过 <strong>Open OnDemand</strong> 浏览器界面浏览 <code>~/</code>，最直观的入口。</li>
+    <li><strong>Shell Access</strong>（Slide 26–27）：从同一个浏览器界面拿到一个 <em>login node</em> 的终端。Slide 27 是登录后看到的 banner——重点是这一行：</li>
+  </ol>
+
+<pre><code class="language-bash">This login node is for lightweight tasks only.
+For intensive work, use Slurm commands like sbatch or srun.</code></pre>
+
+  <p><strong>Login node ≠ compute node</strong>。Login node 是所有用户共享的"前门"，只用来登录、编辑、提交任务。<em>真正的计算工作不许在 login node 上跑</em>，否则会拖慢所有人。这是后面整节 Slurm 内容的动机。</p>
+
+  <p>Slide 28 演示了第一条命令：</p>
+<pre><code class="language-bash">[wcw398@ip-10-37-33-44 ~]$ echo "Hello, CS-2050."
+Hello, CS-2050.</code></pre>
+  <p>就只是验证"shell 接通了"，没有别的含义。</p>
+</div>
+
+
+<!-- ==================== SLIDE 30 ==================== -->
+<h2 class="slide-title">Slide 30 — lscpu：让集群自报家门</h2>
+<img class="slide-img" src="images/slide-30.png" alt="lscpu">
+<div class="explanation">
+<pre><code class="language-bash">[$] lscpu</code></pre>
+  <p>一个工具：<strong><code>lscpu</code></strong>。它打印 CPU 架构（x86_64 / aarch64）、核数、每核线程数、缓存大小、是否支持 SSE/AVX/AVX-512 等。这一条命令在后面非常有用——只要写 SIMD 代码就要先 <code>lscpu</code> 看支持哪一档向量指令。</p>
+</div>
+
+
+<!-- ==================== SLIDE 31 ==================== -->
+<h2 class="slide-title">Slide 31 — 拷贝本节课的例子</h2>
+<img class="slide-img" src="images/slide-31.png" alt="Copy examples">
+<div class="explanation">
+<pre><code class="language-bash">[$] cp -r ~/161588/lecture-02 ~
+[$] chmod u+w --recursive ~/lecture-02
+[$] cd ~/lecture-02/example-1</code></pre>
+  <p>逐行解释：</p>
+  <ul>
+    <li><code>cp -r ~/161588/lecture-02 ~</code> —— 把课程账号 <code>161588</code> 提供的目录递归拷到自己 home。<code>-r</code> 是 recursive。</li>
+    <li><code>chmod u+w --recursive ~/lecture-02</code> —— 给"自己（user）"加"写（w）"权限，整个子树都加。课程目录默认是只读的，自己改东西前要先开写权限。</li>
+    <li><code>cd ~/lecture-02/example-1</code> —— 进入第一个例子目录，准备做编译实验。</li>
+  </ul>
+</div>
+
+
+<!-- ==================== SLIDE 33-37 (SLURM) ==================== -->
+<h2 class="slide-title">Slide 33–37 — Slurm 基本五件套</h2>
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-33.png" alt="sinfo">
+  <img class="slide-img" src="images/slide-34.png" alt="sbatch">
+  <img class="slide-img" src="images/slide-35.png" alt="squeue">
+  <img class="slide-img" src="images/slide-36.png" alt="scancel">
+  <img class="slide-img" src="images/slide-37.png" alt="srun">
+</div>
+<div class="explanation">
+  <p>五张 slide 把 Slurm 最常用的五个命令逐个介绍。把它们当成集群上的"日常工作流"来记：</p>
+
+  <table>
+    <tr><th>命令</th><th>用途</th><th>例子</th></tr>
+    <tr><td><code>sinfo</code></td><td>看集群当前状态（哪些节点空、哪些被占用）</td><td><code>sinfo</code></td></tr>
+    <tr><td><code>sbatch</code></td><td>把一个 shell 脚本作为<em>批处理任务</em>丢进队列</td><td><code>sbatch sbatch-me.sh</code></td></tr>
+    <tr><td><code>squeue</code></td><td>看队列里有什么任务在跑（加 <code>-u 用户名</code> 只看自己）</td><td><code>squeue -u wcw398</code></td></tr>
+    <tr><td><code>scancel</code></td><td>取消某个 job（用 JOBID）</td><td><code>scancel 33524</code></td></tr>
+    <tr><td><code>srun</code></td><td>互动模式：直接在 compute node 上开一个 shell</td><td><code>srun --nodes=1 --ntasks=4 --time=02:00:00 --pty bash</code></td></tr>
+  </table>
+
+  <p>对 <code>srun</code> 这条命令展开讲一下参数：</p>
+  <ul>
+    <li><code>--nodes=1</code> — 申请 1 台机器（physical node）。</li>
+    <li><code>--ntasks=4</code> — 在这台机器上跑 4 个并行任务（后面 MPI 会用到）。</li>
+    <li><code>--time=02:00:00</code> — 最多用 2 小时（到点会被强制释放）。</li>
+    <li><code>--pty bash</code> — 给我一个交互式 bash 会话，而不是直接跑某条命令。</li>
+  </ul>
+
+  <p><strong>记忆口诀</strong>：sinfo 看状态、sbatch 投脚本、squeue 看队列、scancel 杀任务、srun 抢交互。Slurm 在这门课里贯穿全程，五件套必须熟。</p>
+</div>
+
+
+<!-- ==================== SLIDE 39-41 (EXAMPLE 2 + CMAKE) ==================== -->
+<h2 class="slide-title">Slide 39–41 — Example 2：用 C++ + CMake 算 π</h2>
+<div class="slide-grid cols-3">
+  <img class="slide-img" src="images/slide-39.png" alt="Example 2 intro">
+  <img class="slide-img" src="images/slide-40.png" alt="Example 2 pi integral">
+  <img class="slide-img" src="images/slide-41.png" alt="CMake two steps">
+</div>
+<div class="explanation">
+  <p>Example 2 用最经典的"<strong>面积积分求 π</strong>"作为编译练习：</p>
+  <p style="text-align:center;">π = 2 · ∫<sub>−1</sub><sup>1</sup> √(1 − x²) dx</p>
+  <p>（半径为 1 的半圆面积是 π/2，整圆是 π。）数值上把 [−1, 1] 分成 N 段，每段算梯形/中点高度，累加即可。</p>
+
+  <h3>两种编译方式</h3>
+  <p><strong>简单情况：直接 g++</strong></p>
+<pre><code class="language-bash">[$] g++ code.cpp</code></pre>
+  <p>对单文件、无外部依赖的小程序来说够用。</p>
+
+  <p><strong>现代项目：CMake 两步走</strong></p>
+<pre><code class="language-bash"># 步骤 1：Configure（生成构建系统）
+[$] cmake -B where-to-build .
+
+# 步骤 2：Build（实际编译）
+[$] cmake --build where-to-build</code></pre>
+  <p>逐参数解释：</p>
+  <ul>
+    <li><code>cmake</code> —— 调用 CMake 工具本身。</li>
+    <li><code>-B where-to-build</code> —— 把构建产物（Makefile / 中间文件 / 可执行文件）放到 <code>where-to-build</code> 目录。<em>out-of-source build</em>：源码和构建产物分离，clean 起来就是把这个目录 <code>rm -rf</code>。</li>
+    <li><code>.</code> —— <strong>这就是 slide 上问的"这个点是什么意思"</strong>：当前目录，告诉 CMake "去这里找 <code>CMakeLists.txt</code>"。</li>
+    <li>第二条 <code>cmake --build where-to-build</code> —— 让 CMake 调用底层的 make / ninja 真正执行编译。</li>
+  </ul>
+
+  <div class="takeaway">
+    💡 为什么要有 CMake：单文件用 <code>g++</code> 就够了；但现代 C++ 项目往往要链接几十个第三方库，在 Linux/Mac/Windows 上的找包方式都不一样。CMake 提供<strong>跨平台、声明式</strong>的描述方式（写一份 <code>CMakeLists.txt</code> 就够），后面例子里会反复出现。
+  </div>
+</div>
+
+
+<!-- ==================== SLIDE 43 ==================== -->
+<h2 class="slide-title">Slide 43 — Example 3：Python 慢，C++ 快，所以混着用</h2>
+<img class="slide-img" src="images/slide-43.png" alt="Slide 43: Python hybrid">
+<div class="explanation">
+  <p>同样是积分求 π，但把例子搬到 Python 里。讲点很简单：</p>
+  <ul>
+    <li><strong>Python 写起来方便</strong>，但纯 Python 跑数值循环慢得多。</li>
+    <li>所以现代科学计算的标准做法是<em>混合架构</em>：<strong>Python 做骨架</strong>（参数管理、测试、可视化），<strong>性能瓶颈用 C++/CUDA 写</strong>，再用 <code>pybind11</code> / <code>ctypes</code> 等桥接。</li>
+    <li>典型例子：NumPy / PyTorch / TensorFlow，本身都是这种 Python 表壳 + C++/CUDA 心脏的结构。</li>
+  </ul>
+  <p>课程后面 GPU 那一节会重新回到这个 hybrid 模式。</p>
+</div>
+
+
+<!-- ==================== SLIDE 45 ==================== -->
+<h2 class="slide-title">Slide 45 — Accessing the Cluster：VS Code</h2>
+<img class="slide-img" src="images/slide-45.png" alt="Slide 45: VS Code">
+<div class="explanation">
+  <p>第三种连法（除了 Open OnDemand 网页和 SSH 终端）：<strong>VS Code Remote-SSH</strong>。装上 VS Code 的 "Remote - SSH" 扩展，把集群作为远程主机，本地编辑、远程运行。这是大多数同学在后续作业里实际使用的开发方式，因为 IDE 体验远好于 vim 在终端里调代码。</p>
+  <p>对应的 SSH config 在 Lecture 4 末尾会展开（<code>~/.ssh/config</code> 的 Host / Hostname / IdentityFile）。</p>
+</div>
+
+
+<details class="qa">
+  <summary>📌 Q&amp;A 补充要点（点击展开）</summary>
+  <ul>
+    <li><strong>SISD / SIMD / MIMD 到底落在硬件哪？</strong> SISD = 老式单核 CPU 的单条指令路径；SIMD = 现代 CPU 的 SSE/AVX 向量指令、GPU 的 warp；MIMD = 多核 CPU、整个 HPC 集群。</li>
+    <li><strong>login node 和 compute node 的区别为什么重要？</strong> login node 是所有人共享、做轻量任务（编辑、提交）；compute node 是 Slurm 调度才能用到的"干活机器"。在 login 上跑大计算会被管理员投诉。</li>
+    <li><strong><code>srun</code> 和 <code>sbatch</code> 的差别？</strong> <code>sbatch</code> 提交脚本，离线、批处理；<code>srun</code> 当场拿一个交互 shell（或当场跑一行命令），<em>需要现场</em>等资源。</li>
+    <li><strong>CMake 里那个 <code>.</code>？</strong> 告诉 CMake 去当前目录找 <code>CMakeLists.txt</code>。第一个参数 <code>-B</code> 后面跟的是<em>构建目录</em>（产物去哪），不是源码目录。</li>
+    <li><strong>为什么要 <code>chmod u+w --recursive</code>？</strong> 课程账号给的目录默认只读；拷过来后要给自己加写权限才能改东西。</li>
+  </ul>
+</details>
+
+
+<div class="takeaway" style="margin-top: 40px;">
+  <strong>本节课要带走的两件事：</strong>
+  <ol>
+    <li><strong>并行的分类口径</strong>：Flynn's Taxonomy（SISD / SIMD / MISD / MIMD）。SIMD 对应向量指令和 GPU，MIMD 对应多核 / 集群——后面整门课的所有技术都能往这张 2 × 2 上挂。</li>
+    <li><strong>把作业跑到集群的最小工作流</strong>：浏览器 → login node（ssh）→ <code>srun</code> 抢 compute node → <code>cmake -B build .</code> + <code>cmake --build build</code> → 跑可执行文件。后续每节课都假定这套流程已经熟练。</li>
+  </ol>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'cs2050-lec02-highlights';
+  const state = { highlightMode: false, eraserMode: false, currentColor: 'yellow', highlights: [] };
+
+  function load() {
+    try { const raw = localStorage.getItem(STORAGE_KEY); state.highlights = raw ? JSON.parse(raw) : []; }
+    catch (e) { state.highlights = []; }
+  }
+  function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.highlights)); }
+  function genId() { return 'hl_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7); }
+
+  function buildToolbar() {
+    const tb = document.createElement('div');
+    tb.id = 'hl-toolbar';
+    tb.innerHTML =
+      '<button id="hl-mode-btn" class="hl-btn">高亮模式: 关</button>' +
+      '<span class="hl-color-picker">' +
+        '<span class="hl-color" data-color="yellow"></span>' +
+        '<span class="hl-color" data-color="green"></span>' +
+        '<span class="hl-color" data-color="pink"></span>' +
+        '<span class="hl-color" data-color="blue"></span>' +
+      '</span>' +
+      '<button id="hl-eraser-btn" class="hl-btn">🧽 橡皮擦: 关</button>' +
+      '<button id="hl-toggle-btn" class="hl-btn">隐藏标记</button>' +
+      '<button id="hl-clear-btn" class="hl-btn">清除全部</button>';
+    document.body.appendChild(tb);
+
+    const modeBtn = document.getElementById('hl-mode-btn');
+    const eraserBtn = document.getElementById('hl-eraser-btn');
+    function refreshModeUI() {
+      modeBtn.textContent = '高亮模式: ' + (state.highlightMode ? '开' : '关');
+      modeBtn.classList.toggle('active', state.highlightMode);
+      eraserBtn.textContent = '🧽 橡皮擦: ' + (state.eraserMode ? '开' : '关');
+      eraserBtn.classList.toggle('active', state.eraserMode);
+      document.body.classList.toggle('hl-active', state.highlightMode);
+      document.body.classList.toggle('hl-eraser', state.eraserMode);
+    }
+    modeBtn.addEventListener('click', () => {
+      state.highlightMode = !state.highlightMode;
+      if (state.highlightMode) state.eraserMode = false;
+      refreshModeUI();
+    });
+    eraserBtn.addEventListener('click', () => {
+      state.eraserMode = !state.eraserMode;
+      if (state.eraserMode) state.highlightMode = false;
+      refreshModeUI();
+    });
+    tb.querySelectorAll('.hl-color').forEach(el => {
+      el.addEventListener('click', () => {
+        state.currentColor = el.dataset.color;
+        tb.querySelectorAll('.hl-color').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+      });
+    });
+    tb.querySelector('.hl-color[data-color="yellow"]').classList.add('selected');
+    const toggleBtn = document.getElementById('hl-toggle-btn');
+    toggleBtn.addEventListener('click', () => {
+      const hidden = document.body.classList.toggle('hl-hidden');
+      toggleBtn.textContent = hidden ? '显示标记' : '隐藏标记';
+    });
+    document.getElementById('hl-clear-btn').addEventListener('click', () => {
+      if (!confirm('清除全部高亮?')) return;
+      state.highlights = []; save(); clearAllVisuals();
+    });
+  }
+
+  function setupImages() {
+    document.querySelectorAll('.slide-img').forEach(img => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'hl-img-wrapper';
+      img.parentNode.insertBefore(wrapper, img);
+      wrapper.appendChild(img);
+      attachImageDrag(img, wrapper);
+    });
+  }
+  function attachImageDrag(img, wrapper) {
+    let dragging = false, startX = 0, lockedY = 0, preview = null, rect = null;
+    img.addEventListener('mousedown', (e) => {
+      if (!state.highlightMode) return;
+      e.preventDefault();
+      rect = img.getBoundingClientRect();
+      startX = e.clientX - rect.left;
+      lockedY = e.clientY - rect.top;
+      dragging = true;
+      preview = document.createElement('div');
+      preview.className = 'hl-img-mark';
+      preview.dataset.color = state.currentColor;
+      preview.style.left = (startX / rect.width * 100) + '%';
+      preview.style.top  = (lockedY / rect.height * 100) + '%';
+      preview.style.width = '0';
+      preview.style.pointerEvents = 'none';
+      wrapper.appendChild(preview);
+    });
+    function onMove(e) {
+      if (!dragging) return;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      preview.style.left  = (xs / rect.width * 100) + '%';
+      preview.style.width = ((xe - xs) / rect.width * 100) + '%';
+    }
+    function onUp(e) {
+      if (!dragging) return;
+      dragging = false;
+      const curX = e.clientX - rect.left;
+      const xs = Math.max(0, Math.min(startX, curX));
+      const xe = Math.min(rect.width, Math.max(startX, curX));
+      if ((xe - xs) < 8) { if (preview) preview.remove(); preview = null; return; }
+      const data = {
+        type: 'image', img_src: img.getAttribute('src'),
+        y_pct: lockedY / rect.height * 100,
+        x_start_pct: xs / rect.width * 100,
+        x_end_pct: xe / rect.width * 100,
+        color: state.currentColor, id: genId()
+      };
+      state.highlights.push(data); save();
+      preview.dataset.hlId = data.id;
+      preview.style.pointerEvents = 'auto';
+      preview.addEventListener('click', (ev) => {
+        if (!state.eraserMode) return;
+        ev.stopPropagation();
+        removeHighlight(data.id);
+      });
+      preview = null;
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+  function applyImageHighlight(data) {
+    const img = document.querySelector('.slide-img[src="' + cssEscape(data.img_src) + '"]');
+    if (!img) return;
+    const wrapper = img.parentElement;
+    if (!wrapper.classList.contains('hl-img-wrapper')) return;
+    const m = document.createElement('div');
+    m.className = 'hl-img-mark';
+    m.dataset.color = data.color;
+    m.dataset.hlId = data.id;
+    m.style.left = data.x_start_pct + '%';
+    m.style.width = (data.x_end_pct - data.x_start_pct) + '%';
+    m.style.top = data.y_pct + '%';
+    m.addEventListener('click', (ev) => {
+      if (!state.eraserMode) return;
+      ev.stopPropagation();
+      removeHighlight(data.id);
+    });
+    wrapper.appendChild(m);
+  }
+  function cssEscape(s) { return s.replace(/"/g, '\\"'); }
+
+  function setupTextSelection() {
+    document.addEventListener('mouseup', (e) => {
+      if (!state.highlightMode) return;
+      if (e.target.closest('#hl-toolbar')) return;
+      if (e.target.classList && e.target.classList.contains('slide-img')) return;
+      if (e.target.classList && e.target.classList.contains('hl-img-mark')) return;
+      setTimeout(() => {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        const text = sel.toString();
+        if (text.length === 0) return;
+        const range = sel.getRangeAt(0);
+        const ctx = computeContext(range);
+        if (!ctx) return;
+        const data = {
+          type: 'text', text: text,
+          contextBefore: ctx.before, contextAfter: ctx.after,
+          color: state.currentColor, id: genId()
+        };
+        wrapRange(range, data);
+        state.highlights.push(data); save();
+        sel.removeAllRanges();
+      }, 0);
+    });
+  }
+  function computeContext(range) {
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) root = root.parentElement;
+    while (root && root.tagName && !/^(P|LI|TD|H1|H2|H3|H4|DIV|BODY|PRE|BLOCKQUOTE|SUMMARY)$/.test(root.tagName)) {
+      root = root.parentElement;
+    }
+    if (!root) return null;
+    const fullText = root.textContent;
+    const startOffset = nodeOffset(root, range.startContainer, range.startOffset);
+    const endOffset = nodeOffset(root, range.endContainer, range.endOffset);
+    if (startOffset < 0 || endOffset < 0) return null;
+    const CTX = 25;
+    return {
+      before: fullText.slice(Math.max(0, startOffset - CTX), startOffset),
+      after: fullText.slice(endOffset, endOffset + CTX)
+    };
+  }
+  function nodeOffset(root, node, offsetInNode) {
+    let total = 0;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    let n;
+    while ((n = walker.nextNode())) {
+      if (n === node) return total + offsetInNode;
+      total += n.textContent.length;
+    }
+    return -1;
+  }
+  function wrapRange(range, data) {
+    const fragments = [];
+    let root = range.commonAncestorContainer;
+    if (root.nodeType === Node.TEXT_NODE) {
+      fragments.push({ node: root, start: range.startOffset, end: range.endOffset });
+    } else {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+      let n;
+      while ((n = walker.nextNode())) {
+        if (!range.intersectsNode(n)) continue;
+        const start = (n === range.startContainer) ? range.startOffset : 0;
+        const end   = (n === range.endContainer)   ? range.endOffset   : n.textContent.length;
+        if (end > start) fragments.push({ node: n, start, end });
+      }
+    }
+    fragments.forEach(f => {
+      const r = document.createRange();
+      try {
+        r.setStart(f.node, f.start); r.setEnd(f.node, f.end);
+        const m = document.createElement('mark');
+        m.className = 'hl-text-mark';
+        m.dataset.color = data.color;
+        m.dataset.hlId = data.id;
+        m.addEventListener('click', (ev) => {
+          if (!state.eraserMode) return;
+          ev.stopPropagation();
+          removeHighlight(data.id);
+        });
+        r.surroundContents(m);
+      } catch (e) {}
+    });
+  }
+  function applyTextHighlight(data) {
+    const target = data.contextBefore + data.text + data.contextAfter;
+    const root = document.body;
+    const nodes = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => {
+        if (n.parentElement && n.parentElement.closest('script, style, #hl-toolbar'))
+          return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }, false);
+    let nd;
+    while ((nd = walker.nextNode())) nodes.push(nd);
+    const fullText = nodes.map(n => n.textContent).join('');
+    const idx = fullText.indexOf(target);
+    if (idx === -1) return;
+    const startPos = idx + data.contextBefore.length;
+    const endPos = startPos + data.text.length;
+    let cum = 0, startNode = null, startOff = 0, endNode = null, endOff = 0;
+    for (const n of nodes) {
+      const len = n.textContent.length;
+      if (!startNode && startPos >= cum && startPos < cum + len) { startNode = n; startOff = startPos - cum; }
+      if (startNode && endPos > cum && endPos <= cum + len) { endNode = n; endOff = endPos - cum; break; }
+      cum += len;
+    }
+    if (!startNode || !endNode) return;
+    const range = document.createRange();
+    try { range.setStart(startNode, startOff); range.setEnd(endNode, endOff); wrapRange(range, data); } catch (e) {}
+  }
+  function removeHighlight(id) {
+    state.highlights = state.highlights.filter(h => h.id !== id); save();
+    document.querySelectorAll('[data-hl-id="' + id + '"]').forEach(el => {
+      if (el.tagName === 'MARK') {
+        const p = el.parentNode;
+        while (el.firstChild) p.insertBefore(el.firstChild, el);
+        p.removeChild(el); p.normalize();
+      } else { el.remove(); }
+    });
+  }
+  function clearAllVisuals() {
+    document.querySelectorAll('.hl-img-mark').forEach(el => el.remove());
+    document.querySelectorAll('mark.hl-text-mark').forEach(el => {
+      const p = el.parentNode;
+      while (el.firstChild) p.insertBefore(el.firstChild, el);
+      p.removeChild(el); p.normalize();
+    });
+  }
+  function init() {
+    load(); buildToolbar(); setupImages(); setupTextSelection();
+    window.addEventListener('load', () => {
+      state.highlights.forEach(h => {
+        if (h.type === 'image') applyImageHighlight(h);
+        else if (h.type === 'text') applyTextHighlight(h);
+      });
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+
+</body>
+</html>

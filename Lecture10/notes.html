@@ -83,6 +83,12 @@
     border-radius: 6px;
     overflow-x: auto;
   }
+  pre code {
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    color: inherit;
+  }
   table {
     border-collapse: collapse;
     width: 100%;
@@ -299,6 +305,30 @@ p95  = sort[cp.searchsorted(cdf, 0.95)]</code></pre>
   💡 Thread-Level = 用户自己掌控并行细节（block / tile / thread / shared memory / sync）。代价是每一行都要写，收益是 100% 硬件控制权。matmul 是后面讲解 numba.cuda 语法的样板，先记住它的存在。
 </div>
 
+<details class="qa">
+  <summary>Q: Grid-Level "简单但浪费算力" 这个理解对吗？想"只用半张卡"该怎么办？</summary>
+  <ul>
+    <li><strong>Grid-Level / Thread-Level 不是"用多少 GPU"</strong>，是"谁切线程"——库切 vs 你自己切。两者都用整张卡。</li>
+    <li><strong>Grid-Level 不是浪费，是"通用"</strong>。库针对平均情况调好，特殊数据布局/访存模式下不够极致时才砸开 Thread-Level。</li>
+    <li><strong>"只用半张卡"与 Grid/Thread 正交</strong>。靠这些机制：<ul>
+      <li><strong>MIG</strong>：A100/H100 物理切成 2/3/4/7 份独立小卡，隔离最干净。</li>
+      <li><strong>MPS</strong>：env var <code>CUDA_MPS_ACTIVE_THREAD_PERCENTAGE=50</code> 限定进程占 SM 比例。</li>
+      <li><strong>Green Context</strong>（CUDA 12.4+）：launch 时指定 kernel 能用的 SM 子集。</li>
+    </ul></li>
+  </ul>
+</details>
+
+<details class="qa">
+  <summary>Q: SM / block / warp / thread 的关系？哪些是 user 控制，哪些是硬件决定？</summary>
+  <ul>
+    <li><strong>Block 锁在一个 SM 上</strong>，从启动到结束不迁移——所以 <code>shared.array</code> 和 <code>cuda.syncthreads()</code> 只在 block 内有效。</li>
+    <li><strong>一个 SM 可同时驻留多个 block</strong>（资源够时），让 warp scheduler 在它们之间切换隐藏延迟。Shared memory / register / threads-per-SM 上限谁先撞谁卡住。</li>
+    <li><strong>每 block ≤ 1024 thread = 32 warp</strong>（Kepler 后硬上限）。Block size 应是 32 的倍数，否则末尾 warp 有 lane 空转。<strong>Warp 永远 32 thread</strong>，硬件常数。</li>
+    <li><strong>User 控制</strong>：grid size、block size、shared memory 用量。<strong>硬件控制</strong>：block 落到哪个 SM、用几个 SM、block 执行顺序。CUDA 故意不给后者的 API，让同一份 kernel 跨代可扩展（108 SM 的 A100 与 1 万+ SM 的未来卡都能跑）。</li>
+    <li><strong>常用 block size</strong>：128（4 warp）/ 256（8 warp）——足够 warp 隐藏延迟，又不会把单 block 撑太大压缩并发 block 数。</li>
+  </ul>
+</details>
+
 
 <!-- ==================== SLIDE 7 ==================== -->
 <h2 class="slide-title">Slide 7 — Python kernel 性能 ≈ C++：本讲的"为什么"</h2>
@@ -407,6 +437,35 @@ def copy(s, d):
   💡 4 行 copy kernel 的角色分工：装饰器（编译指令）+ 数组参数（必须在 device 上）+ <code>cuda.grid(1)</code>（拿线程 ID）+ 索引读写（每线程做自己那一格）。
 </div>
 
+<details class="qa">
+  <summary>Q: <code>cuda.grid(1)</code> 到底返回什么？<code>t</code> 是哪种东西？</summary>
+  <ul>
+    <li><code>cuda.grid(N)</code> 是 numba 内置函数，返回<strong>当前线程的全局 ID</strong>。参数 N 是 grid 维度：
+      <ul>
+        <li><code>cuda.grid(1)</code> → 一个 <code>int</code>（1D），等价于 <code>blockIdx.x * blockDim.x + threadIdx.x</code></li>
+        <li><code>cuda.grid(2)</code> → <code>(x, y)</code> 二元组（矩阵/图像）</li>
+        <li><code>cuda.grid(3)</code> → <code>(x, y, z)</code> 三元组（3D 数据）</li>
+      </ul>
+    </li>
+    <li><code>t</code> 就是个普通整数——这个线程的"我是几号"。N 个线程同时跑同一份代码，每个拿到不同的 <code>t</code>（0, 1, …, N-1），靠它索引数组完成各自那一格——SPMD 的核心。</li>
+  </ul>
+</details>
+
+<details class="qa">
+  <summary>Q: <code>s, d</code> 必须已经搬到 GPU 上吗？传 numpy 数组会怎样？</summary>
+  <ul>
+    <li><strong>必须在 device 上才高性能</strong>。三种情况：
+      <ul>
+        <li><code>cupy</code> 数组（<code>cp.array(...)</code>）→ ✅ 已在 device</li>
+        <li>numba device array（<code>cuda.to_device(np_arr)</code>）→ ✅ 已在 device</li>
+        <li>numpy 数组（host）→ ⚠️ numba 自动做 host→device 拷一份，跑完再拷回来。能跑但每次 launch 都拷贝，性能拉胯</li>
+      </ul>
+    </li>
+    <li><strong>惯例</strong>：launch 前 <code>cp.asarray()</code> 或 <code>cuda.to_device()</code> 显式搬一次，反复用。和 C++ 的 <code>cudaMemcpy</code> 是显式的同理。</li>
+    <li>kernel 体里 <code>s[t]</code> / <code>d[t]</code> 直接读写 device 显存，不经过 CPU。</li>
+  </ul>
+</details>
+
 
 <!-- ==================== SLIDE 15–17 ==================== -->
 <h2 class="slide-title">Slide 15–17 — 线程的三层组织：thread → warp → block</h2>
@@ -511,6 +570,50 @@ copy[..., ...](s, d, T)</code></pre>
 <div class="takeaway">
   💡 让每个线程做多个元素（<code>items</code>）是 GPU 编程的常规优化。launch 公式：<code>blocks × threads_per_block × items = N</code>。注意 slide 上的 <strong>B 指的是 threads per block</strong>（不是 blocks 数量），符号容易误读。
 </div>
+
+<details class="qa">
+  <summary>Q: 给个具体数字的例子——N=100、20 线程、每线程 5 个元素长什么样？</summary>
+  <p><strong>参数</strong>：N=100, T=5 (items/thread), B=10 (threads/block) → blocks = N/(B·T) = 2。总共 2 block × 10 thread = 20 线程，每线程 5 元素，覆盖 100。</p>
+<pre><code>import cupy as cp
+from numba import cuda
+
+@cuda.jit
+def copy(s, d, items):
+    t = cuda.grid(1) * items        # 这线程的起始下标
+    for i in range(items):
+        d[t + i] = s[t + i]         # 串行做 items 个元素
+
+N = 100              # 数组长度
+T = 5                # items per thread
+B = 10               # threads per block
+blocks_per_grid = N // (B * T)      # = 100 // 50 = 2
+
+s = cp.arange(N, dtype=cp.int32)    # [0..99]，已在 device
+d = cp.empty_like(s)
+
+copy[blocks_per_grid, B](s, d, T)   # = copy[2, 10](s, d, 5)
+</code></pre>
+  <p><strong>逐行</strong>：</p>
+  <ul>
+    <li><code>t = cuda.grid(1) * items</code>——<code>cuda.grid(1)</code> 是全局线程 ID（0..19），×5 得到这线程负责的起始下标。</li>
+    <li><code>for i in range(items):</code>——串行循环 5 次，每次一个连续下标。</li>
+    <li><code>d[t + i] = s[t + i]</code>——拷 <code>s[t..t+4]</code> 到 <code>d</code>。</li>
+    <li><code>N // (B * T)</code>——每 block 处理 <code>B·T=50</code> 个，所以需要 <code>100/50=2</code> 个 block。</li>
+    <li><code>copy[2, 10](s, d, 5)</code>——2 block × 10 thread = 20 线程。</li>
+  </ul>
+  <p><strong>线程 → 元素 映射</strong>（blocked layout，每线程一段连续）：</p>
+  <table>
+    <tr><th>Thread 全局 ID</th><th>所在 block</th><th><code>t = id*5</code></th><th>负责下标</th></tr>
+    <tr><td>0</td><td>Block 0</td><td>0</td><td>[0, 1, 2, 3, 4]</td></tr>
+    <tr><td>1</td><td>Block 0</td><td>5</td><td>[5, 6, 7, 8, 9]</td></tr>
+    <tr><td>…</td><td>Block 0</td><td>…</td><td>…</td></tr>
+    <tr><td>9</td><td>Block 0</td><td>45</td><td>[45..49]</td></tr>
+    <tr><td>10</td><td>Block 1</td><td>50</td><td>[50..54]</td></tr>
+    <tr><td>…</td><td>Block 1</td><td>…</td><td>…</td></tr>
+    <tr><td>19</td><td>Block 1</td><td>95</td><td>[95, 96, 97, 98, 99]</td></tr>
+  </table>
+  <p><strong>等式检查</strong>：<code>blocks × threads × items = 2 × 10 × 5 = 100 = N</code> ✓</p>
+</details>
 
 
 <!-- ==================== SLIDE 27 ==================== -->

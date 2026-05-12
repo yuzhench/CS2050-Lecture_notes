@@ -2290,6 +2290,145 @@ for (auto write_step : std::views::iota(0, write_steps)) {
   💡 <code>par_nosync</code> 不能让所有 Thrust 算法都不阻塞——若返回值依赖计算结果（reduce 标量、copy_if 的 end、find_if 的位置），算法仍 host-block。规避：用 *_into 变体把结果写到输出 iterator，调用立即返回。
 </div>
 
+<details class="qa">
+  <summary>两种 block 区分 + 不阻塞算法的"看似 OK 实则 bug"陷阱</summary>
+
+  <h3>两类 block——本质不同</h3>
+  <table>
+    <tr><th></th><th>"block" 含义</th><th>谁的责任</th><th>par_nosync 能改吗</th></tr>
+    <tr><td><strong>API 自带 block</strong>（reduce, copy_if, find_if）</td><td>算法<em>被迫</em>同步</td><td>API 自己</td><td>❌ 即使写 par_nosync 仍阻塞</td></tr>
+    <tr><td><strong>需手动 sync</strong>（transform, for_each_n）</td><td>你<em>读输出前</em>自己加 sync</td><td>你的责任</td><td>不适用——本来就不阻塞</td></tr>
+  </table>
+  <p>分流原则：<strong>返回值是否需要 GPU 跑完才能知道</strong>？需要 → 被迫 block；不需要 → 立即返回，但读输出是另一回事。</p>
+
+  <h3>transform 之后读 B 的三种安全等级</h3>
+  <pre><code>thrust::transform(par_nosync.on(streamA), A.begin(), A.end(), B.begin(), op);
+// 立即返回；B 此刻可能还没写好</code></pre>
+  <table>
+    <tr><th>读法</th><th>安全？</th><th>原因</th></tr>
+    <tr><td>① host 直接读 <code>B[5]</code></td><td>❌ <strong>bug</strong></td><td>host 不在 stream 里；GPU 可能正在写</td></tr>
+    <tr><td>② 同 stream 下一个 GPU 算法（<code>reduce_into</code> 等）</td><td>✅ 安全</td><td>同 stream FIFO 自动有序</td></tr>
+    <tr><td>③ 不同 stream 的 GPU 算法</td><td>❌ <strong>bug</strong></td><td>跨 stream 并发，需 event + wait</td></tr>
+  </table>
+  <p>修复 ①：<code>streamA.sync()</code> 再读；修复 ③：<code>auto e = streamA.record_event(); streamB.wait(e);</code></p>
+
+  <h3><code>universal_vector</code> 让这事更阴险</h3>
+  <p>普通 <code>device_vector</code> 上 host 直接 <code>B[5]</code> 编译就报错。<strong>universal_vector 在 unified memory 上，host 端 <code>B[5]</code> 语法合法、运行不报错</strong>——可能读到旧值或半写值，<strong>错得静悄悄</strong>。这就是 slide 106 必须 <code>cudaDeviceSynchronize()</code> 才让 host 读的原因。</p>
+</details>
+
+<details class="qa">
+  <summary><code>inclusive_scan</code> / <code>exclusive_scan</code> 怎么用</summary>
+
+  <h3>语义：累计前缀和</h3>
+  <pre>输入:  [1,  2,  3,  4,  5]
+inclusive:  [1,  3,  6, 10, 15]    ← out[i] = in[0]+...+in[i]，<em>含自己</em>
+exclusive:  [0,  1,  3,  6, 10]    ← 从 0 起、<em>不含自己</em>（前缀和）</pre>
+
+  <h3>基础用法</h3>
+  <pre><code>#include &lt;thrust/scan.h&gt;
+thrust::device_vector&lt;int&gt; A = {1, 2, 3, 4, 5};
+thrust::device_vector&lt;int&gt; B(5);
+
+thrust::inclusive_scan(thrust::device,
+                       A.begin(), A.end(),   // 输入区间
+                       B.begin());           // 输出起点
+// B = [1, 3, 6, 10, 15]</code></pre>
+
+  <h3>原地版 + 自定义 binary_op（要求结合律）</h3>
+  <pre><code>thrust::inclusive_scan(thrust::device, A.begin(), A.end(), A.begin());     // 原地
+
+thrust::inclusive_scan(..., thrust::multiplies&lt;int&gt;{});   // 累乘
+thrust::inclusive_scan(..., thrust::maximum&lt;int&gt;{});      // running max</code></pre>
+
+  <h3>为什么并行计算特别在乎</h3>
+  <p>看似必须串行（每位依赖前位），但用 <strong>tree reduction</strong> 可以做到 <strong>O(log N)</strong> 并行深度。Thrust/CUB 帮你实现好了——一行调用。</p>
+
+  <h3>典型应用：stream compaction（exclusive_scan 算"目标位置"）</h3>
+  <pre><code>in   = [-1, 3, -2, 7, 0, -5, 4]
+flag = [ 0, 1,  0, 1, 0,  0, 1]            ← transform 标记
+pos  = [ 0, 0,  1, 1, 2,  2, 2]            ← exclusive_scan(flag)
+                                            ← 每个 1 之前有几个 1 → 它该写到第几位
+out  = [3, 7, 4]                           ← 按 pos 散射到输出</pre>
+</details>
+
+<details class="qa">
+  <summary><code>copy_if</code> 怎么用</summary>
+
+  <h3>语义：只复制满足谓词的元素，紧凑写入</h3>
+  <pre>输入: [-1, 3, -2, 7, 0, -5, 4]
+谓词: x > 0
+输出: [3, 7, 4]</pre>
+
+  <h3>形态 1：谓词作用在元素</h3>
+  <pre><code>auto end = thrust::copy_if(thrust::device,
+                           in.begin(), in.end(),
+                           out.begin(),
+                           [] __device__ (int x) { return x > 0; });
+// end - out.begin() = 3 （实际写入个数）
+out.resize(end - out.begin());   // 自己截到实际长度</code></pre>
+
+  <h3>形态 2：stencil 版（另一数组当 flag）</h3>
+  <pre><code>thrust::copy_if(policy, in.begin(), in.end(), flag.begin(),  // ← 多了 stencil
+                out.begin(),
+                [] __device__ (int f) { return f != 0; });
+// 谓词作用在 flag 上，但拷贝的是 in 对应位置的元素</code></pre>
+
+  <h3>为什么 par_nosync 下也阻塞</h3>
+  <p>返回 end iterator = "满足条件的元素个数" + out.begin()。<strong>个数必须 GPU 跑完才知道</strong>，所以 host 不等就拿不到 end → 被迫阻塞。transform 不阻塞是因为输出长度 = 输入长度（编译期可算）。</p>
+
+  <h3>要异步 compaction → 下到 CUB</h3>
+  <pre><code>size_t* d_num;  // device 上的输出长度
+cub::DeviceSelect::If(tmp, tmp_size, in, out, d_num, N, pred);   // 立即返回
+stream.sync();
+// 再读 d_num</code></pre>
+
+  <h3>典型用法：用 counting_iterator 收集"满足条件的下标"</h3>
+  <pre><code>thrust::copy_if(thrust::device,
+    counting_iterator(0), counting_iterator(N),
+    in.begin(),                                  // stencil = in 本身
+    indices.begin(),
+    [] __device__ (int x) { return x > 0; });
+// indices = [1, 3, 6]  ← 满足条件的位置列表</code></pre>
+</details>
+
+<details class="qa">
+  <summary><code>reduce</code> 的 return-value 风格 vs OpenMP 的 <code>reduction(+:sum)</code> by-ref 风格</summary>
+
+  <h3>Thrust reduce：return value 风格（C++ STL 习惯）</h3>
+  <pre><code>auto sum = thrust::reduce(par, A.begin(), A.end(), 0.0f, std::plus&lt;&gt;{});
+//   ↑
+//   = 左边接住函数返回值，<strong>不是 by-reference 参数</strong></code></pre>
+  <p>好处：链式表达、auto 推导、和 <code>std::reduce</code> 对齐。代价：<strong>强制阻塞</strong>（host 不等就没东西塞 <code>=</code> 左边）。</p>
+
+  <h3>对比 OpenMP：通过 reduction 子句"写回 host 栈变量"</h3>
+  <pre><code>double sum = 0.0;                              // host 栈变量
+#pragma omp parallel for reduction(+:sum)
+for (int i = 0; i &lt; N; ++i) sum += a[i];
+// 区域结束时 sum 已经是最终值——<strong>语义上等价 by-reference output</strong></code></pre>
+  <p>OpenMP runtime：每线程私有副本 → 各自累加 → 区域结束 barrier 自动归并到 sum。</p>
+
+  <h3>为什么 OpenMP 可以、GPU 不行</h3>
+  <table>
+    <tr><th></th><th>OpenMP（CPU 多线程）</th><th>Thrust（GPU）</th></tr>
+    <tr><td>内存</td><td>共享——线程能直接读写 host 栈的 <code>sum</code></td><td>分离——GPU 不能写 host 栈</td></tr>
+    <tr><td>结束语义</td><td>parallel for 隐式 barrier，区域结束 sum 就绪</td><td>par_nosync 立即返回，结果待定</td></tr>
+    <tr><td>by-ref 输出</td><td>✅ 天然支持</td><td>❌ <code>float&amp;</code> 在 host 栈，GPU 触不到</td></tr>
+  </table>
+
+  <h3>GPU 上"非阻塞 reduce" 必须用 output iterator</h3>
+  <pre><code>thrust::universal_vector&lt;float&gt; r(1);
+thrust::reduce_into(par_nosync, A.begin(), A.end(), r.begin(), 0.0f, plus&lt;&gt;{});
+// void 返回；r 在 GPU memory，host 之后 stream.sync() 再读</code></pre>
+  <p>不是 by-ref——是 <strong>output iterator 指向 GPU 可写内存</strong>。GPU 写到那块内存里，host 同步后才看见。</p>
+
+  <h3>给 OpenMP 用户的提醒</h3>
+  <p>OpenMP 写惯了的人初学 GPU 经常掉的坑：</p>
+  <pre><code>float sum;
+gpu_reduce(A, sum);          // 想象成 OpenMP 那样
+std::cout &lt;&lt; sum;            // 错！GPU 可能还没写完，且 sum 是 host 栈</code></pre>
+  <p>GPU 上必须想"<strong>结果在哪块 memory？我什么时候 sync？</strong>"——OpenMP 因为共享内存 + 隐式 barrier，可以装作"看不见同步"。</p>
+</details>
+
 
 <!-- ==================== SLIDE 120–121 ==================== -->
 <h2 class="slide-title">Slide 120–121 — CUB：CUDA C++ 算法编写工具箱（Device / Block / Warp / Per-Thread）</h2>
@@ -2349,6 +2488,138 @@ for (auto write_step : std::views::iota(0, write_steps)) {
   💡 CUB 四个层级覆盖整张 GPU → block → warp → 单线程的并行原语。Thrust 是"会自动调度的高层 STL"，CUB 是"写 kernel 时直接用的可控砖块"。下一节聚焦 Device-Wide。
 </div>
 
+<details class="qa">
+  <summary>硬件层级总览：device / SM / block / warp / thread 各是什么、多大</summary>
+
+  <h3>层级 + 大小</h3>
+  <table>
+    <tr><th>层级</th><th>大小</th><th>定义方</th><th>关键属性</th></tr>
+    <tr><td>Thread</td><td>1 个虚拟执行实例</td><td>程序员</td><td>最小调度单位；有自己的寄存器</td></tr>
+    <tr><td>Warp</td><td><strong>固定 32 threads</strong></td><td>NVIDIA 硬件常量</td><td>真正的硬件执行粒度；锁步执行</td></tr>
+    <tr><td>Block</td><td>1~1024 threads（一般 128/256）</td><td>程序员（kernel 启动时）</td><td>必须完整跑在<strong>一个 SM</strong> 上；可用 shared memory + <code>__syncthreads()</code></td></tr>
+    <tr><td>Grid</td><td>block 集合</td><td>程序员</td><td>整个 kernel 一次 launch 的总并行</td></tr>
+    <tr><td>Device</td><td>整张 GPU</td><td>硬件</td><td>~80–140 个 SM（A100: 108, H100: 132）</td></tr>
+  </table>
+
+  <h3>SM ≠ CPU core——更像"自带 SIMT 引擎的 mini 多核车间"</h3>
+  <table>
+    <tr><th></th><th>CPU core</th><th>SM</th></tr>
+    <tr><td>同时执行 thread 数</td><td>1（或 2 hyperthreading）</td><td>数百（驻留几十 warp）</td></tr>
+    <tr><td>内部计算单元</td><td>少量 ALU/FPU</td><td>64–128 CUDA core + Tensor core + 多 warp scheduler</td></tr>
+    <tr><td>切换上下文成本</td><td>几百 cycle</td><td><strong>0 cycle</strong>——warp 寄存器留在 SM 上</td></tr>
+  </table>
+  <p>更准确对应：<strong>CPU core ≈ SM；CUDA core ≈ CPU core 内部的一个 ALU / SIMD lane</strong>。所以"GPU 几千 CUDA cores" = "~100 个 SM × 每个 SM ~100 个 ALU"，单看一个 ALU 没那么强，赢在数量。</p>
+
+  <h3>每 SM 上 block 数有硬上限 + 资源限制</h3>
+  <pre>block 同时驻留数 = min(
+    32（架构硬上限），
+    寄存器够分给几个 block，
+    shared memory 够分给几个 block，
+    最大并发 threads ÷ block size
+)
+
+例：A100 最大 2048 threads/SM，block size = 256
+  → 实际最多 2048÷256 = 8 个 block（不是 32）</pre>
+  <p>实际驻留几个~十几个 block——这就是 CUDA <strong>occupancy</strong> 指标在管的事。</p>
+
+  <h3>SM 内不只 CUDA core</h3>
+  <table>
+    <tr><th>单元</th><th>干什么</th><th>每 SM 大概</th></tr>
+    <tr><td>CUDA core（FP32/INT32 ALU）</td><td>普通整数 / 单精度浮点</td><td>64–128</td></tr>
+    <tr><td>FP64 unit</td><td>双精度浮点</td><td>32–64</td></tr>
+    <tr><td>SFU</td><td>sin/cos/exp/sqrt</td><td>~4</td></tr>
+    <tr><td>Tensor Core</td><td>4×4 矩阵乘加</td><td>4</td></tr>
+    <tr><td>LD/ST unit</td><td>memory 读写</td><td>~16</td></tr>
+  </table>
+  <p>不同种类的 warp 指令落到不同单元 → 多个 warp 可同时在不同单元上推进。</p>
+</details>
+
+<details class="qa">
+  <summary>每 cycle 发射 vs 驻留 warp vs 总 thread——别混</summary>
+
+  <p>"SM 上同时干活的 warp 有多少"这个问题，要分三个尺度：</p>
+  <table>
+    <tr><th>概念</th><th>数量级（A100）</th><th>含义</th></tr>
+    <tr><td><strong>每 cycle 发射 warp 数</strong></td><td>2~4</td><td>scheduler 一个 cycle 同时 dispatch 指令的 warp 数（由 warp scheduler 数 + 执行单元数决定）</td></tr>
+    <tr><td><strong>驻留 warp 数（resident）</strong></td><td>~64</td><td>SM 上"在场"的 warp 总数——占着寄存器、随时可被发射</td></tr>
+    <tr><td><strong>总 thread 数</strong></td><td>~2048</td><td>64 warp × 32 thread</td></tr>
+  </table>
+
+  <h3>"core 数 ÷ 32 = 4 个 warp 同时" 哪里不全对</h3>
+  <p>128 FP32 core ÷ 32 = 4 是<strong>"每 cycle 发射 FP32 指令的 warp 数"</strong>——不是"SM 上在工作的 warp 数"。同一 cycle：</p>
+  <pre>FP32 core 上:    warp A, warp B  ← 2~4 个发射
+LD/ST 单元上:    warp C          ← 另一类单元，并行
+Tensor core 上:  warp D          ← 又另一类，并行
+等 memory 的:    warp E, F, G... ← 在 flight，未完成</pre>
+
+  <h3>为什么塞那么多驻留 warp（A100 高达 64）</h3>
+  <p>不是为了"一起发射"，是为了 <strong>latency hiding</strong>：当某个 warp 触发 memory load 等 ~300 cycle 时，scheduler 从就绪池里挑别的 warp 顶上发射——驻留越多 → 备胎越多 → 工具时刻有人用。这是 GPU 隐藏 memory 延迟的核心。</p>
+
+  <h3>一个 CUDA core 同一时刻执行一个 thread——但 core 不属于任何 thread</h3>
+  <p>同一个 core 不同 cycle 可能跑完全不同 warp 的 thread——warp 切换 <strong>0 cycle</strong>（寄存器留在 SM 上）。</p>
+</details>
+
+<details class="qa">
+  <summary>per-thread primitive 不违反 SIMT 锁步——同一指令 + 各自数据</summary>
+
+  <h3>SIMT 锁步的真正含义</h3>
+  <p>warp 锁步 ≠ "32 个 thread 做同一件事"。而是 = "32 个 thread 同一时刻执行同一条<strong>指令</strong>，但<em>各自处理自己的数据</em>"。每个 thread 有自己的寄存器、自己的输入数据，用同一条指令操作不同数据 → 产生不同结果。</p>
+
+  <h3>Per-thread primitive 是什么</h3>
+  <p>"只在<em>单个 thread 私有数据</em>上完成"的原语——<strong>所有 32 个 thread 都会跑这个原语，但各操作自己的数据，互不交流</strong>。</p>
+  <pre><code>__device__ void some_kernel() {
+    int my_data[4];                 // 每 thread 自己的 4 个私有寄存器
+    cub::ThreadSort(my_data);       // 所有 32 thread 同时跑这行
+    // thread 0  排自己的 4 个
+    // thread 1  排自己的 4 个
+    // ... 32 个独立排序在锁步中并行完成
+}</code></pre>
+
+  <h3>对照 Warp / Block primitive</h3>
+  <table>
+    <tr><th></th><th>数据范围</th><th>跨 thread 通信</th><th>需要同步</th></tr>
+    <tr><td>Per-thread</td><td>单 thread 寄存器</td><td>✗</td><td>不需要</td></tr>
+    <tr><td>Warp</td><td>32 thread 联合数据</td><td>✓ warp shuffle</td><td>warp 内自动锁步免显式 sync</td></tr>
+    <tr><td>Block</td><td>整 block thread 联合</td><td>✓ shared memory</td><td><code>__syncthreads()</code> 强制</td></tr>
+  </table>
+</details>
+
+<details class="qa">
+  <summary>分层归约 idiom：per-thread → warp → block → device + 各层同步要求</summary>
+
+  <h3>例：128 元素求和（32 thread × 4 element/thread）</h3>
+  <pre>Step 1 (per-thread，无 sync):
+  thread i:  [a₀, a₁, a₂, a₃] → cub::ThreadReduce → sᵢ
+  32 个 thread 锁步并行算各自的 4-element 求和
+
+Step 2 (warp-wide，无 sync):
+  cub::WarpReduce(s₀..s₃₁) → total
+  内部用 warp shuffle 指令递归合并 → log₂(32) = 5 拍完成
+  thread 0 拿到 128 个元素的总和</pre>
+  <p>整个过程<strong>无任何同步指令</strong>——靠 warp 硬件锁步保证。</p>
+
+  <h3>各层同步要求</h3>
+  <table>
+    <tr><th>层级</th><th>同步方式</th><th>原因</th></tr>
+    <tr><td>Per-thread</td><td>不需要</td><td>单 thread 内的工作</td></tr>
+    <tr><td>Warp</td><td>不需要</td><td>32 thread <strong>硬件锁步</strong>——同一指令同一 cycle 完成</td></tr>
+    <tr><td>Block</td><td><code>__syncthreads()</code> 必需</td><td>不同 warp 被 scheduler 独立调度，<strong>进度可能差几百 cycle</strong>；不同 warp 想交换数据必须先到齐</td></tr>
+    <tr><td>Device</td><td>kernel 结束 / <code>cudaStreamSync</code></td><td>不同 block 跑在不同 SM 上，无法直接同步</td></tr>
+  </table>
+
+  <h3>为什么是 GPU 高性能标准 idiom</h3>
+  <pre>per-thread + warp 用<strong>寄存器级别</strong>完成大部分活
+                  → 无 shared memory 访问
+                  → 无 __syncthreads
+                  → ~10 拍出最终结果
+
+vs 全用 block reduce:
+  → 几次 __syncthreads 开销
+  → 多次 shared memory 读写
+  → 慢得多</pre>
+  <p>"只在最后必要时上 shared memory / sync"——CUB 的 ThreadReduce / WarpReduce / BlockReduce / DeviceReduce 四层 API 就是为搭这种分层归约准备的现成砖块。</p>
+</details>
+
 
 <!-- ==================== SLIDE 122–128 ==================== -->
 <h2 class="slide-title">Slide 122–128 — CUB DeviceReduce：两次调用模式（先查 tmp_size，再分配，再启动）</h2>
@@ -2405,6 +2676,80 @@ cub::DeviceReduce::Reduce(
 <div class="takeaway">
   💡 CUB Device API 的两次调用模式：第 1 次传 <code>nullptr</code> 查询所需 tmp_size（不启动 kernel），分配 <code>device_vector&lt;cuda::std::byte&gt;</code>，第 2 次传真 tmp 启动 kernel。优势：tmp 可复用、host 不阻塞、stream 可控；代价：代码繁琐。性能敏感的热点用，普通场景仍然 thrust::* 优先。
 </div>
+
+<details class="qa">
+  <summary>slide 右侧画的"2-kernel 归约图"是 Thrust 内部原理吗？还是 CUB 专属？</summary>
+
+  <h3>分清两个层次</h3>
+  <table>
+    <tr><th>右侧内容</th><th>是什么</th><th>谁的</th></tr>
+    <tr><td>slide 123 的 2-kernel 归约图</td><td><strong>GPU 底层归约机制</strong></td><td><strong>Thrust 和 CUB 共用</strong></td></tr>
+    <tr><td>slide 124-128 的"tmp 显式分配 + 两次调用"</td><td><strong>CUB API 设计风格</strong></td><td>CUB 专属</td></tr>
+  </table>
+
+  <h3>为什么 GPU 归约必须 2-kernel</h3>
+  <pre>Kernel 1：N 元素 → M block，每 block 协作归约 → M 个 partial sum
+          ↓ 写到一块 tmp（global memory）
+Kernel 2：M 个 partial sum → 1 个最终结果
+
+不能一个 kernel 直接 N→1，因为：
+  - 不同 block 跑在不同 SM 上
+  - block 之间不能直接 sync、不能共享 shared memory
+  - 必须经 global memory 二次归约</pre>
+  <p>这是 <strong>GPU 硬件限制</strong>，不是某个库的设计选择。Thrust 和 CUB 底层算法<strong>完全一样</strong>——区别只在 <em>谁管 tmp</em>：Thrust 每次调用都隐式 malloc/free；CUB 让你自己管，可以复用。</p>
+
+  <h3>两次调用模式才是 CUB 独有的</h3>
+  <p>查询 tmp_size → 分配 → 真启动这套"两次调用"是 <code>cub::Device::*</code> 的<strong>统一约定</strong>。Thrust 没有，它替你做了。</p>
+</details>
+
+<details class="qa">
+  <summary>查询调用里的 <code>res.begin()</code> / <code>X.size()</code> / <code>T{}</code> 都在做什么？</summary>
+
+  <pre><code>cub::DeviceReduce::Reduce(
+    nullptr, tmp_size,        // ① tmp 缓冲 + 大小
+    X.begin(), res.begin(),   // ② 输入起点 + 输出位置
+    X.size(),                 // ③ 元素个数
+    cuda::maximum{},          // ④ binary op
+    T{}                       // ⑤ initial value (identity)
+);</code></pre>
+
+  <h3>查询模式下每个参数还在做什么</h3>
+  <table>
+    <tr><th>参数</th><th>查询模式（nullptr 传 tmp）</th><th>真启动</th></tr>
+    <tr><td><code>tmp_size</code></td><td>输出：写"我要多少字节"</td><td>输入：分配多少给的</td></tr>
+    <tr><td><code>X.begin()</code></td><td><strong>类型用</strong>，地址不用</td><td>真读 X</td></tr>
+    <tr><td><code>res.begin()</code></td><td><strong>类型用</strong>，地址不用</td><td>真写 res</td></tr>
+    <tr><td><code>X.size()</code></td><td><strong>用</strong>（不同 N → 不同 tmp_size）</td><td>真扫多少元素</td></tr>
+    <tr><td>binary op / <code>T{}</code></td><td><strong>类型用</strong>（影响 tmp 布局）</td><td>真用来归约</td></tr>
+  </table>
+
+  <h3>为什么 res.begin() 在查询时也要传</h3>
+  <p>不是"API 设计师懒得做两套签名"——是 <strong>tmp_size 真的依赖输出类型</strong>：</p>
+  <pre>res.begin() → iterator 类型 → 输出 T*
+                                ↓
+                       "每 block 要写一个 T 的 partial sum"
+                       "M block × sizeof(T) 是 tmp 一部分"
+                       不同输出 T → tmp_size 不同</pre>
+  <p>所以查询模式下 <strong>地址不用、类型必用</strong>——CUB 从 type-bearing 的迭代器参数推导类型。下一行真启动反正也要 res，直接传它最简洁。</p>
+
+  <h3><code>T{}</code> = 归约的初始值（identity element）</h3>
+  <p>类比 <code>std::accumulate(first, last, init, op)</code> 里的 init：</p>
+  <pre>result = T{}
+for each x in [first, last):
+    result = op(result, x)
+return result</pre>
+  <p><code>T{}</code> 是"T 的默认构造" = 零初始化（数值类型 = 0）。</p>
+
+  <h3>⚠️ 陷阱：<code>T{}</code> 配 max/min 可能出错</h3>
+  <table>
+    <tr><th>操作</th><th>数学 identity</th><th>该传什么</th></tr>
+    <tr><td>plus（加）</td><td>0</td><td><code>T{}</code> 对（数值类型）</td></tr>
+    <tr><td>multiplies（乘）</td><td>1</td><td><strong>不能用 T{}</strong>，要 <code>T(1)</code></td></tr>
+    <tr><td>maximum</td><td>-∞</td><td><code>std::numeric_limits&lt;T&gt;::lowest()</code></td></tr>
+    <tr><td>minimum</td><td>+∞</td><td><code>std::numeric_limits&lt;T&gt;::max()</code></td></tr>
+  </table>
+  <p>例：用 <code>cuda::maximum{}</code> + <code>T{}</code>，如果数据全是负数，<code>max(0, -5) = 0</code> → 结果错。教学例子用 <code>T{}</code> 是简化写法，生产代码 max/min 必须传对的 identity。</p>
+</details>
 
 
 <!-- ==================== SLIDE 129–133 ==================== -->
